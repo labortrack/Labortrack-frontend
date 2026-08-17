@@ -8,10 +8,12 @@
     "allowArbitraryExtensions": true,
     "skipLibCheck": true,
 
-    /* Path Aliases */
-    "baseUrl": ".",
+    /* Silenciar advertencia de migración a TS 7.0 */
+    "ignoreDeprecations": "6.0",
+
+    /* Resolución de Alias */
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     },
 
     /* Bundler mode */
