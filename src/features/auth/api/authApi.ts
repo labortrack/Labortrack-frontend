@@ -1,5 +1,5 @@
 import { axiosClient } from "@/api/axiosClient";
-import {
+import type {
   AuthLoginRequestDto,
   AuthLoginResponseDto,
   RefreshTokenRequestDto,
