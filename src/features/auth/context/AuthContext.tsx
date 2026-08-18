@@ -8,6 +8,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   loading: boolean;
   login: (credentials: AuthLoginRequestDto) => Promise<void>;
+  loginWithGoogle: (idToken: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -19,11 +20,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     const initializeAuth = async () => {
+      // 1. Si no hay marca de sesión activa previa, no hacemos la petición al backend
+      const hasSession = localStorage.getItem("hasSession") === "true";
+      if (!hasSession) {
+        setLoading(false);
+        return;
+      }
+
+      // 2. Si había sesión previa (ej: el usuario hizo F5), pedimos el nuevo token
       try {
         const response = await authApi.refresh();
         setAccessTokenInMemory(response.jwt);
         setEmail(response.email);
       } catch {
+        // Si la cookie expiró o fue inválida, limpiamos la marca
+        localStorage.removeItem("hasSession");
         setAccessTokenInMemory(null);
         setEmail(null);
       } finally {
@@ -34,18 +45,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     initializeAuth();
   }, []);
 
+  // Login tradicional
   const login = async (credentials: AuthLoginRequestDto): Promise<void> => {
     const response = await authApi.login(credentials);
     setAccessTokenInMemory(response.jwt);
     setEmail(response.email);
+    localStorage.setItem("hasSession", "true");
   };
 
+  // Login con Google OAuth2
+  const loginWithGoogle = async (idToken: string): Promise<void> => {
+    const response = await authApi.loginWithGoogle({ idToken });
+    setAccessTokenInMemory(response.jwt);
+    setEmail(response.email);
+    localStorage.setItem("hasSession", "true");
+  };
+
+  // Cierre de sesión
   const logout = async (): Promise<void> => {
     try {
       await authApi.logout();
     } catch (error) {
       console.error("Error al cerrar sesión:", error);
     } finally {
+      localStorage.removeItem("hasSession");
       setAccessTokenInMemory(null);
       setEmail(null);
     }
@@ -58,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isAuthenticated: !!email,
         loading,
         login,
+        loginWithGoogle,
         logout,
       }}
     >
