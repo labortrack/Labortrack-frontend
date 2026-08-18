@@ -5,11 +5,11 @@ export interface AuthLoginRequestDto {
 }
 
 export interface GoogleLoginRequestDto {
-  token: string;
+  idToken: string;
 }
 
 export interface RefreshTokenRequestDto {
-  refreshToken: string;
+  refreshToken?: string;
 }
 
 export interface ForgotPasswordRequestDto {
@@ -26,6 +26,6 @@ export interface AuthLoginResponseDto {
   email: string;
   message: string;
   jwt: string;
-  refreshToken: string;
+  refreshToken?: string | null;
   status: boolean;
 }

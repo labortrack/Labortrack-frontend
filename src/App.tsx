@@ -1,9 +1,13 @@
-export function App() {
+import { BrowserRouter } from "react-router-dom";
+import { AuthProvider } from "@/features/auth/context/AuthContext";
+import AppRoutes from "@/routes/AppRoutes";
+
+export default function App() {
   return (
-    <div>
-      <h1>LaborTrack</h1>
-    </div>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
-
-export default App;

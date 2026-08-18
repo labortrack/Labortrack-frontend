@@ -2,7 +2,7 @@ import { axiosClient } from "@/api/axiosClient";
 import type {
   AuthLoginRequestDto,
   AuthLoginResponseDto,
-  RefreshTokenRequestDto,
+  GoogleLoginRequestDto,
   ForgotPasswordRequestDto,
   ResetPasswordRequestDto,
 } from "../types/auth.dto";
@@ -18,11 +18,24 @@ export const authApi = {
     return data;
   },
 
-  logout: async (payload: RefreshTokenRequestDto): Promise<string> => {
-    const { data } = await axiosClient.post<string>(
-      "/api/auth/logout",
+  loginWithGoogle: async (
+    payload: GoogleLoginRequestDto,
+  ): Promise<AuthLoginResponseDto> => {
+    const { data } = await axiosClient.post<AuthLoginResponseDto>(
+      "/api/auth/google",
       payload,
     );
+    return data;
+  },
+
+  refresh: async (): Promise<AuthLoginResponseDto> => {
+    const { data } =
+      await axiosClient.post<AuthLoginResponseDto>("/api/auth/refresh");
+    return data;
+  },
+
+  logout: async (): Promise<string> => {
+    const { data } = await axiosClient.post<string>("/api/auth/logout");
     return data;
   },
 
