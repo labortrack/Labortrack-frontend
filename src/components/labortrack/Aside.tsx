@@ -93,7 +93,7 @@ export function Aside({
 
     const handleItemClick = (id: string) => {
         onItemClick?.(id);
-        onCloseMobile?.(); // Cierra el drawer automáticamente en móviles
+        onCloseMobile?.();
     };
 
     return (
@@ -110,11 +110,11 @@ export function Aside({
             {/* 2. Contenedor del Aside */}
             <aside
                 className={cn(
-                    // Base & Posicionamiento
+                    // Posicionamiento base
                     "fixed top-0 bottom-0 left-0 z-50 flex flex-col bg-[#f0eded] border-r border-[#e8e8e8] select-none h-screen transition-all duration-300 ease-in-out",
                     // Mobile: Drawer deslizable
                     isMobileOpen ? "translate-x-0 shadow-2xl w-72" : "-translate-x-full",
-                    // Desktop (lg+): Estático y visible siempre
+                    // Desktop (lg+): Posición estática en el layout
                     "lg:translate-x-0 lg:static lg:z-auto lg:shadow-none",
                     // Control de colapso en Desktop
                     isCollapsed ? "lg:w-20" : "lg:w-64",
@@ -122,7 +122,7 @@ export function Aside({
                 )}
             >
                 {/* Header con Logo y botón de cierre en Mobile */}
-                <div className="px-6 py-6 border-b border-[#e8e8e8] flex items-center justify-between">
+                <div className="px-6 py-6 border-b border-[#e8e8e8] flex items-center justify-between flex-shrink-0">
                     <div className="flex items-center gap-3 min-w-0">
                         <div className="w-10 h-10 bg-[#0036a4] rounded-lg flex items-center justify-center flex-shrink-0 shadow-xs">
                             <Building2 className="w-6 h-6 text-white stroke-[1.75]" />
@@ -150,8 +150,18 @@ export function Aside({
                     </button>
                 </div>
 
-                {/* Lista de navegación scrolleable */}
-                <nav className="flex-1 px-3 py-4 overflow-y-auto overflow-x-hidden space-y-1">
+                {/* Lista de navegación */}
+                <nav
+                    className={cn(
+                        "flex-1 px-3 py-4 space-y-1 overflow-x-hidden overflow-y-auto",
+                        // Comportamiento según estado:
+                        isCollapsed && !isMobileOpen
+                            ? // CONTRAÍDO: Quita completamente la barra de scroll
+                            "[scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                            : // EXPANDIDO: Barra estilizada ultrafina
+                            "[scrollbar-width:thin] [scrollbar-color:#cfd1d4_transparent] [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#cfd1d4] [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-[#0036a4]/60"
+                    )}
+                >
                     {visibleItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeItem === item.id;
@@ -209,7 +219,7 @@ export function Aside({
                 </nav>
 
                 {/* Botón Contraer (Solo visible en Desktop) */}
-                <div className="hidden lg:block px-3 py-3 border-t border-[#e8e8e8]">
+                <div className="hidden lg:block px-3 py-3 border-t border-[#e8e8e8] flex-shrink-0">
                     <button
                         type="button"
                         onClick={() => setIsCollapsed(!isCollapsed)}
@@ -236,7 +246,7 @@ export function Aside({
 
                 {/* Tarjeta de Usuario & Logout */}
                 {(!isCollapsed || isMobileOpen) && (
-                    <div className="px-4 py-4 border-t border-[#e8e8e8] bg-[#e8e8e8]">
+                    <div className="px-4 py-4 border-t border-[#e8e8e8] bg-[#e8e8e8] flex-shrink-0">
                         <div className="flex items-center gap-3">
                             <div
                                 className="w-10 h-10 rounded-full flex items-center justify-center text-white text-[14px] font-bold shadow-xs flex-shrink-0"
