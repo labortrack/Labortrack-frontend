@@ -4,6 +4,7 @@ import MainLayout from "@/layouts/MainLayout";
 import LoginPage from "@/features/auth/pages/LoginPage";
 import ResetPasswordPage from "@/features/auth/pages/ResetPasswordPage";
 import DashboardPage from "@/features/dashboard/pages/DashboardPage";
+import UsuariosPage from "@/features/usuarios/pages/UsuarioPages";
 
 export default function AppRoutes() {
     return (
@@ -13,9 +14,11 @@ export default function AppRoutes() {
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
             {/* 2. Rutas Protegidas (Requieren sesión activa) */}
+            {/* 2. Rutas Protegidas */}
             <Route element={<ProtectedRoute />}>
                 <Route element={<MainLayout />}>
                     <Route path="/dashboard" element={<DashboardPage />} />
+                    <Route path="/usuarios" element={<UsuariosPage />} /> {/* 👈 Ruta conectada al Aside */}
                 </Route>
             </Route>
 
