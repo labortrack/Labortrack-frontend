@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { authApi } from "../api/authApi";
-import type { AuthLoginRequestDto } from "../types/auth.dto";
+import { usuarioApi } from "@/features/usuarios/api/usuarioApi";
 import { setAccessTokenInMemory } from "@/api/axiosClient";
+import type { AuthLoginRequestDto } from "../types/auth.dto";
+import type { UserResponseDto } from "@/features/usuarios/types/usuario.types";
 
 interface AuthContextType {
-  email: string | null;
+  user: UserResponseDto | null;
   isAuthenticated: boolean;
   loading: boolean;
   login: (credentials: AuthLoginRequestDto) => Promise<void>;
@@ -12,73 +14,87 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
+function parseJwt(token: string): any {
+  try {
+    const base64Url = token.split(".")[1];
+    return JSON.parse(atob(base64Url.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [email, setEmail] = useState<string | null>(null);
+  const [user, setUser] = useState<UserResponseDto | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
+  // Consulta el DTO completo del usuario autenticado
+  const loadUserData = async (email: string) => {
+    try {
+      const page = await usuarioApi.findByFilter({ email });
+      if (page.content.length > 0) {
+        setUser(page.content[0]);
+      }
+    } catch (err) {
+      console.error("Error al cargar datos del usuario:", err);
+    }
+  };
+
+  const handleAuthSuccess = async (jwt: string, emailFromResponse?: string) => {
+    setAccessTokenInMemory(jwt);
+    const claims = parseJwt(jwt);
+    const email = emailFromResponse || claims?.sub || claims?.email;
+
+    if (email) {
+      await loadUserData(email);
+    }
+  };
+
   useEffect(() => {
-    const initializeAuth = async () => {
-      // 1. Si no hay marca de sesión activa previa, no hacemos la petición al backend
-      const hasSession = localStorage.getItem("hasSession") === "true";
-      if (!hasSession) {
+    const init = async () => {
+      if (localStorage.getItem("hasSession") !== "true") {
         setLoading(false);
         return;
       }
-
-      // 2. Si había sesión previa (ej: el usuario hizo F5), pedimos el nuevo token
       try {
-        const response = await authApi.refresh();
-        setAccessTokenInMemory(response.jwt);
-        setEmail(response.email);
+        const res: any = await authApi.refresh();
+        await handleAuthSuccess(res.jwt, res.email);
       } catch {
-        // Si la cookie expiró o fue inválida, limpiamos la marca
-        localStorage.removeItem("hasSession");
-        setAccessTokenInMemory(null);
-        setEmail(null);
+        logout();
       } finally {
         setLoading(false);
       }
     };
-
-    initializeAuth();
+    init();
   }, []);
 
-  // Login tradicional
-  const login = async (credentials: AuthLoginRequestDto): Promise<void> => {
-    const response = await authApi.login(credentials);
-    setAccessTokenInMemory(response.jwt);
-    setEmail(response.email);
+  const login = async (credentials: AuthLoginRequestDto) => {
+    const res: any = await authApi.login(credentials);
     localStorage.setItem("hasSession", "true");
+    await handleAuthSuccess(res.jwt, res.email);
   };
 
-  // Login con Google OAuth2
-  const loginWithGoogle = async (idToken: string): Promise<void> => {
-    const response = await authApi.loginWithGoogle({ idToken });
-    setAccessTokenInMemory(response.jwt);
-    setEmail(response.email);
+  const loginWithGoogle = async (idToken: string) => {
+    const res: any = await authApi.loginWithGoogle({ idToken });
     localStorage.setItem("hasSession", "true");
+    await handleAuthSuccess(res.jwt, res.email);
   };
 
-  // Cierre de sesión
-  const logout = async (): Promise<void> => {
+  const logout = async () => {
     try {
       await authApi.logout();
-    } catch (error) {
-      console.error("Error al cerrar sesión:", error);
-    } finally {
-      localStorage.removeItem("hasSession");
-      setAccessTokenInMemory(null);
-      setEmail(null);
-    }
+    } catch {}
+    localStorage.removeItem("hasSession");
+    setAccessTokenInMemory(null);
+    setUser(null);
   };
 
   return (
     <AuthContext.Provider
       value={{
-        email,
-        isAuthenticated: !!email,
+        user,
+        isAuthenticated: !!user,
         loading,
         login,
         loginWithGoogle,
@@ -90,10 +106,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useAuth = (): AuthContextType => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth debe ser utilizado dentro de un <AuthProvider>");
-  }
-  return context;
+export const useAuth = () => {
+  const ctx = useContext(AuthContext);
+  if (!ctx) throw new Error("useAuth debe usarse dentro de AuthProvider");
+  return ctx;
 };
