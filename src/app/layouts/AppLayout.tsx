@@ -2,13 +2,14 @@ import { useState } from "react";
 import {
   Building2,
   ChevronLeft,
+  ChevronRight,
   LayoutDashboard,
   LogOut,
   Menu,
   UserCog,
   X,
 } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "@/features/auth/hooks/useAuthActions";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import type { RolNombre } from "@/features/auth/types/auth.types";
@@ -32,6 +33,7 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
   const logout = useLogout();
+  const location = useLocation();
   const navigate = useNavigate();
   const initials =
     `${user.nombre.at(0) ?? ""}${user.apellido.at(0) ?? ""}`.toUpperCase();
@@ -86,31 +88,55 @@ export function AppLayout() {
         className="flex-1 space-y-1 overflow-y-auto p-3"
         aria-label="Navegación principal"
       >
-        {navItems.map(({ to, label, icon: Icon }) => (
-          <Tooltip key={to}>
-            <TooltipTrigger asChild>
-              <NavLink
-                to={to}
-                onClick={() => setMobileOpen(false)}
-                className={({ isActive }) =>
-                  cn(
-                    "relative flex h-11 items-center gap-3 rounded-control px-3 text-sm font-medium transition",
+        {navItems.map(({ to, label, icon: Icon }) => {
+          const isActive =
+            location.pathname === to || location.pathname.startsWith(`${to}/`);
+
+          return (
+            <Tooltip key={to}>
+              <TooltipTrigger asChild>
+                <NavLink
+                  to={to}
+                  onClick={() => setMobileOpen(false)}
+                  className={cn(
+                    "group relative flex h-11 items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-primary text-white shadow-soft before:absolute before:-left-3 before:h-8 before:w-1 before:rounded-r-full before:bg-accent"
-                      : "text-foreground-muted hover:bg-border hover:text-foreground",
+                      ? "bg-primary text-white shadow-soft before:absolute before:-left-3 before:top-1/2 before:h-8 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-accent"
+                      : "text-foreground hover:bg-border",
                     collapsed && !mobileOpen && "justify-center px-0",
-                  )
-                }
-              >
-                <Icon className="size-5 shrink-0" />
-                {!collapsed || mobileOpen ? <span>{label}</span> : null}
-              </NavLink>
-            </TooltipTrigger>
-            {collapsed && !mobileOpen ? (
-              <TooltipContent side="right">{label}</TooltipContent>
-            ) : null}
-          </Tooltip>
-        ))}
+                  )}
+                >
+                  <Icon
+                    className={cn(
+                      "size-5 shrink-0 transition-colors",
+                      isActive
+                        ? "text-white"
+                        : "text-foreground-muted group-hover:text-primary",
+                    )}
+                  />
+                  {!collapsed || mobileOpen ? (
+                    <>
+                      <span
+                        className={cn(
+                          "min-w-0 flex-1 truncate text-left",
+                          isActive ? "text-white" : "text-foreground",
+                        )}
+                      >
+                        {label}
+                      </span>
+                      {isActive ? (
+                        <ChevronRight className="size-4 shrink-0 text-white/75" />
+                      ) : null}
+                    </>
+                  ) : null}
+                </NavLink>
+              </TooltipTrigger>
+              {collapsed && !mobileOpen ? (
+                <TooltipContent side="right">{label}</TooltipContent>
+              ) : null}
+            </Tooltip>
+          );
+        })}
       </nav>
       <div className="hidden border-t border-border p-3 lg:block">
         <Button
