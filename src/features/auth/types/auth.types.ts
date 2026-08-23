@@ -16,8 +16,18 @@ export interface AuthResponse {
   status: boolean;
 }
 
-export interface LoginRequest { email: string; password: string }
-export interface GoogleLoginRequest { idToken: string }
-export interface ForgotPasswordRequest { email: string }
-export interface ResetPasswordRequest { token: string; newPassword: string }
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+export interface GoogleLoginRequest {
+  idToken: string;
+}
+export interface ForgotPasswordRequest {
+  email: string;
+}
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+}
 export type SessionStatus = "checking" | "authenticated" | "anonymous";

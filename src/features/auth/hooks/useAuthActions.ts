@@ -12,7 +12,8 @@ async function establishSession(jwt: string) {
 export function useLogin() {
   const setSession = useSessionStore((state) => state.setSession);
   return useMutation({
-    mutationFn: async (payload: LoginRequest) => establishSession((await authApi.login(payload)).jwt),
+    mutationFn: async (payload: LoginRequest) =>
+      establishSession((await authApi.login(payload)).jwt),
     onSuccess: setSession,
   });
 }
@@ -20,7 +21,8 @@ export function useLogin() {
 export function useGoogleLogin() {
   const setSession = useSessionStore((state) => state.setSession);
   return useMutation({
-    mutationFn: async (payload: GoogleLoginRequest) => establishSession((await authApi.loginWithGoogle(payload)).jwt),
+    mutationFn: async (payload: GoogleLoginRequest) =>
+      establishSession((await authApi.loginWithGoogle(payload)).jwt),
     onSuccess: setSession,
   });
 }

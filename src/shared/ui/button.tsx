@@ -10,8 +10,10 @@ const buttonVariants = cva(
       variant: {
         primary: "bg-primary text-white shadow-soft hover:bg-primary-hover",
         secondary: "bg-accent text-accent-foreground hover:bg-accent-hover",
-        outline: "border border-border-strong bg-card text-foreground hover:bg-subtle",
-        ghost: "bg-transparent text-foreground-muted hover:bg-muted hover:text-foreground",
+        outline:
+          "border border-border-strong bg-card text-foreground hover:bg-subtle",
+        ghost:
+          "bg-transparent text-foreground-muted hover:bg-muted hover:text-foreground",
         destructive: "bg-error text-white hover:bg-error-strong",
         link: "h-auto bg-transparent p-0 text-primary normal-case tracking-normal hover:underline",
       },
@@ -29,7 +31,14 @@ const buttonVariants = cva(
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> &
   VariantProps<typeof buttonVariants> & { asChild?: boolean };
 
-export function Button({ className, variant, size, asChild, type, ...props }: ButtonProps) {
+export function Button({
+  className,
+  variant,
+  size,
+  asChild,
+  type,
+  ...props
+}: ButtonProps) {
   const Component = asChild ? Slot : "button";
   return (
     <Component
