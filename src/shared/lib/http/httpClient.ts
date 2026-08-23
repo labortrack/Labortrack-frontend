@@ -11,7 +11,10 @@ interface RefreshResponse {
   jwt: string;
 }
 
-const refreshClient = axios.create({ baseURL: env.apiBaseUrl, withCredentials: true });
+const refreshClient = axios.create({
+  baseURL: env.apiBaseUrl,
+  withCredentials: true,
+});
 
 export const httpClient = axios.create({
   baseURL: env.apiBaseUrl,
@@ -55,9 +58,16 @@ httpClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const request = error.config as RetryableRequest | undefined;
-    const excluded = refreshExcludedRoutes.some((route) => request?.url?.includes(route));
+    const excluded = refreshExcludedRoutes.some((route) =>
+      request?.url?.includes(route),
+    );
 
-    if (error.response?.status !== 401 || !request || request._retry || excluded) {
+    if (
+      error.response?.status !== 401 ||
+      !request ||
+      request._retry ||
+      excluded
+    ) {
       return Promise.reject(error);
     }
 

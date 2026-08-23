@@ -18,10 +18,26 @@ export interface CreateUsuarioRequestDto {
   rol: RolNombre;
 }
 
-export interface ModifyUserRequestDto { nombre: string; apellido: string }
-export interface UsuarioBajaDto { motivo: string; fechaBaja: string }
-export interface UsuarioFilterDto { nombre?: string; apellido?: string; email?: string; rol?: RolNombre | ""; enabled?: boolean }
-export interface PageableParams { page: number; size: number; sort: string }
+export interface ModifyUserRequestDto {
+  nombre: string;
+  apellido: string;
+}
+export interface UsuarioBajaDto {
+  motivo: string;
+  fechaBaja: string;
+}
+export interface UsuarioFilterDto {
+  nombre?: string;
+  apellido?: string;
+  email?: string;
+  rol?: RolNombre | "";
+  enabled?: boolean;
+}
+export interface PageableParams {
+  page: number;
+  size: number;
+  sort: string;
+}
 
 export interface SpringPage<T> {
   content: T[];

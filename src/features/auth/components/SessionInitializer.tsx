@@ -17,12 +17,16 @@ export function SessionInitializer({ children }: { children: ReactNode }) {
     setChecking();
     void refreshAccessToken()
       .then(() => authApi.me())
-      .then((user) => { if (active) setSession(user); })
+      .then((user) => {
+        if (active) setSession(user);
+      })
       .catch(() => {
         setAccessToken(null);
         if (active) clearSession();
       });
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, [clearSession, setChecking, setSession]);
 
   return children;
