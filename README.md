@@ -1,75 +1,58 @@
-# React + TypeScript + Vite
+# LaborTrack Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Frontend web de LaborTrack construido con React, TypeScript, Vite y Tailwind CSS.
 
-Currently, two official plugins are available:
+## Alcance actual
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Inicio de sesión tradicional y con Google.
+- Recuperación y restablecimiento de contraseña.
+- Sesión con access token en memoria y refresh token HttpOnly.
+- Dashboard inicial vacío.
+- Consulta, filtros, paginación, alta, edición y baja lógica de usuarios.
+- Acceso a usuarios limitado a `ROLE_ADMIN` y `ROLE_RRHH`.
 
-## React Compiler
+No se incluyen rutas vacías para módulos todavía no implementados.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Configuración
 
-## Expanding the ESLint configuration
+Requiere Node.js 20 o superior, pnpm y el backend de LaborTrack. Copiar `.env.example` como `.env.local` y completar:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```env
+VITE_API_BASE_URL=http://localhost:8080
+VITE_APP_NAME=LaborTrack
+VITE_GOOGLE_CLIENT_ID=
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+`VITE_GOOGLE_CLIENT_ID` puede quedar vacío si no se probará Google OAuth. El origen exacto del frontend debe estar autorizado en el cliente OAuth de Google.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## Comandos
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+pnpm install
+pnpm dev
+pnpm build
+pnpm lint
 ```
+
+## Arquitectura
+
+```text
+src/
+├─ app/          # Proveedores, router, configuración y layouts globales
+├─ features/     # Módulos funcionales: auth, dashboard y usuarios
+├─ shared/       # UI, patrones, utilidades e infraestructura reutilizable
+└─ styles/       # Entrada CSS, tokens del sistema y estilos globales
+```
+
+Cada feature mantiene juntas sus páginas, API, hooks, esquemas, tipos y componentes. `shared/ui` contiene piezas visuales básicas; `shared/components`, composiciones reutilizables. Los componentes propios de un negocio permanecen en su feature.
+
+## Decisiones técnicas
+
+- Axios centraliza peticiones, errores y un único refresh ante varios `401` simultáneos.
+- TanStack Query administra datos remotos, caché, paginación y mutaciones.
+- Zustand conserva el estado mínimo de sesión en el cliente.
+- React Hook Form y Zod administran formularios y validaciones.
+- React Router define rutas públicas, protegidas y autorizadas mediante layouts y guards.
+- Los tokens CSS expuestos a Tailwind evitan repetir decisiones visuales en JSX.
+
+Las reglas visuales se documentan en [DESIGN.md](./DESIGN.md).

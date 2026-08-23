@@ -1,0 +1,4 @@
+@import "@fontsource-variable/manrope";
+@import "tailwindcss";
+@import "./tokens.css";
+@import "./globals.css";
