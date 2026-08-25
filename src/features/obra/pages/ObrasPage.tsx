@@ -65,15 +65,19 @@ export default function ObrasPage() {
         title="Obras y Frentes de Trabajo"
         description="Control logístico, frentes de obra y centros de costos de los proyectos."
         actions={
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => navigate("/obras/configuracion")}
+              className="w-full sm:w-auto justify-center"
             >
               <Settings2 className="mr-1.5 size-4" />
               Configuración de Estados
             </Button>
-            <Button onClick={() => setCreateOpen(true)}>
+            <Button
+              onClick={() => setCreateOpen(true)}
+              className="w-full sm:w-auto justify-center"
+            >
               <Plus className="mr-1.5 size-4" />
               Nueva Obra
             </Button>

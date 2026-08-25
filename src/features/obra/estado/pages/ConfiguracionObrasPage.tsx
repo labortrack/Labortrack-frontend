@@ -76,7 +76,7 @@ export default function ConfiguracionObrasPage() {
           actions={
             <Button
               onClick={() => setCreateOpen(true)}
-              className="shrink-0"
+              className="w-full sm:w-auto justify-center"
             >
               <Plus className="mr-1.5 size-4" />
               Agregar Estado de Obra
@@ -86,15 +86,15 @@ export default function ConfiguracionObrasPage() {
       </div>
 
       {/* ── Filter Tabs + Counter ──────────────────────────────── */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1 rounded-lg border border-border bg-muted p-1">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex w-full sm:w-auto items-center gap-1 rounded-lg border border-border bg-muted p-1">
           {TABS.map((tab) => (
             <button
               key={tab}
               type="button"
               onClick={() => setFiltro(tab)}
               className={cn(
-                "flex h-8 items-center gap-1.5 rounded-control px-3 text-xs font-semibold transition-all",
+                "flex-1 sm:flex-initial flex h-8 items-center justify-center gap-1.5 rounded-control px-3 text-xs font-semibold transition-all cursor-pointer",
                 filtro === tab
                   ? "bg-card text-primary shadow-soft"
                   : "text-foreground-muted hover:text-foreground",
@@ -136,17 +136,22 @@ export default function ConfiguracionObrasPage() {
             }
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-border bg-subtle">
-                <TableHead className="w-[240px]">Nombre del Estado</TableHead>
-                <TableHead>Descripción</TableHead>
-                <TableHead className="w-[140px] text-center">
-                  Estado Lógico
-                </TableHead>
-                <TableHead className="w-[100px] text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-b border-border bg-subtle">
+                  <TableHead className="min-w-[200px] w-[240px]">
+                    Nombre del Estado
+                  </TableHead>
+                  <TableHead className="min-w-[220px]">Descripción</TableHead>
+                  <TableHead className="min-w-[120px] w-[140px] text-center">
+                    Estado Lógico
+                  </TableHead>
+                  <TableHead className="min-w-[90px] w-[100px] text-right">
+                    Acciones
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
             <TableBody>
               {estados.map((estado) => {
                 const isInactivo = filtro === "Inactivos";
@@ -241,6 +246,7 @@ export default function ConfiguracionObrasPage() {
               })}
             </TableBody>
           </Table>
+        </div>
         )}
       </Card>
 
