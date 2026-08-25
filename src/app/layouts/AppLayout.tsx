@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  UserCheck,
   UserCog,
   X,
 } from "lucide-react";
@@ -43,6 +44,7 @@ export function AppLayout() {
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     ...(canManageUsers
       ? [
+          { to: "/legajos", label: "Legajos", icon: UserCheck },
           { to: "/obras", label: "Obras", icon: HardHat },
           { to: "/usuarios", label: "Usuarios", icon: UserCog },
         ]
