@@ -38,13 +38,8 @@ export default function ObrasPage() {
   const obrasFiltradas = useMemo(() => {
     const q = busqueda.toLowerCase().trim();
     if (!q) return obras;
-    return obras.filter(
-      (o) =>
-        o.nombreObra.toLowerCase().includes(q) ||
-        o.localidad.toLowerCase().includes(q) ||
-        o.provincia.toLowerCase().includes(q) ||
-        o.nomenclatura.toLowerCase().includes(q) ||
-        o.estadoActual.toLowerCase().includes(q),
+    return obras.filter((o) =>
+      o.nomenclatura.toLowerCase().includes(q),
     );
   }, [obras, busqueda]);
 
@@ -91,8 +86,8 @@ export default function ObrasPage() {
           <SearchInput
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar obras nomenclatura"
-            aria-label="Buscar obras"
+            placeholder="Buscar por nomenclatura contractual (ej: NOM-2026-04)..."
+            aria-label="Buscar por nomenclatura contractual"
           />
         </div>
         {busqueda ? (
@@ -117,7 +112,7 @@ export default function ObrasPage() {
         <span className="text-xs font-medium text-foreground-muted">
           {obrasFiltradas.length} obra{obrasFiltradas.length !== 1 ? "s" : ""}
           {busqueda ? (
-            <span className="ml-1">— filtrando por "{busqueda}"</span>
+            <span className="ml-1">— filtrando por nomenclatura "{busqueda}"</span>
           ) : null}
         </span>
         {estadosSummary.length > 0 ? (
