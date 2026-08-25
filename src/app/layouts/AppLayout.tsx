@@ -3,6 +3,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  HardHat,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -41,7 +42,10 @@ export function AppLayout() {
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     ...(canManageUsers
-      ? [{ to: "/usuarios", label: "Usuarios", icon: UserCog }]
+      ? [
+          { to: "/obras", label: "Obras", icon: HardHat },
+          { to: "/usuarios", label: "Usuarios", icon: UserCog },
+        ]
       : []),
   ];
 
