@@ -32,16 +32,8 @@ export default function ObrasPage() {
   const [transitioningObra, setTransitioningObra] =
     useState<ObraResponseDto | null>(null);
 
-  const obrasQuery = useObras();
+  const obrasQuery = useObras(busqueda);
   const obras = obrasQuery.data ?? [];
-
-  const obrasFiltradas = useMemo(() => {
-    const q = busqueda.toLowerCase().trim();
-    if (!q) return obras;
-    return obras.filter((o) =>
-      o.nomenclatura.toLowerCase().includes(q),
-    );
-  }, [obras, busqueda]);
 
   // Breakdown of active status frequencies
   const estadosSummary = useMemo(() => {
@@ -110,7 +102,7 @@ export default function ObrasPage() {
       {/* ── Results summary + Estado breakdown ───────────────────── */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <span className="text-xs font-medium text-foreground-muted">
-          {obrasFiltradas.length} obra{obrasFiltradas.length !== 1 ? "s" : ""}
+          {obras.length} obra{obras.length !== 1 ? "s" : ""}
           {busqueda ? (
             <span className="ml-1">— filtrando por nomenclatura "{busqueda}"</span>
           ) : null}
@@ -150,13 +142,13 @@ export default function ObrasPage() {
             onRetry={() => void obrasQuery.refetch()}
           />
         </Card>
-      ) : obrasFiltradas.length === 0 ? (
+      ) : obras.length === 0 ? (
         <Card>
           <EmptyState
             title="No se encontraron obras"
             description={
               busqueda
-                ? "Probá cambiando el término de búsqueda."
+                ? `No se encontraron obras con la nomenclatura "${busqueda}".`
                 : "No hay obras registradas en el sistema."
             }
             action={
@@ -169,7 +161,7 @@ export default function ObrasPage() {
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {obrasFiltradas.map((obra) => (
+          {obras.map((obra) => (
             <ObraCard
               key={obra.id}
               obra={obra}

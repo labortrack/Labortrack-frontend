@@ -11,8 +11,23 @@ import type {
 const BASE_URL = "/labortrack/obras";
 
 export const obraApi = {
-  getAll: async () =>
-    (await httpClient.get<ObraResponseDto[]>(BASE_URL)).data,
+  // Lista todas las obras o filtra por nomenclatura que coincida parcialmente
+  getAll: async (nomenclatura?: string) =>
+    (
+      await httpClient.get<ObraResponseDto[]>(BASE_URL, {
+        params: nomenclatura?.trim()
+          ? { nomenclatura: nomenclatura.trim() }
+          : undefined,
+      })
+    ).data,
+
+  // Obtiene una obra por su nomenclatura exacta
+  getByNomenclatura: async (valor: string) =>
+    (
+      await httpClient.get<ObraResponseDto>(`${BASE_URL}/por-nomenclatura`, {
+        params: { valor: valor.trim() },
+      })
+    ).data,
 
   getById: async (id: number) =>
     (await httpClient.get<ObraResponseDto>(`${BASE_URL}/${id}`)).data,

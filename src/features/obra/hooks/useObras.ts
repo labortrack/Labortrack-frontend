@@ -15,15 +15,27 @@ import type {
 export const obrasKeys = {
   all: ["obras"] as const,
   lists: () => [...obrasKeys.all, "list"] as const,
+  list: (nomenclatura?: string) =>
+    [...obrasKeys.all, "list", { nomenclatura: nomenclatura?.trim() || "" }] as const,
+  byNomenclatura: (valor: string) =>
+    [...obrasKeys.all, "byNomenclatura", valor.trim()] as const,
   detail: (id: number) => [...obrasKeys.all, "detail", id] as const,
   historial: (id: number) => [...obrasKeys.all, "historial", id] as const,
 };
 
-export function useObras() {
+export function useObras(nomenclatura?: string) {
   return useQuery({
-    queryKey: obrasKeys.lists(),
-    queryFn: () => obraApi.getAll(),
+    queryKey: obrasKeys.list(nomenclatura),
+    queryFn: () => obraApi.getAll(nomenclatura),
     placeholderData: keepPreviousData,
+  });
+}
+
+export function useObraPorNomenclatura(valor: string | null | undefined) {
+  return useQuery({
+    queryKey: obrasKeys.byNomenclatura(valor ?? ""),
+    queryFn: () => obraApi.getByNomenclatura(valor!),
+    enabled: Boolean(valor?.trim()),
   });
 }
 
