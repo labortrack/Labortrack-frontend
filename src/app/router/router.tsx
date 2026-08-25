@@ -11,6 +11,8 @@ import {
   LoginPage,
   ResetPasswordPage,
   UsuariosPage,
+  ObrasPage,
+  ConfiguracionObrasPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -54,6 +56,26 @@ export const router = createBrowserRouter([
                     {suspense(<UsuariosPage />)}
                   </RoleRoute>
                 ),
+              },
+              {
+                path: "/obras",
+                element: (
+                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                    {suspense(<ObrasPage />)}
+                  </RoleRoute>
+                ),
+              },
+              {
+                path: "/obras/configuracion",
+                element: (
+                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                    {suspense(<ConfiguracionObrasPage />)}
+                  </RoleRoute>
+                ),
+              },
+              {
+                path: "/configuracion-obras",
+                element: <Navigate to="/obras/configuracion" replace />,
               },
             ],
           },

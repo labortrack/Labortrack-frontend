@@ -3,6 +3,7 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  HardHat,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -41,7 +42,10 @@ export function AppLayout() {
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     ...(canManageUsers
-      ? [{ to: "/usuarios", label: "Usuarios", icon: UserCog }]
+      ? [
+          { to: "/obras", label: "Obras", icon: HardHat },
+          { to: "/usuarios", label: "Usuarios", icon: UserCog },
+        ]
       : []),
   ];
 
@@ -89,8 +93,12 @@ export function AppLayout() {
         aria-label="Navegación principal"
       >
         {navItems.map(({ to, label, icon: Icon }) => {
-          const isActive =
-            location.pathname === to || location.pathname.startsWith(`${to}/`);
+          const isCurrentActive =
+            location.pathname === to ||
+            location.pathname.startsWith(`${to}/`) ||
+            (to === "/obras" &&
+              (location.pathname.startsWith("/obras") ||
+                location.pathname.startsWith("/configuracion-obras")));
 
           return (
             <Tooltip key={to}>
@@ -100,7 +108,7 @@ export function AppLayout() {
                   onClick={() => setMobileOpen(false)}
                   className={cn(
                     "group relative flex h-11 items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors",
-                    isActive
+                    isCurrentActive
                       ? "bg-primary text-white shadow-soft before:absolute before:-left-3 before:top-1/2 before:h-8 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-accent"
                       : "text-foreground hover:bg-border",
                     collapsed && !mobileOpen && "justify-center px-0",
@@ -109,7 +117,7 @@ export function AppLayout() {
                   <Icon
                     className={cn(
                       "size-5 shrink-0 transition-colors",
-                      isActive
+                      isCurrentActive
                         ? "text-white"
                         : "text-foreground-muted group-hover:text-primary",
                     )}
@@ -119,12 +127,12 @@ export function AppLayout() {
                       <span
                         className={cn(
                           "min-w-0 flex-1 truncate text-left",
-                          isActive ? "text-white" : "text-foreground",
+                          isCurrentActive ? "text-white" : "text-foreground",
                         )}
                       >
                         {label}
                       </span>
-                      {isActive ? (
+                      {isCurrentActive ? (
                         <ChevronRight className="size-4 shrink-0 text-white/75" />
                       ) : null}
                     </>

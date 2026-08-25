@@ -13,3 +13,10 @@ export const DashboardPage = lazy(
 export const UsuariosPage = lazy(
   () => import("@/features/usuarios/pages/UsuariosPage"),
 );
+export const ObrasPage = lazy(
+  () => import("@/features/obra/pages/ObrasPage"),
+);
+export const ConfiguracionObrasPage = lazy(
+  () => import("@/features/obra/estado/pages/ConfiguracionObrasPage"),
+);
+
