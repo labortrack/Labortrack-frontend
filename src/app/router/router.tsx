@@ -13,6 +13,7 @@ import {
   UsuariosPage,
   ObrasPage,
   ConfiguracionObrasPage,
+  ObraDetailPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -62,6 +63,14 @@ export const router = createBrowserRouter([
                 element: (
                   <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
                     {suspense(<ObrasPage />)}
+                  </RoleRoute>
+                ),
+              },
+              {
+                path: "/obras/:id",
+                element: (
+                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                    {suspense(<ObraDetailPage />)}
                   </RoleRoute>
                 ),
               },
