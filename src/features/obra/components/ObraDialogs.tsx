@@ -1,17 +1,36 @@
 import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
+  AlertCircle,
   AlertTriangle,
+  ArrowRightLeft,
   Building2,
   CheckCircle2,
-  HardHat,
   Lock,
+  Plus,
   Trash2,
-  XCircle,
 } from "lucide-react";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
+import { useEstadosObraActivos } from "../estado/hooks/useEstadosObra";
 import { EstadoBadge } from "../estado/components/EstadoBadge";
-import { CapatazAvatar } from "./CapatazAvatar";
-import type { Capataz, Obra, ObraFormData } from "../types/obra.types";
+import {
+  bajaObraSchema,
+  createObraSchema,
+  modifyObraSchema,
+  transicionarEstadoObraSchema,
+  type BajaObraForm,
+  type CreateObraForm,
+  type ModifyObraForm,
+  type TransicionarEstadoObraForm,
+} from "../schemas/obraSchemas";
+import {
+  useBajaObra,
+  useCambiarEstadoObra,
+  useCreateObra,
+  useModifyObra,
+} from "../hooks/useObras";
+import type { ObraResponseDto } from "../types/obra.types";
 import { FormField } from "@/shared/components";
 import {
   Alert,
@@ -28,96 +47,72 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Spinner,
+  Textarea,
 } from "@/shared/ui";
+import { normalizeApiError } from "@/shared/lib/http/apiError";
 
-const FORM_INIT: ObraFormData = {
-  nombre: "",
-  nomenclatura: "",
-  pais: "Argentina",
-  provincia: "",
-  localidad: "",
-  capatazId: "",
-};
-
-// ─── Modal 1: Registrar Obra ────────────────────────────────────────────────
+// ─── Modal 1: Registrar Obra (Alta) ──────────────────────────────────────────
 
 interface CreateObraDialogProps {
   open: boolean;
-  capataces: Capataz[];
   onOpenChange: (open: boolean) => void;
-  onSuccess: (nuevaObra: Obra) => void;
-  nextId: number;
 }
 
 export function CreateObraDialog({
   open,
-  capataces,
   onOpenChange,
-  onSuccess,
-  nextId,
 }: CreateObraDialogProps) {
-  const [form, setForm] = useState<ObraFormData>({ ...FORM_INIT });
-  const [errores, setErrores] = useState<Partial<Record<keyof ObraFormData, string>>>({});
-  const [showCapatazWarning, setShowCapatazWarning] = useState(false);
+  const mutation = useCreateObra();
+  const [submitError, setSubmitError] = useState<string>();
+
+  const {
+    register,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateObraForm>({
+    resolver: zodResolver(createObraSchema),
+    defaultValues: {
+      nombreObra: "",
+      nomenclatura: "",
+      pais: "Argentina",
+      provincia: "",
+      localidad: "",
+      motivoCambio: "Alta inicial de frente de trabajo",
+    },
+  });
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setForm({ ...FORM_INIT });
-      setErrores({});
-      setShowCapatazWarning(false);
+      reset();
+      setSubmitError(undefined);
+      mutation.reset();
     }
     onOpenChange(nextOpen);
   };
 
-  const setField = (key: keyof ObraFormData, val: string) => {
-    setForm((p) => ({ ...p, [key]: val }));
-    if (errores[key]) setErrores((p) => ({ ...p, [key]: undefined }));
-    setShowCapatazWarning(false);
-  };
-
-  const validar = () => {
-    const e: Partial<Record<keyof ObraFormData, string>> = {};
-    if (!form.nombre.trim()) e.nombre = "El nombre de la obra es obligatorio.";
-    if (!form.nomenclatura.trim())
-      e.nomenclatura = "La nomenclatura contractual es obligatoria.";
-    if (!form.provincia.trim()) e.provincia = "La provincia es obligatoria.";
-    if (!form.localidad.trim()) e.localidad = "La localidad es obligatoria.";
-    if (!form.capatazId) e.capatazId = "Debe asignar un capataz responsable.";
-    return e;
-  };
-
-  const handleGuardar = () => {
-    const errs = validar();
-    if (Object.keys(errs).length) {
-      setErrores(errs);
-      return;
+  const onSubmit = handleSubmit(async (values) => {
+    setSubmitError(undefined);
+    try {
+      const created = await mutation.mutateAsync({
+        nombreObra: values.nombreObra.trim(),
+        nomenclatura: values.nomenclatura.trim().toUpperCase(),
+        pais: values.pais.trim(),
+        provincia: values.provincia.trim(),
+        localidad: values.localidad.trim(),
+        motivoCambio: values.motivoCambio.trim(),
+      });
+      toast.success("Frente de trabajo registrado correctamente.", {
+        description: `"${created.nombreObra}" ha sido dado de alta con estado inicial ${created.estadoActual}.`,
+      });
+      handleOpenChange(false);
+    } catch (error) {
+      setSubmitError(
+        normalizeApiError(error, "No se pudo registrar la obra.").message,
+      );
     }
-
-    const cap = capataces.find((c) => String(c.id) === form.capatazId);
-    if (cap?.estado === "suspendido") {
-      setShowCapatazWarning(true);
-      return;
-    }
-
-    const nueva: Obra = {
-      id: nextId,
-      nombre: form.nombre.trim(),
-      nomenclatura: form.nomenclatura.trim().toUpperCase(),
-      pais: form.pais.trim() || "Argentina",
-      provincia: form.provincia.trim(),
-      localidad: form.localidad.trim(),
-      capatazId: parseInt(form.capatazId, 10),
-      capatazNombre: cap?.nombre ?? "—",
-      estado: "PLANIFICADA",
-      tieneCuadrillasActivas: false,
-    };
-
-    onSuccess(nueva);
-    toast.success("Frente de trabajo registrado correctamente.", {
-      description: `"${nueva.nombre}" ha sido dado de alta con estado PLANIFICADA.`,
-    });
-    handleOpenChange(false);
-  };
+  });
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -130,148 +125,138 @@ export function CreateObraDialog({
             <div>
               <DialogTitle>Registrar Nuevo Frente de Trabajo</DialogTitle>
               <DialogDescription>
-                Complete los datos del proyecto. El estado inicial será{" "}
-                <strong className="text-primary font-bold">PLANIFICADA</strong>.
+                Complete los datos contractuales y de localización de la nueva obra.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <FormField
-            id="obra-nombre"
-            label="Nombre de la Obra"
-            error={errores.nombre}
-            required
-          >
-            <Input
-              id="obra-nombre"
-              placeholder="Ej: Torre Mendoza Centro"
-              value={form.nombre}
-              onChange={(e) => setField("nombre", e.target.value)}
-              aria-invalid={Boolean(errores.nombre)}
-            />
-          </FormField>
+        <form onSubmit={onSubmit} className="flex-1 flex flex-col min-h-0" noValidate>
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            {submitError ? (
+              <Alert variant="error" className="mb-2">
+                <AlertCircle className="mt-0.5 size-4" />
+                {submitError}
+              </Alert>
+            ) : null}
 
-          <FormField
-            id="obra-nomenclatura"
-            label="Nomenclatura Contractual"
-            error={errores.nomenclatura}
-            required
-          >
-            <Input
-              id="obra-nomenclatura"
-              placeholder="Ej: NOM-2026-04"
-              value={form.nomenclatura}
-              onChange={(e) => setField("nomenclatura", e.target.value)}
-              aria-invalid={Boolean(errores.nomenclatura)}
-            />
-          </FormField>
+            <FormField
+              id="create-obra-nombre"
+              label="Nombre de la Obra"
+              error={errors.nombreObra?.message}
+              required
+            >
+              <Input
+                id="create-obra-nombre"
+                placeholder="Ej: Torre Mendoza Centro"
+                aria-invalid={Boolean(errors.nombreObra)}
+                {...register("nombreObra")}
+              />
+            </FormField>
 
-          <div>
-            <span className="mb-2 block text-xs font-semibold text-primary">
-              Ubicación Geográfica
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <FormField id="obra-pais" label="País" required>
-                <Input
-                  id="obra-pais"
-                  placeholder="Argentina"
-                  value={form.pais}
-                  onChange={(e) => setField("pais", e.target.value)}
-                />
-              </FormField>
+            <FormField
+              id="create-obra-nomenclatura"
+              label="Nomenclatura Contractual"
+              error={errors.nomenclatura?.message}
+              required
+            >
+              <Input
+                id="create-obra-nomenclatura"
+                placeholder="Ej: NOM-2026-04"
+                aria-invalid={Boolean(errors.nomenclatura)}
+                {...register("nomenclatura")}
+              />
+            </FormField>
 
-              <FormField
-                id="obra-provincia"
-                label="Provincia"
-                error={errores.provincia}
-                required
-              >
-                <Input
-                  id="obra-provincia"
-                  placeholder="Ej: Mendoza"
-                  value={form.provincia}
-                  onChange={(e) => setField("provincia", e.target.value)}
-                  aria-invalid={Boolean(errores.provincia)}
-                />
-              </FormField>
+            <div>
+              <span className="mb-2 block text-xs font-semibold text-primary">
+                Ubicación Geográfica
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <FormField
+                  id="create-obra-pais"
+                  label="País"
+                  error={errors.pais?.message}
+                  required
+                >
+                  <Input
+                    id="create-obra-pais"
+                    placeholder="Argentina"
+                    aria-invalid={Boolean(errors.pais)}
+                    {...register("pais")}
+                  />
+                </FormField>
 
-              <FormField
-                id="obra-localidad"
-                label="Localidad"
-                error={errores.localidad}
-                required
-              >
-                <Input
-                  id="obra-localidad"
-                  placeholder="Ej: Ciudad de Mendoza"
-                  value={form.localidad}
-                  onChange={(e) => setField("localidad", e.target.value)}
-                  aria-invalid={Boolean(errores.localidad)}
-                />
-              </FormField>
+                <FormField
+                  id="create-obra-provincia"
+                  label="Provincia"
+                  error={errors.provincia?.message}
+                  required
+                >
+                  <Input
+                    id="create-obra-provincia"
+                    placeholder="Ej: Mendoza"
+                    aria-invalid={Boolean(errors.provincia)}
+                    {...register("provincia")}
+                  />
+                </FormField>
+
+                <FormField
+                  id="create-obra-localidad"
+                  label="Localidad"
+                  error={errors.localidad?.message}
+                  required
+                >
+                  <Input
+                    id="create-obra-localidad"
+                    placeholder="Ej: Ciudad de Mendoza"
+                    aria-invalid={Boolean(errors.localidad)}
+                    {...register("localidad")}
+                  />
+                </FormField>
+              </div>
             </div>
+
+            <FormField
+              id="create-obra-motivo"
+              label="Motivo / Justificación del Alta"
+              error={errors.motivoCambio?.message}
+              required
+            >
+              <Textarea
+                id="create-obra-motivo"
+                rows={2}
+                placeholder="Indique la razón o acta de inicio para registrar este proyecto..."
+                aria-invalid={Boolean(errors.motivoCambio)}
+                {...register("motivoCambio")}
+              />
+            </FormField>
           </div>
 
-          <FormField
-            id="obra-capataz"
-            label="Asignar Capataz Responsable"
-            error={errores.capatazId}
-            required
-          >
-            <Select
-              value={form.capatazId}
-              onValueChange={(v) => setField("capatazId", v)}
+          <DialogFooter className="px-6 py-4 border-t border-border bg-subtle">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleOpenChange(false)}
+              disabled={mutation.isPending}
             >
-              <SelectTrigger id="obra-capataz" aria-invalid={Boolean(errores.capatazId)}>
-                <SelectValue placeholder="Buscar y seleccionar capataz..." />
-              </SelectTrigger>
-              <SelectContent>
-                {capataces.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    <div className="flex items-center gap-2">
-                      <CapatazAvatar nombre={c.nombre} size="sm" />
-                      <span>{c.nombre}</span>
-                      {c.estado === "suspendido" ? (
-                        <span className="text-[11px] font-bold text-error">
-                          (SUSPENDIDO)
-                        </span>
-                      ) : null}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-
-          {showCapatazWarning ? (
-            <Alert variant="error" className="flex items-start gap-3">
-              <XCircle className="size-5 shrink-0 mt-0.5" />
-              <div>
-                <strong className="block font-bold">Asignación bloqueada</strong>
-                <p className="text-xs">
-                  No se puede confirmar la operación. El Capataz seleccionado se
-                  encuentra suspendido o no está habilitado para tomar nuevas obras.
-                </p>
-              </div>
-            </Alert>
-          ) : null}
-        </div>
-
-        <DialogFooter className="px-6 py-4 border-t border-border bg-subtle">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => handleOpenChange(false)}
-          >
-            Cancelar
-          </Button>
-          <Button type="button" onClick={handleGuardar}>
-            <HardHat className="mr-1.5 size-4" />
-            Confirmar Obra
-          </Button>
-        </DialogFooter>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? (
+                <>
+                  <Spinner className="text-white" />
+                  Registrando...
+                </>
+              ) : (
+                <>
+                  <Plus className="mr-1.5 size-4" />
+                  Registrar Obra
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
@@ -280,68 +265,64 @@ export function CreateObraDialog({
 // ─── Modal 2: Modificar Obra ────────────────────────────────────────────────
 
 interface EditObraDialogProps {
-  obra: Obra | null;
-  capataces: Capataz[];
+  obra: ObraResponseDto | null;
   onOpenChange: (open: boolean) => void;
-  onSuccess: (obraActualizada: Obra) => void;
 }
 
 export function EditObraDialog({
   obra,
-  capataces,
   onOpenChange,
-  onSuccess,
 }: EditObraDialogProps) {
-  const [form, setForm] = useState<ObraFormData>(() => ({
-    nombre: obra?.nombre ?? "",
-    nomenclatura: obra?.nomenclatura ?? "",
-    pais: obra?.pais ?? "Argentina",
-    provincia: obra?.provincia ?? "",
-    localidad: obra?.localidad ?? "",
-    capatazId: obra ? String(obra.capatazId) : "",
-  }));
-  const [errores, setErrores] = useState<Partial<Record<keyof ObraFormData, string>>>({});
+  const mutation = useModifyObra();
+  const [submitError, setSubmitError] = useState<string>();
+
+  const {
+    register,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ModifyObraForm>({
+    resolver: zodResolver(modifyObraSchema),
+    values: {
+      nombreObra: obra?.nombreObra ?? "",
+      pais: obra?.pais ?? "Argentina",
+      provincia: obra?.provincia ?? "",
+      localidad: obra?.localidad ?? "",
+    },
+  });
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
-      setErrores({});
+      reset();
+      setSubmitError(undefined);
+      mutation.reset();
     }
     onOpenChange(nextOpen);
   };
 
-  const setField = (key: keyof ObraFormData, val: string) => {
-    setForm((p) => ({ ...p, [key]: val }));
-    if (errores[key]) setErrores((p) => ({ ...p, [key]: undefined }));
-  };
-
-  const handleGuardarCambios = () => {
+  const onSubmit = handleSubmit(async (values) => {
     if (!obra) return;
-    const e: Partial<Record<keyof ObraFormData, string>> = {};
-    if (!form.nombre.trim()) e.nombre = "El nombre de la obra es obligatorio.";
-    if (!form.provincia.trim()) e.provincia = "La provincia es obligatoria.";
-    if (!form.localidad.trim()) e.localidad = "La localidad es obligatoria.";
-    if (!form.capatazId) e.capatazId = "Debe asignar un capataz responsable.";
-
-    if (Object.keys(e).length) {
-      setErrores(e);
-      return;
+    setSubmitError(undefined);
+    try {
+      await mutation.mutateAsync({
+        id: obra.id,
+        payload: {
+          nombreObra: values.nombreObra.trim(),
+          pais: values.pais.trim(),
+          provincia: values.provincia.trim(),
+          localidad: values.localidad.trim(),
+        },
+      });
+      toast.success("Frente de trabajo actualizado correctamente.", {
+        description: `"${values.nombreObra}" ha sido modificado.`,
+      });
+      handleOpenChange(false);
+    } catch (error) {
+      setSubmitError(
+        normalizeApiError(error, "No se pudo actualizar la obra.").message,
+      );
     }
-
-    const cap = capataces.find((c) => String(c.id) === form.capatazId);
-    const updated: Obra = {
-      ...obra,
-      nombre: form.nombre.trim(),
-      pais: form.pais.trim(),
-      provincia: form.provincia.trim(),
-      localidad: form.localidad.trim(),
-      capatazId: parseInt(form.capatazId, 10),
-      capatazNombre: cap?.nombre ?? obra.capatazNombre,
-    };
-
-    onSuccess(updated);
-    toast.success("Frente de trabajo actualizado correctamente.");
-    handleOpenChange(false);
-  };
+  });
 
   return (
     <Dialog open={Boolean(obra)} onOpenChange={handleOpenChange}>
@@ -349,244 +330,437 @@ export function EditObraDialog({
         <DialogHeader className="px-6 py-5 border-b border-border bg-card">
           <DialogTitle>Modificar Frente de Trabajo</DialogTitle>
           <DialogDescription>
-            La nomenclatura contractual no puede modificarse una vez registrada.
+            La nomenclatura contractual no puede modificarse una vez registrada para asegurar la trazabilidad.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
-          <FormField
-            id="edit-obra-nombre"
-            label="Nombre de la Obra"
-            error={errores.nombre}
-            required
-          >
-            <Input
+        <form onSubmit={onSubmit} className="flex-1 flex flex-col min-h-0" noValidate>
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4">
+            {submitError ? (
+              <Alert variant="error" className="mb-2">
+                <AlertCircle className="mt-0.5 size-4" />
+                {submitError}
+              </Alert>
+            ) : null}
+
+            <FormField
               id="edit-obra-nombre"
-              value={form.nombre}
-              onChange={(e) => setField("nombre", e.target.value)}
-              aria-invalid={Boolean(errores.nombre)}
-            />
-          </FormField>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-foreground">
-              Nomenclatura Contractual
-            </label>
-            <div className="relative">
-              <Input
-                value={form.nomenclatura}
-                disabled
-                className="cursor-not-allowed bg-subtle text-foreground-muted pr-8"
-              />
-              <Lock className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-foreground-muted" />
-            </div>
-            <p className="text-[11px] text-foreground-muted">
-              Campo inmutable para garantizar la trazabilidad contractual.
-            </p>
-          </div>
-
-          <div>
-            <span className="mb-2 block text-xs font-semibold text-primary">
-              Ubicación Geográfica
-            </span>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <FormField id="edit-obra-pais" label="País" required>
-                <Input
-                  id="edit-obra-pais"
-                  value={form.pais}
-                  onChange={(e) => setField("pais", e.target.value)}
-                />
-              </FormField>
-
-              <FormField
-                id="edit-obra-provincia"
-                label="Provincia"
-                error={errores.provincia}
-                required
-              >
-                <Input
-                  id="edit-obra-provincia"
-                  value={form.provincia}
-                  onChange={(e) => setField("provincia", e.target.value)}
-                  aria-invalid={Boolean(errores.provincia)}
-                />
-              </FormField>
-
-              <FormField
-                id="edit-obra-localidad"
-                label="Localidad"
-                error={errores.localidad}
-                required
-              >
-                <Input
-                  id="edit-obra-localidad"
-                  value={form.localidad}
-                  onChange={(e) => setField("localidad", e.target.value)}
-                  aria-invalid={Boolean(errores.localidad)}
-                />
-              </FormField>
-            </div>
-          </div>
-
-          <FormField
-            id="edit-obra-capataz"
-            label="Capataz Responsable"
-            error={errores.capatazId}
-            required
-          >
-            <Select
-              value={form.capatazId}
-              onValueChange={(v) => setField("capatazId", v)}
+              label="Nombre de la Obra"
+              error={errors.nombreObra?.message}
+              required
             >
-              <SelectTrigger id="edit-obra-capataz">
-                <SelectValue placeholder="Seleccionar capataz..." />
-              </SelectTrigger>
-              <SelectContent>
-                {capataces.map((c) => (
-                  <SelectItem key={c.id} value={String(c.id)}>
-                    <div className="flex items-center gap-2">
-                      <CapatazAvatar nombre={c.nombre} size="sm" />
-                      <span>{c.nombre}</span>
-                      {c.estado === "suspendido" ? (
-                        <span className="text-[11px] font-bold text-error">
-                          (SUSPENDIDO)
-                        </span>
-                      ) : null}
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </FormField>
-        </div>
+              <Input
+                id="edit-obra-nombre"
+                aria-invalid={Boolean(errors.nombreObra)}
+                {...register("nombreObra")}
+              />
+            </FormField>
 
-        <DialogFooter className="px-6 py-4 border-t border-border bg-subtle">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => handleOpenChange(false)}
-          >
-            Cancelar
-          </Button>
-          <Button type="button" onClick={handleGuardarCambios}>
-            <CheckCircle2 className="mr-1.5 size-4" />
-            Guardar Cambios
-          </Button>
-        </DialogFooter>
+            <div className="space-y-1.5">
+              <label className="text-xs font-semibold text-foreground">
+                Nomenclatura Contractual
+              </label>
+              <div className="relative">
+                <Input
+                  value={obra?.nomenclatura ?? ""}
+                  disabled
+                  className="cursor-not-allowed bg-subtle text-foreground-muted pr-8"
+                />
+                <Lock className="absolute right-3 top-1/2 -translate-y-1/2 size-3.5 text-foreground-muted" />
+              </div>
+              <p className="text-[11px] text-foreground-muted">
+                Campo inmutable para garantizar la trazabilidad contractual.
+              </p>
+            </div>
+
+            <div>
+              <span className="mb-2 block text-xs font-semibold text-primary">
+                Ubicación Geográfica
+              </span>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <FormField
+                  id="edit-obra-pais"
+                  label="País"
+                  error={errors.pais?.message}
+                  required
+                >
+                  <Input
+                    id="edit-obra-pais"
+                    aria-invalid={Boolean(errors.pais)}
+                    {...register("pais")}
+                  />
+                </FormField>
+
+                <FormField
+                  id="edit-obra-provincia"
+                  label="Provincia"
+                  error={errors.provincia?.message}
+                  required
+                >
+                  <Input
+                    id="edit-obra-provincia"
+                    aria-invalid={Boolean(errors.provincia)}
+                    {...register("provincia")}
+                  />
+                </FormField>
+
+                <FormField
+                  id="edit-obra-localidad"
+                  label="Localidad"
+                  error={errors.localidad?.message}
+                  required
+                >
+                  <Input
+                    id="edit-obra-localidad"
+                    aria-invalid={Boolean(errors.localidad)}
+                    {...register("localidad")}
+                  />
+                </FormField>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t border-border bg-subtle">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleOpenChange(false)}
+              disabled={mutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? (
+                <>
+                  <Spinner className="text-white" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-1.5 size-4" />
+                  Guardar Cambios
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
 }
 
-// ─── Modal 3: Cierre Administrativo ─────────────────────────────────────────
+// ─── Modal 3: Baja / Cierre Administrativo de Obra ─────────────────────────
 
 interface CloseObraDialogProps {
-  obra: Obra | null;
+  obra: ObraResponseDto | null;
   onOpenChange: (open: boolean) => void;
-  onConfirm: (obraId: number) => void;
 }
 
 export function CloseObraDialog({
   obra,
   onOpenChange,
-  onConfirm,
 }: CloseObraDialogProps) {
-  const tieneCuadrillas = obra?.tieneCuadrillasActivas ?? false;
+  const mutation = useBajaObra();
+  const [submitError, setSubmitError] = useState<string>();
 
-  const handleConfirmar = () => {
-    if (!obra || tieneCuadrillas) return;
-    onConfirm(obra.id);
-    toast.success("Frente de trabajo archivado.", {
-      description: "La obra ha sido cerrada administrativamente.",
-    });
-    onOpenChange(false);
+  const {
+    register,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<BajaObraForm>({
+    resolver: zodResolver(bajaObraSchema),
+    defaultValues: {
+      motivoCambio: "Cierre administrativo de obra",
+    },
+  });
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset();
+      setSubmitError(undefined);
+      mutation.reset();
+    }
+    onOpenChange(nextOpen);
   };
 
+  const onSubmit = handleSubmit(async (values) => {
+    if (!obra) return;
+    setSubmitError(undefined);
+    try {
+      await mutation.mutateAsync({
+        id: obra.id,
+        payload: {
+          motivoCambio: values.motivoCambio.trim(),
+        },
+      });
+      toast.success("Frente de trabajo suspendido / dado de baja.", {
+        description: `"${obra.nombreObra}" ha sido transicionada al estado final.`,
+      });
+      handleOpenChange(false);
+    } catch (error) {
+      setSubmitError(
+        normalizeApiError(error, "No se pudo suspender la obra.").message,
+      );
+    }
+  });
+
   return (
-    <Dialog open={Boolean(obra)} onOpenChange={onOpenChange}>
+    <Dialog open={Boolean(obra)} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <div className="flex items-start gap-4">
-            <div
-              className={`flex size-12 shrink-0 items-center justify-center rounded-lg ${
-                tieneCuadrillas
-                  ? "bg-error-soft text-error"
-                  : "bg-warning-soft text-warning"
-              }`}
-            >
-              {tieneCuadrillas ? (
-                <XCircle className="size-6 text-error" />
-              ) : (
-                <AlertTriangle className="size-6 text-warning" />
-              )}
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-error-soft text-error">
+              <AlertTriangle className="size-6 text-error" />
             </div>
             <div>
-              <DialogTitle>Cierre Administrativo de Obra</DialogTitle>
+              <DialogTitle>Cierre / Baja de Obra</DialogTitle>
               {obra ? (
                 <div className="mt-1.5 flex items-center gap-1.5">
                   <span className="inline-flex items-center gap-1.5 rounded bg-subtle px-2 py-0.5 text-xs text-foreground">
                     <Building2 className="size-3 text-foreground-muted" />
-                    <span>{obra.nombre}</span>
+                    <span>{obra.nombreObra}</span>
                   </span>
-                  <EstadoBadge estado={obra.estado} />
+                  <EstadoBadge estado={obra.estadoActual} />
                 </div>
               ) : null}
             </div>
           </div>
         </DialogHeader>
 
-        <div className="space-y-3">
+        {submitError ? (
+          <Alert variant="error" className="mb-2">
+            <AlertCircle className="mt-0.5 size-4" />
+            {submitError}
+          </Alert>
+        ) : null}
+
+        <form onSubmit={onSubmit} className="space-y-3" noValidate>
           <DialogDescription className="text-sm leading-relaxed text-foreground-muted">
-            ¿Está seguro de que desea finalizar este frente de trabajo? Se aplicará
-            una baja lógica y se transicionará el proyecto al estado{" "}
-            <strong className="font-bold text-foreground">ARCHIVADA</strong>.
+            ¿Está seguro de que desea suspender o dar de baja este frente de trabajo? Se cerrará el estado vigente actual y se transicionará al estado de cierre.
           </DialogDescription>
 
-          {tieneCuadrillas ? (
-            <Alert variant="error" className="flex items-start gap-3">
-              <XCircle className="size-5 shrink-0 mt-0.5" />
-              <div className="text-xs">
-                <strong className="block font-bold mb-0.5">
-                  Cierre bloqueado — cuadrillas activas
-                </strong>
-                <p>
-                  Imposible finalizar el frente de trabajo: Existen cuadrillas de
-                  construcción operando en el terreno. Debe transicionar todas las
-                  cuadrillas asociadas al estado FINALIZADA o SUSPENDIDA antes de
-                  proceder al cierre.
-                </p>
-              </div>
-            </Alert>
-          ) : (
-            <div className="flex items-start gap-2.5 rounded-lg border border-warning/30 bg-warning-soft/40 p-3 text-xs text-foreground-muted">
-              <AlertTriangle className="size-4 shrink-0 text-warning mt-0.5" />
-              <span>
-                Esta acción es irreversible. El historial del proyecto y sus
-                registros operativos se conservarán para auditoría.
-              </span>
-            </div>
-          )}
-        </div>
+          <FormField
+            id="baja-motivo"
+            label="Motivo de la baja"
+            error={errors.motivoCambio?.message}
+            required
+          >
+            <Textarea
+              id="baja-motivo"
+              rows={3}
+              placeholder="Indique la causa o resolución del cierre..."
+              aria-invalid={Boolean(errors.motivoCambio)}
+              {...register("motivoCambio")}
+            />
+          </FormField>
 
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleOpenChange(false)}
+              disabled={mutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant="destructive"
+              disabled={mutation.isPending}
+            >
+              {mutation.isPending ? (
+                <>
+                  <Spinner className="text-white" />
+                  Procesando...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="mr-1.5 size-4" />
+                  Confirmar Cierre
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ─── Modal 4: Transicionar Estado de Obra ───────────────────────────────────
+
+interface TransicionarEstadoObraDialogProps {
+  obra: ObraResponseDto | null;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function TransicionarEstadoObraDialog({
+  obra,
+  onOpenChange,
+}: TransicionarEstadoObraDialogProps) {
+  const mutation = useCambiarEstadoObra();
+  const estadosActivosQuery = useEstadosObraActivos();
+  const [submitError, setSubmitError] = useState<string>();
+
+  const {
+    register,
+    control,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<TransicionarEstadoObraForm>({
+    resolver: zodResolver(transicionarEstadoObraSchema),
+    defaultValues: {
+      motivoCambio: "",
+    },
+  });
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset();
+      setSubmitError(undefined);
+      mutation.reset();
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const onSubmit = handleSubmit(async (values) => {
+    if (!obra) return;
+    setSubmitError(undefined);
+    try {
+      const updated = await mutation.mutateAsync({
+        id: obra.id,
+        payload: {
+          idEstadoObra: Number(values.idEstadoObra),
+          motivoCambio: values.motivoCambio.trim(),
+        },
+      });
+      toast.success("Estado de obra actualizado correctamente.", {
+        description: `"${updated.nombreObra}" transicionó a "${updated.estadoActual}".`,
+      });
+      handleOpenChange(false);
+    } catch (error) {
+      setSubmitError(
+        normalizeApiError(
+          error,
+          "No se pudo cambiar el estado de la obra.",
+        ).message,
+      );
+    }
+  });
+
+  const estadosDisponibles = (estadosActivosQuery.data ?? []).filter(
+    (e) => e.nombreEstadoObra.toUpperCase() !== obra?.estadoActual?.toUpperCase(),
+  );
+
+  return (
+    <Dialog open={Boolean(obra)} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-accent-soft text-accent">
+              <ArrowRightLeft className="size-5" />
+            </span>
+            <div>
+              <DialogTitle>Transicionar Estado de Obra</DialogTitle>
+              {obra ? (
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-xs font-semibold text-foreground">
+                    {obra.nombreObra}
+                  </span>
+                  <span className="text-xs text-foreground-muted">— Actual:</span>
+                  <EstadoBadge estado={obra.estadoActual} />
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </DialogHeader>
+
+        {submitError ? (
+          <Alert variant="error" className="mb-2">
+            <AlertCircle className="mt-0.5 size-4" />
+            {submitError}
+          </Alert>
+        ) : null}
+
+        <form onSubmit={onSubmit} className="space-y-4" noValidate>
+          <FormField
+            id="transicion-nuevo-estado"
+            label="Nuevo Estado"
+            error={errors.idEstadoObra?.message}
+            required
           >
-            Cancelar
-          </Button>
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={handleConfirmar}
-            disabled={tieneCuadrillas}
-            className={tieneCuadrillas ? "opacity-50 cursor-not-allowed" : ""}
+            <Controller
+              control={control}
+              name="idEstadoObra"
+              render={({ field }) => (
+                <Select
+                  value={field.value ? String(field.value) : ""}
+                  onValueChange={(val) => field.onChange(Number(val))}
+                  disabled={estadosActivosQuery.isPending}
+                >
+                  <SelectTrigger id="transicion-nuevo-estado">
+                    <SelectValue placeholder="Seleccionar nuevo estado de obra..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {estadosDisponibles.map((est) => (
+                      <SelectItem key={est.id} value={String(est.id)}>
+                        <div className="flex items-center gap-2">
+                          <EstadoBadge estado={est.nombreEstadoObra} />
+                          {est.descripcionEstadoObra ? (
+                            <span className="text-xs text-foreground-muted">
+                              — {est.descripcionEstadoObra}
+                            </span>
+                          ) : null}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
+          </FormField>
+
+          <FormField
+            id="transicion-motivo"
+            label="Motivo del Cambio de Estado"
+            error={errors.motivoCambio?.message}
+            required
           >
-            <Trash2 className="mr-1.5 size-4" />
-            Confirmar Cierre
-          </Button>
-        </DialogFooter>
+            <Textarea
+              id="transicion-motivo"
+              rows={3}
+              placeholder="Indique la causa o resolución técnica que motiva este cambio de estado..."
+              aria-invalid={Boolean(errors.motivoCambio)}
+              {...register("motivoCambio")}
+            />
+          </FormField>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleOpenChange(false)}
+              disabled={mutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={mutation.isPending}>
+              {mutation.isPending ? (
+                <>
+                  <Spinner className="text-white" />
+                  Actualizando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-1.5 size-4" />
+                  Aplicar Transición
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );

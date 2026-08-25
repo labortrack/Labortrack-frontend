@@ -66,12 +66,16 @@ export const router = createBrowserRouter([
                 ),
               },
               {
-                path: "/configuracion-obras",
+                path: "/obras/configuracion",
                 element: (
                   <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
                     {suspense(<ConfiguracionObrasPage />)}
                   </RoleRoute>
                 ),
+              },
+              {
+                path: "/configuracion-obras",
+                element: <Navigate to="/obras/configuracion" replace />,
               },
             ],
           },

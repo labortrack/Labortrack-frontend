@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   Pencil,
   Plus,
-  Settings2,
   Trash2,
 } from "lucide-react";
 import {
@@ -21,6 +20,7 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
+  PageHeader,
 } from "@/shared/components";
 import {
   Badge,
@@ -63,36 +63,26 @@ export default function ConfiguracionObrasPage() {
         <button
           type="button"
           onClick={() => navigate("/obras")}
-          className="group mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary"
+          className="group mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary cursor-pointer"
         >
           <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Atrás</span>
+          <span>Volver a Obras</span>
         </button>
 
         {/* ── Page Header ─────────────────────────────────────── */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-3">
-            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
-              <Settings2 className="size-5" />
-            </span>
-            <div>
-              <h1 className="text-2xl font-medium leading-7 text-foreground">
-                Configuración Global de Estados de Obra
-              </h1>
-              <p className="mt-0.5 text-sm text-foreground-muted">
-                Administre el catálogo de estados disponibles para los proyectos civiles
-              </p>
-            </div>
-          </div>
-
-          <Button
-            onClick={() => setCreateOpen(true)}
-            className="shrink-0"
-          >
-            <Plus className="mr-1.5 size-4" />
-            Agregar Estado de Obra
-          </Button>
-        </div>
+        <PageHeader
+          title="Configuración Global de Estados de Obra"
+          description="Administre el catálogo de estados disponibles para los proyectos civiles."
+          actions={
+            <Button
+              onClick={() => setCreateOpen(true)}
+              className="shrink-0"
+            >
+              <Plus className="mr-1.5 size-4" />
+              Agregar Estado de Obra
+            </Button>
+          }
+        />
       </div>
 
       {/* ── Filter Tabs + Counter ──────────────────────────────── */}

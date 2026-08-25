@@ -1,29 +1,47 @@
-import type { EstadoObraNombre } from "../estado/types/estadoObra.types";
-
-export interface Capataz {
+export interface ObraResponseDto {
   id: number;
-  nombre: string;
-  estado: "activo" | "suspendido";
-}
-
-export interface Obra {
-  id: number;
-  nombre: string;
+  nombreObra: string;
   nomenclatura: string;
   pais: string;
   provincia: string;
   localidad: string;
-  capatazId: number;
-  capatazNombre: string;
-  estado: EstadoObraNombre;
-  tieneCuadrillasActivas: boolean;
+  estadoActual: string;
+  fechaInicioEstadoActual?: string;
 }
 
-export interface ObraFormData {
-  nombre: string;
+export interface CreateObraDto {
+  nombreObra: string;
   nomenclatura: string;
   pais: string;
   provincia: string;
   localidad: string;
-  capatazId: string;
+  motivoCambio: string;
 }
+
+export interface ModifyObraRequestDto {
+  nombreObra: string;
+  pais: string;
+  provincia: string;
+  localidad: string;
+}
+
+export interface BajaObraRequestDto {
+  motivoCambio: string;
+}
+
+export interface TransicionarEstadoObraDto {
+  idEstadoObra: number;
+  motivoCambio: string;
+}
+
+export interface HistorialEstadoObraDto {
+  id: number;
+  idEstadoObra: number;
+  nombreEstadoObra: string;
+  fechaDesde: string;
+  fechaHasta?: string | null;
+  motivoCambio: string;
+}
+
+// Alias for convenience across components
+export type Obra = ObraResponseDto;
