@@ -87,7 +87,7 @@ export default function ObrasPage() {
           <SearchInput
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar obras por nombre, nomenclatura, localidad o estado..."
+            placeholder="Buscar obras nomenclatura"
             aria-label="Buscar obras"
           />
         </div>
