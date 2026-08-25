@@ -1,6 +1,6 @@
 import { cn } from "@/shared/utils/cn";
 
-export function getInitials(nombre: string): string {
+function getInitials(nombre: string): string {
   if (!nombre) return "";
   return nombre
     .trim()
@@ -24,7 +24,7 @@ const AVATAR_PALETTE = [
   "#db2777",
 ];
 
-export function getAvatarColor(seed: string): string {
+function getAvatarColor(seed: string): string {
   if (!seed) return AVATAR_PALETTE[0];
   let h = 0;
   for (let i = 0; i < seed.length; i++) {
