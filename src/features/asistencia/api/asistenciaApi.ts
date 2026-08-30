@@ -4,7 +4,9 @@ import type {
   AsistenciaHistorialResponseDto,
   AsistenciaHoyResponseDto,
   CapacidadesAsistenciaResponseDto,
+  PeriodoDisponibleAsistenciaResponseDto,
 } from "../types/asistencia.types";
+import type { SpringPage } from "@/shared/types/pagination.types";
 
 const BASE_URL = "/api/asistencias";
 
@@ -24,11 +26,23 @@ export const asistenciaApi = {
     return response.status === 204 ? null : response.data;
   },
 
-  getHistorial: async (mes: number, anio: number) =>
+  getHistorial: async (
+    mes: number,
+    anio: number,
+    page: number,
+    size: number,
+  ) =>
     (
-      await httpClient.get<AsistenciaHistorialResponseDto[]>(
+      await httpClient.get<SpringPage<AsistenciaHistorialResponseDto>>(
         `${BASE_URL}/mias/historial`,
-        { params: { mes, anio } },
+        { params: { mes, anio, page, size } },
+      )
+    ).data,
+
+  getPeriodoDisponible: async () =>
+    (
+      await httpClient.get<PeriodoDisponibleAsistenciaResponseDto>(
+        `${BASE_URL}/mias/periodo-disponible`,
       )
     ).data,
 

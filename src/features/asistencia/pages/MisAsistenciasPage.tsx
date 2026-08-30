@@ -1,16 +1,18 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { History } from "lucide-react";
 import { AsistenciaHistorialList } from "../components/AsistenciaHistorialList";
 import { AsistenciaHoyCard } from "../components/AsistenciaHoyCard";
 import {
   useAsistenciaHoy,
   useHistorialAsistencias,
+  usePeriodoDisponibleAsistencia,
 } from "../hooks/useAsistencias";
 import {
   EmptyState,
   ErrorState,
   LoadingState,
   PageHeader,
+  Pagination,
 } from "@/shared/components";
 import {
   Card,
@@ -38,18 +40,28 @@ const MESES = [
   "Diciembre",
 ] as const;
 
-const ANIO_ACTUAL = new Date().getFullYear();
-const ANIOS = Array.from(
-  { length: ANIO_ACTUAL - 1899 },
-  (_, index) => ANIO_ACTUAL - index,
-);
+const PAGE_SIZE = 10;
 
 export default function MisAsistenciasPage() {
   const ahora = new Date();
+  const anioActual = ahora.getFullYear();
   const [mes, setMes] = useState(ahora.getMonth() + 1);
-  const [anio, setAnio] = useState(ahora.getFullYear());
+  const [anio, setAnio] = useState(anioActual);
+  const [page, setPage] = useState(0);
   const asistenciaHoyQuery = useAsistenciaHoy();
-  const historialQuery = useHistorialAsistencias(mes, anio);
+  const periodoQuery = usePeriodoDisponibleAsistencia();
+  const historialQuery = useHistorialAsistencias(mes, anio, page, PAGE_SIZE);
+  const aniosDisponibles = useMemo(() => {
+    if (!periodoQuery.data) return [anioActual];
+
+    return Array.from(
+      {
+        length:
+          periodoQuery.data.anioHasta - periodoQuery.data.anioDesde + 1,
+      },
+      (_, index) => periodoQuery.data.anioHasta - index,
+    );
+  }, [anioActual, periodoQuery.data]);
 
   return (
     <div className="space-y-8">
@@ -127,7 +139,10 @@ export default function MisAsistenciasPage() {
               </label>
               <Select
                 value={String(mes)}
-                onValueChange={(value) => setMes(Number(value))}
+                onValueChange={(value) => {
+                  setMes(Number(value));
+                  setPage(0);
+                }}
               >
                 <SelectTrigger id="mes-asistencias">
                   <SelectValue />
@@ -151,19 +166,32 @@ export default function MisAsistenciasPage() {
               </label>
               <Select
                 value={String(anio)}
-                onValueChange={(value) => setAnio(Number(value))}
+                disabled={periodoQuery.isPending || periodoQuery.isError}
+                onValueChange={(value) => {
+                  setAnio(Number(value));
+                  setPage(0);
+                }}
               >
                 <SelectTrigger id="anio-asistencias">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {ANIOS.map((valor) => (
+                  {aniosDisponibles.map((valor) => (
                     <SelectItem key={valor} value={String(valor)}>
                       {valor}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {periodoQuery.isError ? (
+                <button
+                  type="button"
+                  className="mt-1 text-xs font-medium text-error hover:underline"
+                  onClick={() => void periodoQuery.refetch()}
+                >
+                  Reintentar carga de años
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
@@ -185,7 +213,7 @@ export default function MisAsistenciasPage() {
                 onRetry={() => void historialQuery.refetch()}
               />
             </Card>
-          ) : historialQuery.data.length === 0 ? (
+          ) : historialQuery.data.content.length === 0 ? (
             <Card>
               <EmptyState
                 title="No hay asistencias para este período"
@@ -193,7 +221,18 @@ export default function MisAsistenciasPage() {
               />
             </Card>
           ) : (
-            <AsistenciaHistorialList asistencias={historialQuery.data} />
+            <div>
+              <AsistenciaHistorialList
+                asistencias={historialQuery.data.content}
+              />
+              <Pagination
+                page={historialQuery.data.number}
+                totalPages={historialQuery.data.totalPages}
+                totalElements={historialQuery.data.totalElements}
+                disabled={historialQuery.isFetching}
+                onPageChange={setPage}
+              />
+            </div>
           )}
         </div>
       </section>

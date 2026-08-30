@@ -2,12 +2,14 @@ import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   CreateUsuarioRequestDto,
   ModifyUserRequestDto,
-  PageableParams,
-  SpringPage,
   UserResponseDto,
   UsuarioBajaDto,
   UsuarioFilterDto,
 } from "../types/usuario.types";
+import type {
+  PageableParams,
+  SpringPage,
+} from "@/shared/types/pagination.types";
 
 function cleanFilters(filter: UsuarioFilterDto) {
   return Object.fromEntries(

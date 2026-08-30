@@ -34,6 +34,11 @@ export interface CapacidadesAsistenciaResponseDto {
   puedeConsultarParteDiario: boolean;
 }
 
+export interface PeriodoDisponibleAsistenciaResponseDto {
+  anioDesde: number;
+  anioHasta: number;
+}
+
 export interface ObraAsistenciaResponseDto {
   id: number;
   nombre: string;
