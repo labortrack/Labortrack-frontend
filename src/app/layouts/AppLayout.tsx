@@ -3,6 +3,8 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
+  ClipboardList,
   HardHat,
   LayoutDashboard,
   LogOut,
@@ -14,6 +16,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "@/features/auth/hooks/useAuthActions";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import type { RolNombre } from "@/features/auth/types/auth.types";
+import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
 import {
   Avatar,
   Button,
@@ -33,18 +36,40 @@ export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
+  const capacidadesQuery = useCapacidadesAsistencia();
   const logout = useLogout();
   const location = useLocation();
   const navigate = useNavigate();
   const initials =
     `${user.nombre.at(0) ?? ""}${user.apellido.at(0) ?? ""}`.toUpperCase();
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
+  const capacidades = capacidadesQuery.isError
+    ? undefined
+    : capacidadesQuery.data;
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     ...(canManageUsers
       ? [
           { to: "/obras", label: "Obras", icon: HardHat },
           { to: "/usuarios", label: "Usuarios", icon: UserCog },
+        ]
+      : []),
+    ...(capacidades?.puedeConsultarParteDiario
+      ? [
+          {
+            to: "/asistencias",
+            label: "Asistencias",
+            icon: ClipboardCheck,
+          },
+        ]
+      : []),
+    ...(capacidades?.puedeConsultarMisAsistencias
+      ? [
+          {
+            to: "/mis-asistencias",
+            label: "Mis asistencias",
+            icon: ClipboardList,
+          },
         ]
       : []),
   ];

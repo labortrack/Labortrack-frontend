@@ -4,6 +4,7 @@ import { AppLayout } from "@/app/layouts/AppLayout";
 import { AuthLayout } from "@/app/layouts/AuthLayout";
 import { ErrorPage } from "./ErrorPage";
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from "./guards";
+import { AsistenciaCapabilityRoute } from "@/features/asistencia/components/AsistenciaCapabilityRoute";
 import { LoadingState } from "@/shared/components";
 import {
   DashboardPage,
@@ -14,6 +15,10 @@ import {
   ObrasPage,
   ConfiguracionObrasPage,
   ObraDetailPage,
+  MisAsistenciasPage,
+  MiAsistenciaDetailPage,
+  AsistenciasPage,
+  AsistenciaDetailPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -85,6 +90,46 @@ export const router = createBrowserRouter([
               {
                 path: "/configuracion-obras",
                 element: <Navigate to="/obras/configuracion" replace />,
+              },
+              {
+                path: "/mis-asistencias",
+                element: (
+                  <AsistenciaCapabilityRoute
+                    capacidad="puedeConsultarMisAsistencias"
+                  >
+                    {suspense(<MisAsistenciasPage />)}
+                  </AsistenciaCapabilityRoute>
+                ),
+              },
+              {
+                path: "/mis-asistencias/:asistenciaId",
+                element: (
+                  <AsistenciaCapabilityRoute
+                    capacidad="puedeConsultarMisAsistencias"
+                  >
+                    {suspense(<MiAsistenciaDetailPage />)}
+                  </AsistenciaCapabilityRoute>
+                ),
+              },
+              {
+                path: "/asistencias",
+                element: (
+                  <AsistenciaCapabilityRoute
+                    capacidad="puedeConsultarParteDiario"
+                  >
+                    {suspense(<AsistenciasPage />)}
+                  </AsistenciaCapabilityRoute>
+                ),
+              },
+              {
+                path: "/asistencias/:asistenciaId",
+                element: (
+                  <AsistenciaCapabilityRoute
+                    capacidad="puedeConsultarParteDiario"
+                  >
+                    {suspense(<AsistenciaDetailPage />)}
+                  </AsistenciaCapabilityRoute>
+                ),
               },
             ],
           },
