@@ -20,6 +20,7 @@ export const legajosKeys = {
     [...legajosKeys.all, "list", { filters, page, size }] as const,
   detail: (id: number) => [...legajosKeys.all, "detail", id] as const,
   historial: (id: number) => [...legajosKeys.all, "historial", id] as const,
+  fotoUrl: (id: number) => [...legajosKeys.all, "foto", id] as const,
 };
 
 export function useLegajosList(
@@ -53,6 +54,17 @@ export function useHistorialEstados(id: number | null | undefined) {
     queryKey: legajosKeys.historial(id ?? 0),
     queryFn: () => legajosApi.getHistorialEstados(id!),
     enabled: Boolean(id && id > 0),
+  });
+}
+
+export function useFotoPresignedUrl(
+  id: number | null | undefined,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: legajosKeys.fotoUrl(id ?? 0),
+    queryFn: () => legajosApi.getFotoPresignedUrl(id!),
+    enabled: Boolean(id && id > 0 && enabled),
   });
 }
 

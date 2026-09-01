@@ -1,5 +1,7 @@
 export type Genero = "MASCULINO" | "FEMENINO" | "OTRO";
 
+// ─── Request DTOs ────────────────────────────────────────────────────────────
+
 export interface CreateUsuarioRequestDto {
   nombre: string;
   apellido: string;
@@ -41,6 +43,8 @@ export interface EmpleadoBajaDto {
 export interface ReactivarLegajoRequestDto {
   motivo: string;
 }
+
+// ─── Response DTOs ───────────────────────────────────────────────────────────
 
 export interface EmpleadoResumenResponseDto {
   id: number;
@@ -87,6 +91,8 @@ export interface EmpleadoEstadoResponseDto {
   motivo: string;
 }
 
+// ─── Paginación (Spring Boot Page<T>) ────────────────────────────────────────
+
 export interface SpringPage<T> {
   content: T[];
   totalElements: number;
@@ -94,6 +100,8 @@ export interface SpringPage<T> {
   size: number;
   number: number; // 0-indexed
 }
+
+// ─── Parámetros de filtrado para el listado paginado ─────────────────────────
 
 export interface EmpleadoFilterParams {
   buscar?: string;
@@ -103,6 +111,8 @@ export interface EmpleadoFilterParams {
   size?: number;
   sort?: string;
 }
+
+// ─── Labels de presentación ──────────────────────────────────────────────────
 
 export const CATEGORIA_LABELS: Record<string, string> = {
   OFICIAL_ESPECIALIZADO: "Oficial Especializado",

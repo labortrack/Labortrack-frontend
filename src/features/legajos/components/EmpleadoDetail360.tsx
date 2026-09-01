@@ -24,6 +24,7 @@ import {
 } from "../types/legajo.types";
 import { formatDate } from "./EmpleadoTable";
 import { EmpleadoTimeline } from "./EmpleadoTimeline";
+import { AvatarMinio } from "./AvatarMinio";
 import { Badge, Button } from "@/shared/ui";
 
 interface EmpleadoDetail360Props {
@@ -57,17 +58,14 @@ export function EmpleadoDetail360({
       <div className="rounded-card border border-border bg-card p-6 shadow-soft">
         <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            {legajo.fotoPerfilKey ? (
-              <img
-                src={legajo.fotoPerfilKey}
-                alt={`${legajo.nombre} ${legajo.apellido}`}
-                className="size-20 rounded-full object-cover border-2 border-primary/20 shadow-soft"
-              />
-            ) : (
-              <div className="size-20 flex items-center justify-center rounded-full bg-primary-soft text-primary text-xl font-bold border-2 border-primary/20">
-                {initials}
-              </div>
-            )}
+            <AvatarMinio
+              empleadoId={legajo.id}
+              nombre={legajo.nombre}
+              apellido={legajo.apellido}
+              fotoPerfilKey={legajo.fotoPerfilKey}
+              className="size-20 border-2 border-primary/20 shadow-soft"
+              size="lg"
+            />
             <div>
               <div className="flex items-center gap-3 flex-wrap">
                 <h2 className="text-2xl font-bold text-foreground">

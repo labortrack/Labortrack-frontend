@@ -1,14 +1,17 @@
 import { useState } from "react";
+import { Plus } from "lucide-react";
 import type { EmpleadoFilterParams } from "../types/legajo.types";
 import {
   useHistorialEstados,
   useLegajoDetail,
   useLegajosList,
 } from "../hooks/useLegajos";
+import { AltaEmpleadoForm } from "../components/AltaEmpleadoForm";
 import { EmpleadoFilters } from "../components/EmpleadoFilters";
 import { EmpleadoTable } from "../components/EmpleadoTable";
 import { EmpleadoDetail360 } from "../components/EmpleadoDetail360";
 import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
+import { Button } from "@/shared/ui";
 
 const DEFAULT_FILTERS: EmpleadoFilterParams = {
   buscar: "",
@@ -22,6 +25,7 @@ export default function LegajosPage() {
   const [selectedEmpleadoId, setSelectedEmpleadoId] = useState<number | null>(
     null,
   );
+  const [mostrarAlta, setMostrarAlta] = useState(false);
 
   const {
     data: pageData,
@@ -117,12 +121,34 @@ export default function LegajosPage() {
     );
   }
 
+  // Vista de Alta de Empleado
+  if (mostrarAlta) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Nuevo Legajo"
+          description="Completá los datos del empleado para dar de alta un nuevo legajo digital."
+        />
+        <AltaEmpleadoForm
+          onSuccess={() => setMostrarAlta(false)}
+          onCancel={() => setMostrarAlta(false)}
+        />
+      </div>
+    );
+  }
+
   // Vista principal: Grilla de Búsqueda
   return (
     <div className="space-y-6">
       <PageHeader
         title="Gestión de Legajos Digitales"
         description="Consulta de legajos, situación contractual y localización operativa de trabajadores."
+        actions={
+          <Button onClick={() => setMostrarAlta(true)}>
+            <Plus className="size-4" />
+            Nuevo Legajo
+          </Button>
+        }
       />
 
       <EmpleadoFilters

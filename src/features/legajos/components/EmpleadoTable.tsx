@@ -1,7 +1,8 @@
 import { ArrowRight, UserX2 } from "lucide-react";
 import type { EmpleadoResumenResponseDto } from "../types/legajo.types";
 import { CATEGORIA_LABELS, ESTADO_LABELS } from "../types/legajo.types";
-import { InitialsAvatar, Pagination } from "@/shared/components";
+import { AvatarMinio } from "./AvatarMinio";
+import { Pagination } from "@/shared/components";
 import {
   Badge,
   Button,
@@ -97,15 +98,13 @@ export function EmpleadoTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    {empleado.fotoPerfilKey ? (
-                      <img
-                        src={empleado.fotoPerfilKey}
-                        alt={`${empleado.nombre} ${empleado.apellido}`}
-                        className="size-9 rounded-full object-cover border border-border"
-                      />
-                    ) : (
-                      <InitialsAvatar initials={initials} />
-                    )}
+                    <AvatarMinio
+                      empleadoId={empleado.id}
+                      nombre={empleado.nombre}
+                      apellido={empleado.apellido}
+                      fotoPerfilKey={empleado.fotoPerfilKey}
+                      size="md"
+                    />
                     <div>
                       <div className="font-medium text-foreground">
                         {empleado.apellido}, {empleado.nombre}
