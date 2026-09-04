@@ -19,6 +19,8 @@ import {
   MiAsistenciaDetailPage,
   AsistenciasPage,
   AsistenciaDetailPage,
+  DocumentacionPage,
+  TiposDocumentoPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -90,6 +92,22 @@ export const router = createBrowserRouter([
               {
                 path: "/configuracion-obras",
                 element: <Navigate to="/obras/configuracion" replace />,
+              },
+              {
+                path: "/documentacion",
+                element: (
+                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                    {suspense(<DocumentacionPage />)}
+                  </RoleRoute>
+                ),
+              },
+              {
+                path: "/documentacion/tipos",
+                element: (
+                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                    {suspense(<TiposDocumentoPage />)}
+                  </RoleRoute>
+                ),
               },
               {
                 path: "/mis-asistencias",

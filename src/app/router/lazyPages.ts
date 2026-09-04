@@ -34,4 +34,9 @@ export const AsistenciasPage = lazy(
 export const AsistenciaDetailPage = lazy(
   () => import("@/features/asistencia/pages/AsistenciaDetailPage"),
 );
-
+export const DocumentacionPage = lazy(
+  () => import("@/features/documentacion/pages/DocumentacionPage"),
+);
+export const TiposDocumentoPage = lazy(
+  () => import("@/features/documentacion/pages/TiposDocumentoPage"),
+);
