@@ -160,7 +160,7 @@ export const legajosApi = {
    */
   getFotoPresignedUrl: async (id: number): Promise<PresignedUrlResponse> => {
     const response = await httpClient.get<PresignedUrlResponse>(
-      `/api/v1/documentos/visualizarDocumento/${id}`,
+      `/legajos/${id}/foto-url`,
     );
     return response.data;
   },
