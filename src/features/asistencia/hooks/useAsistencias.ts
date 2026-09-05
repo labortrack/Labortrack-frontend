@@ -7,6 +7,7 @@ import {
 import { asistenciaApi } from "../api/asistenciaApi";
 import type {
   ConfirmarQrRequestDto,
+  ParteDiarioFiltros,
   TipoOperacionQr,
   ValidarQrRequestDto,
 } from "../types/asistencia.types";
@@ -26,6 +27,12 @@ export const asistenciaKeys = {
     ] as const,
   detallePropio: (asistenciaId: number) =>
     [...asistenciaKeys.propias(), "detalle", asistenciaId] as const,
+  parteDiario: (filtros: ParteDiarioFiltros) =>
+    [...asistenciaKeys.all, "parte-diario", filtros] as const,
+  opcionesFiltro: (fecha: string) =>
+    [...asistenciaKeys.all, "opciones-filtro", fecha] as const,
+  detalleOperativo: (asistenciaId: number) =>
+    [...asistenciaKeys.all, "detalle-operativo", asistenciaId] as const,
 };
 
 export function useCapacidadesAsistencia() {
@@ -98,5 +105,30 @@ export function useConfirmarAsistenciaQr(tipo: TipoOperacionQr) {
         queryKey: asistenciaKeys.propias(),
       });
     },
+  });
+}
+
+export function useParteDiarioAsistencia(filtros: ParteDiarioFiltros) {
+  return useQuery({
+    queryKey: asistenciaKeys.parteDiario(filtros),
+    queryFn: () => asistenciaApi.getParteDiario(filtros),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useOpcionesFiltroAsistencia(fecha: string) {
+  return useQuery({
+    queryKey: asistenciaKeys.opcionesFiltro(fecha),
+    queryFn: () => asistenciaApi.getOpcionesFiltro(fecha),
+  });
+}
+
+export function useDetalleAsistenciaOperativa(
+  asistenciaId: number | null | undefined,
+) {
+  return useQuery({
+    queryKey: asistenciaKeys.detalleOperativo(asistenciaId ?? 0),
+    queryFn: () => asistenciaApi.getDetalleOperativo(asistenciaId!),
+    enabled: Boolean(asistenciaId),
   });
 }
