@@ -1,7 +1,9 @@
+import { useRef } from "react";
 import {
   ArrowLeft,
   Briefcase,
   Calendar,
+  Camera,
   CreditCard,
   Droplet,
   FileText,
@@ -9,10 +11,12 @@ import {
   HeartPulse,
   Mail,
   MapPin,
+  Pencil,
   Phone,
   ShieldCheck,
   User,
 } from "lucide-react";
+import { toast } from "sonner";
 import type {
   EmpleadoEstadoResponseDto,
   EmpleadoResponseDto,
@@ -25,33 +29,81 @@ import {
 import { formatDate } from "./EmpleadoTable";
 import { EmpleadoTimeline } from "./EmpleadoTimeline";
 import { AvatarMinio } from "./AvatarMinio";
-import { Badge, Button } from "@/shared/ui";
+import { useActualizarFotoPerfil } from "../hooks/useLegajos";
+import { Badge, Button, Spinner } from "@/shared/ui";
 
 interface EmpleadoDetail360Props {
   legajo: EmpleadoResponseDto;
   historialEstados: EmpleadoEstadoResponseDto[];
-  onBack: () => void;
+  onBack?: () => void;
+  onEdit?: () => void;
 }
 
 export function EmpleadoDetail360({
   legajo,
   historialEstados,
   onBack,
+  onEdit,
 }: EmpleadoDetail360Props) {
-  const initials =
-    `${legajo.nombre.at(0) ?? ""}${legajo.apellido.at(0) ?? ""}`.toUpperCase();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const actualizarFotoMutation = useActualizarFotoPerfil();
+
+  const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      await actualizarFotoMutation.mutateAsync({
+        id: legajo.id,
+        foto: file,
+      });
+      toast.success("Foto de perfil actualizada exitosamente.");
+    } catch {
+      toast.error("No se pudo actualizar la foto de perfil.");
+    }
+  };
 
   return (
     <div className="space-y-6">
       {/* Botón de Retorno y Header Top */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <Button variant="outline" onClick={onBack} className="w-fit gap-2">
-          <ArrowLeft className="size-4" />
-          Volver al Listado
-        </Button>
-        <Badge variant="neutral" className="w-fit">
-          Modo Solo Lectura
-        </Badge>
+        {onBack ? (
+          <Button variant="outline" onClick={onBack} className="w-fit gap-2">
+            <ArrowLeft className="size-4" />
+            Volver al Listado
+          </Button>
+        ) : (
+          <div />
+        )}
+
+        <div className="flex items-center gap-2">
+          {onEdit ? (
+            <Button variant="outline" onClick={onEdit} className="gap-2">
+              <Pencil className="size-4" />
+              Editar Mis Datos
+            </Button>
+          ) : null}
+
+          <Button
+            variant="outline"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={actualizarFotoMutation.isPending}
+            className="gap-2"
+          >
+            {actualizarFotoMutation.isPending ? (
+              <Spinner className="size-4" />
+            ) : (
+              <Camera className="size-4" />
+            )}
+            Cambiar Foto
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/jpeg,image/png"
+            className="hidden"
+            onChange={handleFotoChange}
+          />
+        </div>
       </div>
 
       {/* Header Profile Card */}
@@ -65,6 +117,7 @@ export function EmpleadoDetail360({
               fotoPerfilKey={legajo.fotoPerfilKey}
               className="size-20 border-2 border-primary/20 shadow-soft"
               size="lg"
+              allowZoom
             />
             <div>
               <div className="flex items-center gap-3 flex-wrap">

@@ -79,18 +79,24 @@ export const legajosApi = {
   },
 
   /**
-   * PUT /ModificarEmpleado/{id}
+   * PUT /legajos/ModificarEmpleado/{id}
    * Actualización parcial de datos del legajo (JSON).
    */
+  modificarEmpleado: async (
+    id: number,
+    data: EmpleadoUpdateDto,
+  ): Promise<EmpleadoResponseDto> => {
+    const response = await httpClient.put<EmpleadoResponseDto>(
+      `/legajos/ModificarEmpleado/${id}`,
+      data,
+    );
+    return response.data;
+  },
   modificar: async (
     id: number,
     payload: EmpleadoUpdateDto,
   ): Promise<EmpleadoResponseDto> => {
-    const response = await httpClient.put<EmpleadoResponseDto>(
-      `/legajos/ModificarEmpleado/${id}`,
-      payload,
-    );
-    return response.data;
+    return legajosApi.modificarEmpleado(id, payload);
   },
 
   /**
@@ -112,18 +118,24 @@ export const legajosApi = {
   },
 
   /**
-   * DELETE /BajaEmpleado/{id}
+   * DELETE /legajos/BajaEmpleado/{id}
    * Registrar la baja de un empleado.
    */
+  bajaEmpleado: async (
+    id: number,
+    data: EmpleadoBajaDto,
+  ): Promise<EmpleadoResponseDto> => {
+    const response = await httpClient.delete<EmpleadoResponseDto>(
+      `/legajos/BajaEmpleado/${id}`,
+      { data },
+    );
+    return response.data;
+  },
   baja: async (
     id: number,
     payload: EmpleadoBajaDto,
   ): Promise<EmpleadoResponseDto> => {
-    const response = await httpClient.delete<EmpleadoResponseDto>(
-      `/legajos/BajaEmpleado/${id}`,
-      { data: payload },
-    );
-    return response.data;
+    return legajosApi.bajaEmpleado(id, payload);
   },
 
   /**

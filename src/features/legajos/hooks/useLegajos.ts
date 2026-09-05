@@ -83,11 +83,23 @@ export function useAltaEmpleado() {
 }
 
 export function useModificarEmpleado() {
-  const invalidate = useInvalidateLegajos();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: EmpleadoUpdateDto }) =>
-      legajosApi.modificar(id, payload),
-    onSuccess: invalidate,
+    mutationFn: ({
+      id,
+      data,
+      payload,
+    }: {
+      id: number;
+      data?: EmpleadoUpdateDto;
+      payload?: EmpleadoUpdateDto;
+    }) => legajosApi.modificarEmpleado(id, (data ?? payload)!),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: legajosKeys.all });
+      queryClient.invalidateQueries({
+        queryKey: legajosKeys.detail(variables.id),
+      });
+    },
   });
 }
 
@@ -101,11 +113,21 @@ export function useActualizarFotoPerfil() {
 }
 
 export function useBajaEmpleado() {
-  const invalidate = useInvalidateLegajos();
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: number; payload: EmpleadoBajaDto }) =>
-      legajosApi.baja(id, payload),
-    onSuccess: invalidate,
+    mutationFn: ({
+      id,
+      data,
+      payload,
+    }: {
+      id: number;
+      data?: EmpleadoBajaDto;
+      payload?: EmpleadoBajaDto;
+    }) => legajosApi.bajaEmpleado(id, (data ?? payload)!),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: legajosKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: legajosKeys.all });
+    },
   });
 }
 

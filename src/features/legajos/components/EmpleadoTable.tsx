@@ -1,7 +1,10 @@
-import { ArrowRight, UserX2 } from "lucide-react";
+import { useState } from "react";
+import { ArrowRight, Trash2, UserX2 } from "lucide-react";
 import type { EmpleadoResumenResponseDto } from "../types/legajo.types";
 import { CATEGORIA_LABELS, ESTADO_LABELS } from "../types/legajo.types";
 import { AvatarMinio } from "./AvatarMinio";
+import { BajaEmpleadoModal } from "./BajaEmpleadoModal";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Pagination } from "@/shared/components";
 import {
   Badge,
@@ -53,6 +56,14 @@ export function EmpleadoTable({
   onSelectEmpleado,
   isLoading,
 }: EmpleadoTableProps) {
+  const [isBajaModalOpen, setIsBajaModalOpen] = useState(false);
+  const [empleadoIdParaBaja, setEmpleadoIdParaBaja] = useState<number | null>(null);
+
+  const user = useSessionStore((state) => state.user);
+  const canBaja = user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
+
+  const empleadoSeleccionado = data.find((e) => e.id === empleadoIdParaBaja);
+
   if (!isLoading && data.length === 0) {
     return (
       <div className="flex min-h-[360px] flex-col items-center justify-center rounded-card border border-border bg-card p-8 text-center shadow-soft">
@@ -104,6 +115,7 @@ export function EmpleadoTable({
                       apellido={empleado.apellido}
                       fotoPerfilKey={empleado.fotoPerfilKey}
                       size="md"
+                      allowZoom
                     />
                     <div>
                       <div className="font-medium text-foreground">
@@ -129,18 +141,37 @@ export function EmpleadoTable({
                   {formatDate(empleado.fechaIngreso)}
                 </TableCell>
                 <TableCell className="text-right">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onSelectEmpleado(empleado.id);
-                    }}
-                    className="text-primary hover:text-primary-hover"
-                  >
-                    Ver Ficha 360°
-                    <ArrowRight className="size-4 ml-1" />
-                  </Button>
+                  <div className="flex items-center justify-end gap-1">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onSelectEmpleado(empleado.id);
+                      }}
+                      className="text-primary hover:text-primary-hover"
+                    >
+                      Ver Ficha 360°
+                      <ArrowRight className="size-4 ml-1" />
+                    </Button>
+
+                    {canBaja && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEmpleadoIdParaBaja(empleado.id);
+                          setIsBajaModalOpen(true);
+                        }}
+                        className="text-error hover:bg-error-soft hover:text-error"
+                        title="Dar de baja empleado"
+                        aria-label="Dar de baja empleado"
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             );
@@ -154,6 +185,20 @@ export function EmpleadoTable({
         totalElements={totalElements}
         onPageChange={onPageChange}
         disabled={isLoading}
+      />
+
+      <BajaEmpleadoModal
+        empleadoId={empleadoIdParaBaja}
+        isOpen={isBajaModalOpen}
+        onClose={() => {
+          setIsBajaModalOpen(false);
+          setEmpleadoIdParaBaja(null);
+        }}
+        nombreEmpleado={
+          empleadoSeleccionado
+            ? `${empleadoSeleccionado.nombre} ${empleadoSeleccionado.apellido}`
+            : undefined
+        }
       />
     </div>
   );

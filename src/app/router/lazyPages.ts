@@ -25,5 +25,8 @@ export const ObraDetailPage = lazy(
 export const LegajosPage = lazy(
   () => import("@/features/legajos/pages/LegajosPage"),
 );
+export const MisDatosPage = lazy(
+  () => import("@/features/legajos/pages/MisDatosPage"),
+);
 
 

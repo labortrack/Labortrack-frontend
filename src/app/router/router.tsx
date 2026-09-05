@@ -15,6 +15,7 @@ import {
   ConfiguracionObrasPage,
   ObraDetailPage,
   LegajosPage,
+  MisDatosPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
             element: <AppLayout />,
             children: [
               { path: "/dashboard", element: suspense(<DashboardPage />) },
+              { path: "/mis-datos", element: suspense(<MisDatosPage />) },
               {
                 path: "/usuarios",
                 element: (

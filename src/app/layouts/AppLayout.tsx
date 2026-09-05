@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  User,
   UserCheck,
   UserCog,
   X,
@@ -42,6 +43,7 @@ export function AppLayout() {
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { to: "/mis-datos", label: "Mis Datos", icon: User },
     ...(canManageUsers
       ? [
           { to: "/legajos", label: "Legajos", icon: UserCheck },
