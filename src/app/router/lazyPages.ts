@@ -28,6 +28,9 @@ export const MisAsistenciasPage = lazy(
 export const MiAsistenciaDetailPage = lazy(
   () => import("@/features/asistencia/pages/MiAsistenciaDetailPage"),
 );
+export const AsistenciaQrPage = lazy(
+  () => import("@/features/asistencia/pages/AsistenciaQrPage"),
+);
 export const AsistenciasPage = lazy(
   () => import("@/features/asistencia/pages/AsistenciasPage"),
 );
