@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Navigate,
   useLocation,
@@ -11,6 +12,8 @@ import {
   Clock3,
   FileCheck2,
   History,
+  LogIn,
+  LogOut,
   MapPin,
   Settings2,
   Users,
@@ -19,9 +22,11 @@ import { AsistenciaEstadosTimeline } from "../components/AsistenciaEstadosTimeli
 import { AsistenciaInfoItem } from "../components/AsistenciaInfoItem";
 import { AsistenciaStatusBadge } from "../components/AsistenciaStatusBadge";
 import { RegistroAsistenciaCard } from "../components/RegistroAsistenciaCard";
+import { RegistroManualAsistenciaDialog } from "../components/RegistroManualAsistenciaDialog";
 import { TrabajadorAvatar } from "../components/TrabajadorAvatar";
 import { useDetalleAsistenciaOperativa } from "../hooks/useAsistencias";
 import type { AccionAsistenciaOperativa } from "../types/asistencia.types";
+import type { TipoRegistroManual } from "../types/asistencia.types";
 import {
   ESTADO_JORNADA_LABELS,
   formatFecha,
@@ -55,6 +60,8 @@ export default function AsistenciaDetailPage() {
   const id = Number(asistenciaId);
   const idValido = Number.isInteger(id) && id > 0;
   const detalleQuery = useDetalleAsistenciaOperativa(idValido ? id : null);
+  const [tipoRegistroManual, setTipoRegistroManual] =
+    useState<TipoRegistroManual>();
 
   if (!idValido) {
     return <Navigate to={volverAAsistencias} replace />;
@@ -227,23 +234,58 @@ export default function AsistenciaDetailPage() {
               </CardHeader>
               <CardContent className="space-y-2">
                 {asistencia.accionesDisponibles.map((accion) => (
-                  <div
-                    key={accion}
-                    className="flex items-center justify-between gap-3 rounded-lg border border-border bg-subtle px-3 py-2.5"
-                  >
-                    <span className="text-sm font-semibold text-foreground">
-                      {ACCION_LABELS[accion]}
-                    </span>
-                    <span className="rounded-full bg-primary-soft px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                      Disponible
-                    </span>
-                  </div>
+                  accion === "REGISTRAR_INGRESO_MANUAL" ||
+                  accion === "REGISTRAR_EGRESO_MANUAL" ? (
+                    <Button
+                      key={accion}
+                      className="w-full justify-between"
+                      onClick={() =>
+                        setTipoRegistroManual(
+                          accion === "REGISTRAR_INGRESO_MANUAL"
+                            ? "ingreso"
+                            : "egreso",
+                        )
+                      }
+                    >
+                      <span className="flex items-center gap-2">
+                        {accion === "REGISTRAR_INGRESO_MANUAL" ? (
+                          <LogIn />
+                        ) : (
+                          <LogOut />
+                        )}
+                        {ACCION_LABELS[accion]}
+                      </span>
+                    </Button>
+                  ) : (
+                    <div
+                      key={accion}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-subtle px-3 py-2.5"
+                    >
+                      <span className="text-sm font-semibold text-foreground">
+                        {ACCION_LABELS[accion]}
+                      </span>
+                      <span className="rounded-full bg-primary-soft px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
+                        Disponible
+                      </span>
+                    </div>
+                  )
                 ))}
               </CardContent>
             </Card>
           ) : null}
         </div>
       </div>
+
+      {tipoRegistroManual ? (
+        <RegistroManualAsistenciaDialog
+          open
+          tipo={tipoRegistroManual}
+          asistencia={asistencia}
+          onOpenChange={(open) => {
+            if (!open) setTipoRegistroManual(undefined);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

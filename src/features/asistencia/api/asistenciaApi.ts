@@ -12,6 +12,10 @@ import type {
   OpcionesFiltroAsistenciaResponseDto,
   ParteDiarioFiltros,
   ParteDiarioResponseDto,
+  RegistrarEgresoManualRequestDto,
+  RegistrarIngresoManualRequestDto,
+  RegistroEgresoManualResponseDto,
+  RegistroIngresoManualResponseDto,
   ValidarQrRequestDto,
 } from "../types/asistencia.types";
 import type { SpringPage } from "@/shared/types/pagination.types";
@@ -112,6 +116,28 @@ export const asistenciaApi = {
     (
       await httpClient.get<AsistenciaOperativaDetalleResponseDto>(
         `${BASE_URL}/${asistenciaId}`,
+      )
+    ).data,
+
+  registrarIngresoManual: async (
+    asistenciaId: number,
+    request: RegistrarIngresoManualRequestDto,
+  ) =>
+    (
+      await httpClient.post<RegistroIngresoManualResponseDto>(
+        `${BASE_URL}/${asistenciaId}/ingreso-manual`,
+        request,
+      )
+    ).data,
+
+  registrarEgresoManual: async (
+    asistenciaId: number,
+    request: RegistrarEgresoManualRequestDto,
+  ) =>
+    (
+      await httpClient.post<RegistroEgresoManualResponseDto>(
+        `${BASE_URL}/${asistenciaId}/egreso-manual`,
+        request,
       )
     ).data,
 };
