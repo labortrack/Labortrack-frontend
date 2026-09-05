@@ -54,7 +54,7 @@ export function AppLayout() {
           { to: "/usuarios", label: "Usuarios", icon: UserCog },
         ]
       : []),
-    ...(capacidades?.puedeConsultarParteDiario
+    ...(capacidades?.parteDiario?.puedeConsultar
       ? [
           {
             to: "/asistencias",

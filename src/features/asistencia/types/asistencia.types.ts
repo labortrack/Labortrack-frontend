@@ -16,6 +16,13 @@ export type TipoJornada =
   | "FERIADO"
   | "NO_LABORABLE";
 
+export type EstadoJornadaTrabajo =
+  | "PROGRAMADA"
+  | "NO_TRABAJADA"
+  | "EN_CURSO"
+  | "FINALIZADA"
+  | "ANULADA";
+
 export type AccionAsistenciaPropia =
   | "REGISTRAR_INGRESO_QR"
   | "REGISTRAR_EGRESO_QR"
@@ -29,9 +36,18 @@ export type AccionAsistenciaOperativa =
   | "ANULAR_EGRESO"
   | "ANULAR_ASISTENCIA";
 
+export type AlcanceParteDiario = "GLOBAL" | "OBRA" | "CUADRILLA";
+
+export interface ParteDiarioCapacidadResponseDto {
+  puedeConsultar: boolean;
+  alcance: AlcanceParteDiario | null;
+  obraIdPredeterminada: number | null;
+  cuadrillaIdPredeterminada: number | null;
+}
+
 export interface CapacidadesAsistenciaResponseDto {
   puedeConsultarMisAsistencias: boolean;
-  puedeConsultarParteDiario: boolean;
+  parteDiario: ParteDiarioCapacidadResponseDto;
 }
 
 export interface PeriodoDisponibleAsistenciaResponseDto {
@@ -135,3 +151,79 @@ export interface ConfirmacionEgresoQrResponseDto
 export type ConfirmacionQrResponseDto =
   | ConfirmacionIngresoQrResponseDto
   | ConfirmacionEgresoQrResponseDto;
+
+export interface ParteDiarioFiltros {
+  fecha: string;
+  obraId?: number;
+  cuadrillaId?: number;
+  estado?: EstadoAsistencia;
+  trabajador?: string;
+}
+
+export interface ResumenParteDiarioResponseDto {
+  totalEsperadas: number;
+  pendientesIngreso: number;
+  presentes: number;
+  egresadas: number;
+  ausentes: number;
+  ausenciasJustificadas: number;
+  noTrabajadasComputables: number;
+  anuladas: number;
+}
+
+export interface AsistenciaParteDiarioResponseDto {
+  id: number;
+  fotoTrabajador: string | null;
+  trabajador: string;
+  obra: ObraAsistenciaResponseDto;
+  cuadrillaId: number;
+  cuadrilla: string;
+  fechaHoraIngreso: string | null;
+  fechaHoraEgreso: string | null;
+  estado: EstadoAsistencia;
+}
+
+export interface ParteDiarioResponseDto {
+  fecha: string;
+  resumen: ResumenParteDiarioResponseDto;
+  asistencias: AsistenciaParteDiarioResponseDto[];
+  mensaje: string | null;
+}
+
+export interface ObraFiltroAsistenciaResponseDto {
+  id: number;
+  nombre: string;
+  nomenclatura: string;
+}
+
+export interface CuadrillaFiltroAsistenciaResponseDto {
+  id: number;
+  nombre: string;
+  obraId: number;
+}
+
+export interface OpcionesFiltroAsistenciaResponseDto {
+  fecha: string;
+  obras: ObraFiltroAsistenciaResponseDto[];
+  cuadrillas: CuadrillaFiltroAsistenciaResponseDto[];
+}
+
+export interface AsistenciaOperativaDetalleResponseDto {
+  id: number;
+  fecha: string;
+  fotoTrabajador: string | null;
+  trabajador: string;
+  obra: ObraAsistenciaResponseDto;
+  cuadrillaId: number;
+  cuadrilla: string;
+  jornadaId: number;
+  tipoJornada: TipoJornada;
+  estadoJornada: EstadoJornadaTrabajo;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+  estado: EstadoAsistencia;
+  ingreso: RegistroAsistenciaResponseDto | null;
+  egreso: RegistroAsistenciaResponseDto | null;
+  historialEstados: EstadoAsistenciaHistorialResponseDto[];
+  accionesDisponibles: AccionAsistenciaOperativa[];
+}

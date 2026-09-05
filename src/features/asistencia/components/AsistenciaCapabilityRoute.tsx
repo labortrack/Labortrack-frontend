@@ -2,10 +2,9 @@ import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { LoadingState } from "@/shared/components";
 import { useCapacidadesAsistencia } from "../hooks/useAsistencias";
-import type { CapacidadesAsistenciaResponseDto } from "../types/asistencia.types";
 
 interface AsistenciaCapabilityRouteProps {
-  capacidad: keyof CapacidadesAsistenciaResponseDto;
+  capacidad: "misAsistencias" | "parteDiario";
   children: ReactNode;
 }
 
@@ -20,7 +19,12 @@ export function AsistenciaCapabilityRoute({
     return <LoadingState label="Comprobando acceso a asistencias..." />;
   }
 
-  if (isError || !capacidades?.[capacidad]) {
+  const tieneCapacidad =
+    capacidad === "misAsistencias"
+      ? capacidades?.puedeConsultarMisAsistencias
+      : capacidades?.parteDiario?.puedeConsultar;
+
+  if (isError || !tieneCapacidad) {
     return <Navigate to="/dashboard" replace />;
   }
 

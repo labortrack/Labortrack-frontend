@@ -96,7 +96,7 @@ export const router = createBrowserRouter([
                 path: "/mis-asistencias",
                 element: (
                   <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarMisAsistencias"
+                    capacidad="misAsistencias"
                   >
                     {suspense(<MisAsistenciasPage />)}
                   </AsistenciaCapabilityRoute>
@@ -106,7 +106,7 @@ export const router = createBrowserRouter([
                 path: "/mis-asistencias/:asistenciaId",
                 element: (
                   <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarMisAsistencias"
+                    capacidad="misAsistencias"
                   >
                     {suspense(<MiAsistenciaDetailPage />)}
                   </AsistenciaCapabilityRoute>
@@ -116,7 +116,7 @@ export const router = createBrowserRouter([
                 path: "/asistencias/qr",
                 element: (
                   <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarMisAsistencias"
+                    capacidad="misAsistencias"
                   >
                     {suspense(<AsistenciaQrPage />)}
                   </AsistenciaCapabilityRoute>
@@ -126,7 +126,7 @@ export const router = createBrowserRouter([
                 path: "/asistencias",
                 element: (
                   <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarParteDiario"
+                    capacidad="parteDiario"
                   >
                     {suspense(<AsistenciasPage />)}
                   </AsistenciaCapabilityRoute>
@@ -136,7 +136,7 @@ export const router = createBrowserRouter([
                 path: "/asistencias/:asistenciaId",
                 element: (
                   <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarParteDiario"
+                    capacidad="parteDiario"
                   >
                     {suspense(<AsistenciaDetailPage />)}
                   </AsistenciaCapabilityRoute>

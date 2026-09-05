@@ -3,11 +3,15 @@ import type {
   AsistenciaDetalleResponseDto,
   AsistenciaHistorialResponseDto,
   AsistenciaHoyResponseDto,
+  AsistenciaOperativaDetalleResponseDto,
   CapacidadesAsistenciaResponseDto,
   ConfirmacionEgresoQrResponseDto,
   ConfirmacionIngresoQrResponseDto,
   ConfirmarQrRequestDto,
   PeriodoDisponibleAsistenciaResponseDto,
+  OpcionesFiltroAsistenciaResponseDto,
+  ParteDiarioFiltros,
+  ParteDiarioResponseDto,
   ValidarQrRequestDto,
 } from "../types/asistencia.types";
 import type { SpringPage } from "@/shared/types/pagination.types";
@@ -86,6 +90,28 @@ export const asistenciaApi = {
       await httpClient.post<AsistenciaHoyResponseDto>(
         `${BASE_URL}/mias/egreso-qr/confirmar`,
         request,
+      )
+    ).data,
+
+  getParteDiario: async (filtros: ParteDiarioFiltros) =>
+    (
+      await httpClient.get<ParteDiarioResponseDto>(BASE_URL, {
+        params: filtros,
+      })
+    ).data,
+
+  getOpcionesFiltro: async (fecha: string) =>
+    (
+      await httpClient.get<OpcionesFiltroAsistenciaResponseDto>(
+        `${BASE_URL}/opciones-filtro`,
+        { params: { fecha } },
+      )
+    ).data,
+
+  getDetalleOperativo: async (asistenciaId: number) =>
+    (
+      await httpClient.get<AsistenciaOperativaDetalleResponseDto>(
+        `${BASE_URL}/${asistenciaId}`,
       )
     ).data,
 };

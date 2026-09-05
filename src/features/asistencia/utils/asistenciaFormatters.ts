@@ -3,6 +3,7 @@ import type {
   ObraAsistenciaResponseDto,
   TipoAsistencia,
   TipoJornada,
+  EstadoJornadaTrabajo,
 } from "../types/asistencia.types";
 
 export const ESTADO_ASISTENCIA_LABELS = {
@@ -27,6 +28,14 @@ export const TIPO_JORNADA_LABELS = {
   FERIADO: "Feriado",
   NO_LABORABLE: "No laborable",
 } satisfies Record<TipoJornada, string>;
+
+export const ESTADO_JORNADA_LABELS = {
+  PROGRAMADA: "Programada",
+  NO_TRABAJADA: "No trabajada",
+  EN_CURSO: "En curso",
+  FINALIZADA: "Finalizada",
+  ANULADA: "Anulada",
+} satisfies Record<EstadoJornadaTrabajo, string>;
 
 export function formatUbicacionObra(obra: ObraAsistenciaResponseDto) {
   return [obra.localidad, obra.provincia, obra.pais]
