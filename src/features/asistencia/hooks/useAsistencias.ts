@@ -1,5 +1,15 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { asistenciaApi } from "../api/asistenciaApi";
+import type {
+  ConfirmarQrRequestDto,
+  TipoOperacionQr,
+  ValidarQrRequestDto,
+} from "../types/asistencia.types";
 
 export const asistenciaKeys = {
   all: ["asistencias"] as const,
@@ -59,5 +69,34 @@ export function useDetalleAsistenciaPropia(
     queryKey: asistenciaKeys.detallePropio(asistenciaId ?? 0),
     queryFn: () => asistenciaApi.getDetallePropio(asistenciaId!),
     enabled: Boolean(asistenciaId),
+  });
+}
+
+export function useValidarAsistenciaQr(tipo: TipoOperacionQr) {
+  return useMutation({
+    mutationFn: (request: ValidarQrRequestDto) =>
+      tipo === "ingreso"
+        ? asistenciaApi.validarIngresoQr(request)
+        : asistenciaApi.validarEgresoQr(request),
+  });
+}
+
+export function useConfirmarAsistenciaQr(tipo: TipoOperacionQr) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (request: ConfirmarQrRequestDto) =>
+      tipo === "ingreso"
+        ? asistenciaApi.confirmarIngresoQr(request)
+        : asistenciaApi.confirmarEgresoQr(request),
+    onSuccess: (asistenciaActualizada) => {
+      queryClient.setQueryData(
+        asistenciaKeys.hoy(),
+        asistenciaActualizada,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: asistenciaKeys.propias(),
+      });
+    },
   });
 }

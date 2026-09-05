@@ -104,3 +104,34 @@ export interface AsistenciaDetalleResponseDto {
   egreso: RegistroAsistenciaResponseDto | null;
   historialEstados: EstadoAsistenciaHistorialResponseDto[];
 }
+
+export type TipoOperacionQr = "ingreso" | "egreso";
+
+export interface ValidarQrRequestDto {
+  tokenQr: string;
+}
+
+export interface ConfirmarQrRequestDto extends ValidarQrRequestDto {
+  asistenciaId: number;
+}
+
+export interface ConfirmacionIngresoQrResponseDto {
+  asistenciaId: number;
+  obra: ObraAsistenciaResponseDto;
+  fecha: string;
+  fechaHoraValidacion: string;
+  empleadoId: number;
+  trabajador: string;
+  cuadrillaId: number;
+  cuadrilla: string;
+  estadoActual: EstadoAsistencia;
+}
+
+export interface ConfirmacionEgresoQrResponseDto
+  extends ConfirmacionIngresoQrResponseDto {
+  fechaHoraIngreso: string;
+}
+
+export type ConfirmacionQrResponseDto =
+  | ConfirmacionIngresoQrResponseDto
+  | ConfirmacionEgresoQrResponseDto;

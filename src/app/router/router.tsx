@@ -17,6 +17,7 @@ import {
   ObraDetailPage,
   MisAsistenciasPage,
   MiAsistenciaDetailPage,
+  AsistenciaQrPage,
   AsistenciasPage,
   AsistenciaDetailPage,
 } from "./lazyPages";
@@ -108,6 +109,16 @@ export const router = createBrowserRouter([
                     capacidad="puedeConsultarMisAsistencias"
                   >
                     {suspense(<MiAsistenciaDetailPage />)}
+                  </AsistenciaCapabilityRoute>
+                ),
+              },
+              {
+                path: "/asistencias/qr",
+                element: (
+                  <AsistenciaCapabilityRoute
+                    capacidad="puedeConsultarMisAsistencias"
+                  >
+                    {suspense(<AsistenciaQrPage />)}
                   </AsistenciaCapabilityRoute>
                 ),
               },

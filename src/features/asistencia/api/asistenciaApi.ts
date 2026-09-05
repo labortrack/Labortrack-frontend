@@ -4,7 +4,11 @@ import type {
   AsistenciaHistorialResponseDto,
   AsistenciaHoyResponseDto,
   CapacidadesAsistenciaResponseDto,
+  ConfirmacionEgresoQrResponseDto,
+  ConfirmacionIngresoQrResponseDto,
+  ConfirmarQrRequestDto,
   PeriodoDisponibleAsistenciaResponseDto,
+  ValidarQrRequestDto,
 } from "../types/asistencia.types";
 import type { SpringPage } from "@/shared/types/pagination.types";
 
@@ -50,6 +54,38 @@ export const asistenciaApi = {
     (
       await httpClient.get<AsistenciaDetalleResponseDto>(
         `${BASE_URL}/mias/${asistenciaId}`,
+      )
+    ).data,
+
+  validarIngresoQr: async (request: ValidarQrRequestDto) =>
+    (
+      await httpClient.post<ConfirmacionIngresoQrResponseDto>(
+        `${BASE_URL}/mias/ingreso-qr/validar`,
+        request,
+      )
+    ).data,
+
+  confirmarIngresoQr: async (request: ConfirmarQrRequestDto) =>
+    (
+      await httpClient.post<AsistenciaHoyResponseDto>(
+        `${BASE_URL}/mias/ingreso-qr/confirmar`,
+        request,
+      )
+    ).data,
+
+  validarEgresoQr: async (request: ValidarQrRequestDto) =>
+    (
+      await httpClient.post<ConfirmacionEgresoQrResponseDto>(
+        `${BASE_URL}/mias/egreso-qr/validar`,
+        request,
+      )
+    ).data,
+
+  confirmarEgresoQr: async (request: ConfirmarQrRequestDto) =>
+    (
+      await httpClient.post<AsistenciaHoyResponseDto>(
+        `${BASE_URL}/mias/egreso-qr/confirmar`,
+        request,
       )
     ).data,
 };
