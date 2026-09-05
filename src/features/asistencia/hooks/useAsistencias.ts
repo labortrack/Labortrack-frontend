@@ -8,6 +8,10 @@ import { asistenciaApi } from "../api/asistenciaApi";
 import type {
   ConfirmarQrRequestDto,
   ParteDiarioFiltros,
+  RegistrarEgresoManualRequestDto,
+  RegistrarIngresoManualRequestDto,
+  RegistroManualResponseDto,
+  TipoRegistroManual,
   TipoOperacionQr,
   ValidarQrRequestDto,
 } from "../types/asistencia.types";
@@ -130,5 +134,60 @@ export function useDetalleAsistenciaOperativa(
     queryKey: asistenciaKeys.detalleOperativo(asistenciaId ?? 0),
     queryFn: () => asistenciaApi.getDetalleOperativo(asistenciaId!),
     enabled: Boolean(asistenciaId),
+  });
+}
+
+export function useRegistrarAsistenciaManual(
+  tipo: TipoRegistroManual,
+  asistenciaId: number,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    RegistroManualResponseDto,
+    Error,
+    RegistrarIngresoManualRequestDto | RegistrarEgresoManualRequestDto
+  >({
+    mutationFn: (
+      request:
+        | RegistrarIngresoManualRequestDto
+        | RegistrarEgresoManualRequestDto,
+    ) =>
+      tipo === "ingreso"
+        ? asistenciaApi.registrarIngresoManual(
+            asistenciaId,
+            request as RegistrarIngresoManualRequestDto,
+          )
+        : asistenciaApi.registrarEgresoManual(
+            asistenciaId,
+            request as RegistrarEgresoManualRequestDto,
+          ),
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: asistenciaKeys.detalleOperativo(asistenciaId),
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [...asistenciaKeys.all, "parte-diario"],
+        }),
+      ]);
+    },
+    onError: async (error) => {
+      if (
+        typeof error === "object" &&
+        error !== null &&
+        "response" in error &&
+        (error as { response?: { status?: number } }).response?.status === 409
+      ) {
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: asistenciaKeys.detalleOperativo(asistenciaId),
+          }),
+          queryClient.invalidateQueries({
+            queryKey: [...asistenciaKeys.all, "parte-diario"],
+          }),
+        ]);
+      }
+    },
   });
 }

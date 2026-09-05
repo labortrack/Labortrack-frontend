@@ -152,6 +152,36 @@ export type ConfirmacionQrResponseDto =
   | ConfirmacionIngresoQrResponseDto
   | ConfirmacionEgresoQrResponseDto;
 
+export interface RegistrarIngresoManualRequestDto {
+  horaIngreso: string;
+  motivo: string;
+}
+
+export interface RegistrarEgresoManualRequestDto {
+  horaEgreso: string;
+  motivo: string;
+}
+
+export interface RegistroIngresoManualResponseDto {
+  asistenciaId: number;
+  fechaHoraIngreso: string;
+  tipoIngreso: TipoAsistencia;
+  estadoActual: EstadoAsistencia;
+}
+
+export interface RegistroEgresoManualResponseDto {
+  asistenciaId: number;
+  fechaHoraEgreso: string;
+  tipoEgreso: TipoAsistencia;
+  estadoActual: EstadoAsistencia;
+}
+
+export type RegistroManualResponseDto =
+  | RegistroIngresoManualResponseDto
+  | RegistroEgresoManualResponseDto;
+
+export type TipoRegistroManual = "ingreso" | "egreso";
+
 export interface ParteDiarioFiltros {
   fecha: string;
   obraId?: number;
