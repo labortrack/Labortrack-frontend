@@ -12,18 +12,39 @@ import type {
 
 // ─── Base URLs ────────────────────────────────────────────────────────────────
 
-const TIPOS_BASE = "/api/tipos-documento";
-const DOCS_BASE = "/api/documentos";
+const TIPOS_BASE = "/api/v1/tipos-documento";
+const DOCS_BASE = "/api/v1/documentos";
+const LEGAJOS_BASE = "/legajos";
+
+// ─── Tipos locales ────────────────────────────────────────────────────────────
+
+/** Subconjunto de EmpleadoResumenResponseDto que necesitamos en el combobox. */
+export interface EmpleadoResumenDto {
+  id: number;
+  nombre: string;
+  apellido: string;
+  dni: string;
+  estadoActual: string;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Elimina claves con valores vacíos o indefinidos para no ensuciar los query params. */
-function cleanFilters(filter: DocumentoFilterDto) {
-  return Object.fromEntries(
-    Object.entries(filter).filter(
-      ([, value]) => value !== "" && value !== undefined,
-    ),
-  );
+/** Normaliza los filtros para coincidir con los RequestParam del backend Spring. */
+function mapDocumentoFilters(filter: DocumentoFilterDto) {
+  const params: Record<string, unknown> = {};
+  if (filter.nombreDocumento?.trim()) {
+    params.buscarPorNombre = filter.nombreDocumento.trim();
+  }
+  if (filter.tipoDocumentoId) {
+    params.tipoDocumentoId = filter.tipoDocumentoId;
+  }
+  if (filter.empleadoId) {
+    params.empleadoId = filter.empleadoId;
+  }
+  if (filter.visibilidad) {
+    params.visibilidad = filter.visibilidad;
+  }
+  return params;
 }
 
 // ─── API ──────────────────────────────────────────────────────────────────────
@@ -61,13 +82,13 @@ export const documentacionApi = {
   /** Reactiva un Tipo de Documento previamente dado de baja. */
   reactivarTipoDocumento: async (id: number) =>
     (
-      await httpClient.patch<TipoDocumentoDTO>(
+      await httpClient.patch<{ mensaje: string }>(
         `${TIPOS_BASE}/reactivarTipoDocumento/${id}`,
         null,
       )
     ).data,
 
-  /** Obtiene el listado completo de Tipos de Documento (sin paginación). */
+  /** Obtiene el listado completo de Tipos de Documento (histórico completo). */
   listadoCompletoTiposDocumento: async () =>
     (
       await httpClient.get<TipoDocumentoDTO[]>(`${TIPOS_BASE}/listado-completo`)
@@ -81,12 +102,11 @@ export const documentacionApi = {
       )
     ).data,
 
-  /** Listado paginado de Tipos de Documento. */
-  listarTiposDocumento: async (pageable: PageableParams) =>
+  /** Listado de Tipos de Documento activos. */
+  listarTiposDocumento: async () =>
     (
-      await httpClient.get<SpringPage<TipoDocumentoDTO>>(
+      await httpClient.get<TipoDocumentoDTO[]>(
         `${TIPOS_BASE}/listarTiposDocumento`,
-        { params: { ...pageable } },
       )
     ).data,
 
@@ -153,7 +173,21 @@ export const documentacionApi = {
     (
       await httpClient.get<SpringPage<DocumentoRespuestaDto>>(
         `${DOCS_BASE}/ListarDocumentos`,
-        { params: { ...cleanFilters(filter), ...pageable } },
+        { params: { ...mapDocumentoFilters(filter), ...pageable } },
+      )
+    ).data,
+
+  // ── Empleados (para el combobox de asociación de documentos) ────────────────
+
+  /**
+   * Busca empleados paginados filtrando por texto libre.
+   * Llama a GET /legajos/EmpleadosPaginados?buscar={texto}
+   */
+  buscarEmpleados: async (buscar: string) =>
+    (
+      await httpClient.get<SpringPage<EmpleadoResumenDto>>(
+        `${LEGAJOS_BASE}/EmpleadosPaginados`,
+        { params: { buscar: buscar.trim() || undefined, size: 10, page: 0, sort: "usuario.apellido,asc" } },
       )
     ).data,
 };

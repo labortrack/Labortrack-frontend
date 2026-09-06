@@ -2,8 +2,8 @@ import { useState } from "react";
 import {
   Brain,
   Edit2,
+  Eye,
   FileText,
-  Plus,
   RotateCcw,
   Trash2,
 } from "lucide-react";
@@ -33,17 +33,22 @@ import type { TipoDocumentoDTO } from "../types/documentacion.types";
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface TiposDocumentoTableProps {
+  onSelect?: (tipo: TipoDocumentoDTO) => void;
   onEdit: (tipo: TipoDocumentoDTO) => void;
   onBaja: (tipo: TipoDocumentoDTO) => void;
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
 
-export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps) {
+export function TiposDocumentoTable({
+  onSelect,
+  onEdit,
+  onBaja,
+}: TiposDocumentoTableProps) {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
 
-  const query = useTiposDocumento(page, PAGE_SIZE);
+  const query = useTiposDocumento();
 
   // ── Estados de carga / error / vacío ───────────────────────────────────────
   if (query.isPending) {
@@ -64,7 +69,12 @@ export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps
     );
   }
 
-  if (!query.data?.content.length) {
+  const items = query.data ?? [];
+  const totalElements = items.length;
+  const totalPages = Math.ceil(totalElements / PAGE_SIZE);
+  const paginatedItems = items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+
+  if (!items.length) {
     return (
       <EmptyState
         title="Sin tipos de documento"
@@ -99,8 +109,12 @@ export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps
           </TableRow>
         </TableHeader>
         <TableBody>
-          {query.data.content.map((tipo) => (
-            <TableRow key={tipo.idTipoDocumento}>
+          {paginatedItems.map((tipo) => (
+            <TableRow
+              key={tipo.idTipoDocumento}
+              className="cursor-pointer transition-colors hover:bg-muted/60"
+              onClick={() => onSelect?.(tipo)}
+            >
               {/* Nombre */}
               <TableCell>
                 <div className="flex items-center gap-2">
@@ -136,7 +150,7 @@ export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps
 
               {/* Categoría */}
               <TableCell className="hidden lg:table-cell">
-                <Badge variant="outline">{tipo.categoriaRuteo}</Badge>
+                <Badge variant="neutral">{tipo.categoriaRuteo}</Badge>
               </TableCell>
 
               {/* Visibilidad */}
@@ -147,15 +161,38 @@ export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps
               </TableCell>
 
               {/* Acciones */}
-              <TableCell>
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-end gap-1">
+                  {onSelect && (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onSelect(tipo);
+                          }}
+                          aria-label={`Ver detalle 360° de tipo ${tipo.nombre}`}
+                        >
+                          <Eye className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Ver Vista 360°</TooltipContent>
+                    </Tooltip>
+                  )}
+
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="size-8"
-                        onClick={() => onEdit(tipo)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEdit(tipo);
+                        }}
                         aria-label={`Editar tipo ${tipo.nombre}`}
                       >
                         <Edit2 />
@@ -170,7 +207,10 @@ export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps
                         variant="ghost"
                         size="icon"
                         className="size-8 hover:bg-error-soft hover:text-error"
-                        onClick={() => onBaja(tipo)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onBaja(tipo);
+                        }}
                         aria-label={`Dar de baja tipo ${tipo.nombre}`}
                       >
                         <Trash2 />
@@ -186,9 +226,9 @@ export function TiposDocumentoTable({ onEdit, onBaja }: TiposDocumentoTableProps
       </Table>
 
       <Pagination
-        page={query.data.number}
-        totalPages={query.data.totalPages}
-        totalElements={query.data.totalElements}
+        page={page}
+        totalPages={totalPages}
+        totalElements={totalElements}
         disabled={query.isFetching}
         onPageChange={setPage}
       />

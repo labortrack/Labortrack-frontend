@@ -53,7 +53,6 @@ export function AppLayout() {
       ? [
           { to: "/obras", label: "Obras", icon: HardHat },
           { to: "/usuarios", label: "Usuarios", icon: UserCog },
-          { to: "/documentacion/tipos", label: "Tipos de Doc.", icon: FileText },
         ]
       : []),
     { to: "/documentacion", label: "Documentación", icon: FileText },

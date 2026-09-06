@@ -118,7 +118,11 @@ export function DocumentosTable({
         </TableHeader>
         <TableBody>
           {query.data.content.map((doc) => (
-            <TableRow key={doc.idDocumento}>
+            <TableRow
+              key={doc.idDocumento}
+              className="cursor-pointer transition-colors hover:bg-muted/60"
+              onClick={() => onPrevisualizar(doc)}
+            >
               {/* Nombre del documento */}
               <TableCell>
                 <p className="font-medium leading-tight">{doc.nombreDocumento}</p>
@@ -129,7 +133,7 @@ export function DocumentosTable({
 
               {/* Tipo */}
               <TableCell className="hidden md:table-cell">
-                <Badge variant="outline">{doc.tipoDocumentoNombre}</Badge>
+                <Badge variant="neutral">{doc.tipoDocumentoNombre}</Badge>
               </TableCell>
 
               {/* Fecha de subida */}
@@ -158,23 +162,26 @@ export function DocumentosTable({
                 )}
               </TableCell>
 
-              {/* Acciones — todos pueden ver y descargar */}
-              <TableCell>
+              {/* Acciones */}
+              <TableCell onClick={(e) => e.stopPropagation()}>
                 <div className="flex justify-end gap-1">
-                  {/* ── Previsualizar (todos los roles) ── */}
+                  {/* ── Vista 360 / Detalle (todos los roles) ── */}
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
                         variant="ghost"
                         size="icon"
                         className="size-8"
-                        onClick={() => onPrevisualizar(doc)}
-                        aria-label={`Previsualizar ${doc.nombreDocumento}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onPrevisualizar(doc);
+                        }}
+                        aria-label={`Ver detalle 360° de ${doc.nombreDocumento}`}
                       >
                         <Eye />
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Previsualizar</TooltipContent>
+                    <TooltipContent>Ver Vista 360°</TooltipContent>
                   </Tooltip>
 
                   {/* ── Descargar (todos los roles) ── */}
@@ -184,7 +191,10 @@ export function DocumentosTable({
                         variant="ghost"
                         size="icon"
                         className="size-8"
-                        onClick={() => onDescargar(doc)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDescargar(doc);
+                        }}
                         aria-label={`Descargar ${doc.nombreDocumento}`}
                       >
                         <Download />
@@ -201,7 +211,10 @@ export function DocumentosTable({
                           variant="ghost"
                           size="icon"
                           className="size-8 hover:bg-error-soft hover:text-error"
-                          onClick={() => onBaja(doc)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onBaja(doc);
+                          }}
                           aria-label={`Dar de baja ${doc.nombreDocumento}`}
                         >
                           <Trash2 />

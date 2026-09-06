@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -42,14 +43,13 @@ function useInvalidateDocumentos() {
 // ─── Hooks de Tipos de Documento ──────────────────────────────────────────────
 
 /**
- * Listado paginado de Tipos de Documento.
+ * Listado de Tipos de Documento.
  * Usado para la tabla de administración del parámetro.
  */
-export function useTiposDocumento(page = 0, size = 10) {
+export function useTiposDocumento() {
   return useQuery({
-    queryKey: documentacionKeys.tiposList(page, size),
-    queryFn: () =>
-      documentacionApi.listarTiposDocumento({ page, size, sort: "nombre,asc" }),
+    queryKey: documentacionKeys.tiposAll,
+    queryFn: () => documentacionApi.listarTiposDocumento(),
     placeholderData: keepPreviousData,
   });
 }
@@ -156,5 +156,29 @@ export function useReactivarDocumento() {
   return useMutation({
     mutationFn: (id: number) => documentacionApi.reactivarDocumento(id),
     onSuccess: invalidate,
+  });
+}
+
+// ─── Hook: Búsqueda de empleados con debounce ──────────────────────────────────
+
+/**
+ * Busca empleados por nombre/apellido con 300 ms de debounce.
+ * Solo dispara la consulta cuando `buscar` tiene al menos 1 carácter.
+ * Ideal para poblar el combobox de "Empleado Asociado" en el formulario de subida.
+ */
+export function useBuscarEmpleados(buscar: string) {
+  const [debouncedBuscar, setDebouncedBuscar] = useState(buscar);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedBuscar(buscar), 300);
+    return () => clearTimeout(timer);
+  }, [buscar]);
+
+  return useQuery({
+    queryKey: ["empleados", "buscar", debouncedBuscar],
+    queryFn: () => documentacionApi.buscarEmpleados(debouncedBuscar),
+    enabled: debouncedBuscar.trim().length > 0,
+    placeholderData: keepPreviousData,
+    staleTime: 30_000,
   });
 }
