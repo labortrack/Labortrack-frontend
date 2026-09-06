@@ -208,6 +208,31 @@ export type AnulacionRegistroResponseDto =
 
 export type TipoAnulacionRegistro = "ingreso" | "egreso";
 
+export interface RegularizarAsistenciaOmitidaRequestDto {
+  horaIngreso: string;
+  horaEgreso: string;
+  motivo: string;
+}
+
+export interface RegularizacionAsistenciaOmitidaResponseDto {
+  asistenciaId: number;
+  fechaHoraIngreso: string;
+  tipoIngreso: TipoAsistencia;
+  fechaHoraEgreso: string;
+  tipoEgreso: TipoAsistencia;
+  estadoActual: EstadoAsistencia;
+}
+
+export interface AnularAsistenciaRequestDto {
+  motivo: string;
+}
+
+export interface AnulacionAsistenciaResponseDto {
+  asistenciaId: number;
+  fechaHoraAnulacion: string;
+  estadoActual: EstadoAsistencia;
+}
+
 export interface ParteDiarioFiltros {
   fecha: string;
   obraId?: number;
