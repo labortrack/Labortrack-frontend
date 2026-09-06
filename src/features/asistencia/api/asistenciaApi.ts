@@ -2,6 +2,8 @@ import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   AnulacionEgresoResponseDto,
   AnulacionIngresoResponseDto,
+  AnulacionAsistenciaResponseDto,
+  AnularAsistenciaRequestDto,
   AnularEgresoRequestDto,
   AnularIngresoRequestDto,
   AsistenciaDetalleResponseDto,
@@ -20,6 +22,8 @@ import type {
   RegistrarIngresoManualRequestDto,
   RegistroEgresoManualResponseDto,
   RegistroIngresoManualResponseDto,
+  RegularizacionAsistenciaOmitidaResponseDto,
+  RegularizarAsistenciaOmitidaRequestDto,
   ValidarQrRequestDto,
 } from "../types/asistencia.types";
 import type { SpringPage } from "@/shared/types/pagination.types";
@@ -163,6 +167,28 @@ export const asistenciaApi = {
     (
       await httpClient.post<AnulacionEgresoResponseDto>(
         `${BASE_URL}/${asistenciaId}/anular-egreso`,
+        request,
+      )
+    ).data,
+
+  regularizarAsistenciaOmitida: async (
+    asistenciaId: number,
+    request: RegularizarAsistenciaOmitidaRequestDto,
+  ) =>
+    (
+      await httpClient.post<RegularizacionAsistenciaOmitidaResponseDto>(
+        `${BASE_URL}/${asistenciaId}/regularizacion-extemporanea`,
+        request,
+      )
+    ).data,
+
+  anularAsistencia: async (
+    asistenciaId: number,
+    request: AnularAsistenciaRequestDto,
+  ) =>
+    (
+      await httpClient.post<AnulacionAsistenciaResponseDto>(
+        `${BASE_URL}/${asistenciaId}/anular-asistencia`,
         request,
       )
     ).data,

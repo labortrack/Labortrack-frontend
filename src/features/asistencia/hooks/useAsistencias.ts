@@ -8,6 +8,8 @@ import {
 import { asistenciaApi } from "../api/asistenciaApi";
 import type {
   AnulacionRegistroResponseDto,
+  AnulacionAsistenciaResponseDto,
+  AnularAsistenciaRequestDto,
   AnularEgresoRequestDto,
   AnularIngresoRequestDto,
   ConfirmarQrRequestDto,
@@ -15,6 +17,8 @@ import type {
   RegistrarEgresoManualRequestDto,
   RegistrarIngresoManualRequestDto,
   RegistroManualResponseDto,
+  RegularizacionAsistenciaOmitidaResponseDto,
+  RegularizarAsistenciaOmitidaRequestDto,
   TipoAnulacionRegistro,
   TipoRegistroManual,
   TipoOperacionQr,
@@ -222,6 +226,48 @@ export function useAnularRegistroAsistencia(
             asistenciaId,
             request as AnularEgresoRequestDto,
           ),
+    onSuccess: async () => {
+      await invalidarConsultasOperativas(queryClient, asistenciaId);
+    },
+    onError: async (error) => {
+      if (esConflictoDeActualizacion(error)) {
+        await invalidarConsultasOperativas(queryClient, asistenciaId);
+      }
+    },
+  });
+}
+
+export function useRegularizarAsistenciaOmitida(asistenciaId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    RegularizacionAsistenciaOmitidaResponseDto,
+    Error,
+    RegularizarAsistenciaOmitidaRequestDto
+  >({
+    mutationFn: (request) =>
+      asistenciaApi.regularizarAsistenciaOmitida(asistenciaId, request),
+    onSuccess: async () => {
+      await invalidarConsultasOperativas(queryClient, asistenciaId);
+    },
+    onError: async (error) => {
+      if (esConflictoDeActualizacion(error)) {
+        await invalidarConsultasOperativas(queryClient, asistenciaId);
+      }
+    },
+  });
+}
+
+export function useAnularAsistencia(asistenciaId: number) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    AnulacionAsistenciaResponseDto,
+    Error,
+    AnularAsistenciaRequestDto
+  >({
+    mutationFn: (request) =>
+      asistenciaApi.anularAsistencia(asistenciaId, request),
     onSuccess: async () => {
       await invalidarConsultasOperativas(queryClient, asistenciaId);
     },

@@ -11,3 +11,9 @@ export const anulacionRegistroSchema = z.object({
 export type AnulacionRegistroForm = z.infer<
   typeof anulacionRegistroSchema
 >;
+
+export const anulacionAsistenciaSchema = anulacionRegistroSchema;
+
+export type AnulacionAsistenciaForm = z.infer<
+  typeof anulacionAsistenciaSchema
+>;

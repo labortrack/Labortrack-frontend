@@ -21,10 +21,12 @@ import {
 } from "lucide-react";
 import { AsistenciaEstadosTimeline } from "../components/AsistenciaEstadosTimeline";
 import { AnulacionRegistroAsistenciaDialog } from "../components/AnulacionRegistroAsistenciaDialog";
+import { AnulacionAsistenciaDialog } from "../components/AnulacionAsistenciaDialog";
 import { AsistenciaInfoItem } from "../components/AsistenciaInfoItem";
 import { AsistenciaStatusBadge } from "../components/AsistenciaStatusBadge";
 import { RegistroAsistenciaCard } from "../components/RegistroAsistenciaCard";
 import { RegistroManualAsistenciaDialog } from "../components/RegistroManualAsistenciaDialog";
+import { RegularizacionAsistenciaDialog } from "../components/RegularizacionAsistenciaDialog";
 import { TrabajadorAvatar } from "../components/TrabajadorAvatar";
 import { useDetalleAsistenciaOperativa } from "../hooks/useAsistencias";
 import type {
@@ -69,6 +71,9 @@ export default function AsistenciaDetailPage() {
     useState<TipoRegistroManual>();
   const [tipoAnulacionRegistro, setTipoAnulacionRegistro] =
     useState<TipoAnulacionRegistro>();
+  const [regularizacionAbierta, setRegularizacionAbierta] = useState(false);
+  const [anulacionAsistenciaAbierta, setAnulacionAsistenciaAbierta] =
+    useState(false);
 
   if (!idValido) {
     return <Navigate to={volverAAsistencias} replace />;
@@ -280,18 +285,29 @@ export default function AsistenciaDetailPage() {
                         {ACCION_LABELS[accion]}
                       </span>
                     </Button>
-                  ) : (
-                    <div
+                  ) : accion === "REGULARIZAR_ASISTENCIA_OMITIDA" ? (
+                    <Button
                       key={accion}
-                      className="flex items-center justify-between gap-3 rounded-lg border border-border bg-subtle px-3 py-2.5"
+                      className="w-full justify-between"
+                      onClick={() => setRegularizacionAbierta(true)}
                     >
-                      <span className="text-sm font-semibold text-foreground">
+                      <span className="flex items-center gap-2">
+                        <FileCheck2 />
                         {ACCION_LABELS[accion]}
                       </span>
-                      <span className="rounded-full bg-primary-soft px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-primary">
-                        Disponible
+                    </Button>
+                  ) : (
+                    <Button
+                      key={accion}
+                      variant="destructive"
+                      className="w-full justify-between"
+                      onClick={() => setAnulacionAsistenciaAbierta(true)}
+                    >
+                      <span className="flex items-center gap-2">
+                        <CircleX />
+                        {ACCION_LABELS[accion]}
                       </span>
-                    </div>
+                    </Button>
                   )
                 ))}
               </CardContent>
@@ -319,6 +335,22 @@ export default function AsistenciaDetailPage() {
           onOpenChange={(open) => {
             if (!open) setTipoAnulacionRegistro(undefined);
           }}
+        />
+      ) : null}
+
+      {regularizacionAbierta ? (
+        <RegularizacionAsistenciaDialog
+          open
+          asistencia={asistencia}
+          onOpenChange={setRegularizacionAbierta}
+        />
+      ) : null}
+
+      {anulacionAsistenciaAbierta ? (
+        <AnulacionAsistenciaDialog
+          open
+          asistencia={asistencia}
+          onOpenChange={setAnulacionAsistenciaAbierta}
         />
       ) : null}
     </div>
