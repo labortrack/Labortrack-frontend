@@ -1,20 +1,48 @@
 import {
   keepPreviousData,
+  type QueryClient,
   useMutation,
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
 import { asistenciaApi } from "../api/asistenciaApi";
 import type {
+  AnulacionRegistroResponseDto,
+  AnularEgresoRequestDto,
+  AnularIngresoRequestDto,
   ConfirmarQrRequestDto,
   ParteDiarioFiltros,
   RegistrarEgresoManualRequestDto,
   RegistrarIngresoManualRequestDto,
   RegistroManualResponseDto,
+  TipoAnulacionRegistro,
   TipoRegistroManual,
   TipoOperacionQr,
   ValidarQrRequestDto,
 } from "../types/asistencia.types";
+
+async function invalidarConsultasOperativas(
+  queryClient: QueryClient,
+  asistenciaId: number,
+) {
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: asistenciaKeys.detalleOperativo(asistenciaId),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: [...asistenciaKeys.all, "parte-diario"],
+    }),
+  ]);
+}
+
+function esConflictoDeActualizacion(error: unknown) {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "response" in error &&
+    (error as { response?: { status?: number } }).response?.status === 409
+  );
+}
 
 export const asistenciaKeys = {
   all: ["asistencias"] as const,
@@ -163,30 +191,43 @@ export function useRegistrarAsistenciaManual(
             request as RegistrarEgresoManualRequestDto,
           ),
     onSuccess: async () => {
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: asistenciaKeys.detalleOperativo(asistenciaId),
-        }),
-        queryClient.invalidateQueries({
-          queryKey: [...asistenciaKeys.all, "parte-diario"],
-        }),
-      ]);
+      await invalidarConsultasOperativas(queryClient, asistenciaId);
     },
     onError: async (error) => {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "response" in error &&
-        (error as { response?: { status?: number } }).response?.status === 409
-      ) {
-        await Promise.all([
-          queryClient.invalidateQueries({
-            queryKey: asistenciaKeys.detalleOperativo(asistenciaId),
-          }),
-          queryClient.invalidateQueries({
-            queryKey: [...asistenciaKeys.all, "parte-diario"],
-          }),
-        ]);
+      if (esConflictoDeActualizacion(error)) {
+        await invalidarConsultasOperativas(queryClient, asistenciaId);
+      }
+    },
+  });
+}
+
+export function useAnularRegistroAsistencia(
+  tipo: TipoAnulacionRegistro,
+  asistenciaId: number,
+) {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    AnulacionRegistroResponseDto,
+    Error,
+    AnularIngresoRequestDto | AnularEgresoRequestDto
+  >({
+    mutationFn: (request) =>
+      tipo === "ingreso"
+        ? asistenciaApi.anularIngreso(
+            asistenciaId,
+            request as AnularIngresoRequestDto,
+          )
+        : asistenciaApi.anularEgreso(
+            asistenciaId,
+            request as AnularEgresoRequestDto,
+          ),
+    onSuccess: async () => {
+      await invalidarConsultasOperativas(queryClient, asistenciaId);
+    },
+    onError: async (error) => {
+      if (esConflictoDeActualizacion(error)) {
+        await invalidarConsultasOperativas(queryClient, asistenciaId);
       }
     },
   });

@@ -14,11 +14,10 @@ import type {
   TipoRegistroManual,
 } from "../types/asistencia.types";
 import {
-  formatFecha,
   formatHora,
   TIPO_ASISTENCIA_LABELS,
 } from "../utils/asistenciaFormatters";
-import { AsistenciaStatusBadge } from "./AsistenciaStatusBadge";
+import { ResumenOperacionAsistencia } from "./ResumenOperacionAsistencia";
 import { FormField } from "@/shared/components";
 import {
   Alert,
@@ -40,21 +39,6 @@ interface RegistroManualAsistenciaDialogProps {
   tipo: TipoRegistroManual;
   asistencia: AsistenciaOperativaDetalleResponseDto;
   onOpenChange: (open: boolean) => void;
-}
-
-function DatoSoloLectura({
-  label,
-  value,
-}: {
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="space-y-1">
-      <p className="text-xs font-semibold text-foreground-muted">{label}</p>
-      <p className="text-sm font-semibold text-foreground">{value}</p>
-    </div>
-  );
 }
 
 export function RegistroManualAsistenciaDialog({
@@ -159,30 +143,23 @@ export function RegistroManualAsistenciaDialog({
           </div>
         </DialogHeader>
 
-        <div className="mb-5 grid gap-4 rounded-lg border border-border bg-subtle p-4 sm:grid-cols-2">
-          <DatoSoloLectura label="Trabajador" value={asistencia.trabajador} />
-          <DatoSoloLectura label="Obra" value={asistencia.obra.nombre} />
-          <DatoSoloLectura label="Cuadrilla" value={asistencia.cuadrilla} />
-          <DatoSoloLectura label="Fecha" value={formatFecha(asistencia.fecha)} />
-          {!esIngreso && asistencia.ingreso ? (
-            <>
-              <DatoSoloLectura
-                label="Hora de ingreso registrada"
-                value={formatHora(asistencia.ingreso.fechaHora)}
-              />
-              <DatoSoloLectura
-                label="Tipo de ingreso"
-                value={TIPO_ASISTENCIA_LABELS[asistencia.ingreso.tipo]}
-              />
-            </>
-          ) : null}
-          <div className="space-y-1 sm:col-span-2">
-            <p className="text-xs font-semibold text-foreground-muted">
-              Estado actual
-            </p>
-            <AsistenciaStatusBadge estado={asistencia.estado} />
-          </div>
-        </div>
+        <ResumenOperacionAsistencia
+          asistencia={asistencia}
+          datosAdicionales={
+            !esIngreso && asistencia.ingreso
+              ? [
+                  {
+                    label: "Hora de ingreso registrada",
+                    value: formatHora(asistencia.ingreso.fechaHora),
+                  },
+                  {
+                    label: "Tipo de ingreso",
+                    value: TIPO_ASISTENCIA_LABELS[asistencia.ingreso.tipo],
+                  },
+                ]
+              : []
+          }
+        />
 
         {submitError ? (
           <Alert variant="error" className="mb-4">

@@ -182,6 +182,32 @@ export type RegistroManualResponseDto =
 
 export type TipoRegistroManual = "ingreso" | "egreso";
 
+export interface AnularIngresoRequestDto {
+  motivo: string;
+}
+
+export interface AnularEgresoRequestDto {
+  motivo: string;
+}
+
+export interface AnulacionIngresoResponseDto {
+  asistenciaId: number;
+  fechaHoraAnulacion: string;
+  estadoActual: EstadoAsistencia;
+}
+
+export interface AnulacionEgresoResponseDto {
+  asistenciaId: number;
+  fechaHoraAnulacion: string;
+  estadoActual: EstadoAsistencia;
+}
+
+export type AnulacionRegistroResponseDto =
+  | AnulacionIngresoResponseDto
+  | AnulacionEgresoResponseDto;
+
+export type TipoAnulacionRegistro = "ingreso" | "egreso";
+
 export interface ParteDiarioFiltros {
   fecha: string;
   obraId?: number;
