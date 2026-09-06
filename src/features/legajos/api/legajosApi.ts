@@ -108,7 +108,7 @@ export const legajosApi = {
     formData.append("foto", foto);
 
     const response = await httpClient.put<EmpleadoResponseDto>(
-      `/${id}/foto`,
+      `/legajos/${id}/foto`,
       formData,
       {
         headers: { "Content-Type": "multipart/form-data" },

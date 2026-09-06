@@ -38,7 +38,16 @@ import {
   SelectValue,
   Spinner,
 } from "@/shared/ui";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+
+const CATEGORIA_UOCRA_OPTIONS = [
+  { value: 1, label: "Oficial Especializado" },
+  { value: 2, label: "Oficial" },
+  { value: 3, label: "Medio Oficial" },
+  { value: 4, label: "Peón" },
+  { value: 5, label: "Ayudante" },
+];
 
 const GRUPO_SANGUINEO_OPTIONS = [
   "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-",
@@ -66,6 +75,9 @@ export function EmpleadoForm({
   onCancel,
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
+
+  const currentUser = useSessionStore((state) => state.user);
+  const isOperario = currentUser?.rol === "ROLE_OPERARIO";
 
   const { data: empleadoData, isLoading: isLoadingEmpleado } = useLegajoDetail(
     empleadoId,
@@ -102,6 +114,7 @@ export function EmpleadoForm({
       nombreContactoEmergencia: "",
       celularContactoEmergencia: "",
       numeroIeric: "",
+      categoriaUocraId: undefined,
       genero: undefined,
       usuario: {
         nombre: "",
@@ -128,6 +141,7 @@ export function EmpleadoForm({
         nombreContactoEmergencia: empleadoData.nombreContactoEmergencia || "",
         celularContactoEmergencia: empleadoData.celularContactoEmergencia || "",
         numeroIeric: empleadoData.numeroIeric || "",
+        categoriaUocraId: empleadoData.categoriaUocraId ?? undefined,
         genero: empleadoData.genero,
         usuario: {
           nombre: empleadoData.nombre || "",
@@ -165,6 +179,7 @@ export function EmpleadoForm({
     setSubmitError(undefined);
     try {
       if (isEdit && empleadoId) {
+        const originalCategoriaUocraId = empleadoData?.categoriaUocraId;
         // En modo edición solo enviamos los campos permitidos por EmpleadoUpdateDto
         const updatePayload: EmpleadoUpdateDto = {
           nacionalidad: values.nacionalidad,
@@ -172,6 +187,9 @@ export function EmpleadoForm({
           numeroCelular: values.numeroCelular,
           nombreContactoEmergencia: values.nombreContactoEmergencia,
           celularContactoEmergencia: values.celularContactoEmergencia,
+          categoriaUocraId: isOperario
+            ? originalCategoriaUocraId
+            : (values.categoriaUocraId ?? originalCategoriaUocraId),
         };
 
         await modificarMutation.mutateAsync({
@@ -564,7 +582,7 @@ export function EmpleadoForm({
           Datos Laborales
         </legend>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <FormField
             id="empleado-ieric"
             label="Número IERIC (Libreta)"
@@ -594,6 +612,38 @@ export function EmpleadoForm({
               {...register("fechaIngreso")}
             />
           </FormField>
+
+          {!isOperario ? (
+            <FormField
+              id="empleado-categoria-uocra"
+              label="Categoría UOCRA"
+              error={errors.categoriaUocraId?.message}
+            >
+              <Controller
+                name="categoriaUocraId"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    value={field.value ? String(field.value) : ""}
+                    onValueChange={(val) =>
+                      field.onChange(val ? Number(val) : undefined)
+                    }
+                  >
+                    <SelectTrigger id="empleado-categoria-uocra">
+                      <SelectValue placeholder="Seleccioná una categoría" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {CATEGORIA_UOCRA_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={String(opt.value)}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </FormField>
+          ) : null}
         </div>
       </fieldset>
 

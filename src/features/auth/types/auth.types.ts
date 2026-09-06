@@ -7,6 +7,8 @@ export interface CurrentUser {
   email: string;
   rol: RolNombre;
   empleadoId?: number;
+  idEmpleado?: number;
+  legajoId?: number;
 }
 
 export interface AuthResponse {

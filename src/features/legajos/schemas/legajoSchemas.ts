@@ -132,6 +132,7 @@ export const getEmpleadoFormSchema = (isEdit = false) =>
       .string()
       .trim()
       .min(1, "El número de IERIC es obligatorio."),
+    categoriaUocraId: z.number().optional(),
     genero: z.enum(["MASCULINO", "FEMENINO", "OTRO"], {
       error: "Seleccioná un género.",
     }),

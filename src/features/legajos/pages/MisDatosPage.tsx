@@ -12,7 +12,7 @@ import {
 
 export default function MisDatosPage() {
   const user = useSessionStore((state) => state.user);
-  const empleadoId = user?.empleadoId ?? (user as Record<string, unknown> | null)?.idEmpleado as number | undefined;
+  const empleadoId = user?.empleadoId;
 
   const [isEditing, setIsEditing] = useState(false);
 
@@ -31,7 +31,7 @@ export default function MisDatosPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Mis Datos"
+          title="Ficha 360° · Mis Datos"
           description="Portal de autogestión para el trabajador."
         />
         <div className="rounded-card border border-border bg-card shadow-soft p-6">
@@ -48,7 +48,7 @@ export default function MisDatosPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Mis Datos"
+          title="Ficha 360° · Mis Datos"
           description="Cargando tu ficha personal..."
         />
         <LoadingState label="Cargando tus datos laborales y personales..." />
@@ -60,7 +60,7 @@ export default function MisDatosPage() {
     return (
       <div className="space-y-6">
         <PageHeader
-          title="Mis Datos"
+          title="Ficha 360° · Mis Datos"
           description="Portal de autogestión para el trabajador."
         />
         <ErrorState
@@ -93,7 +93,7 @@ export default function MisDatosPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Mis Datos · ${detailData.apellido}, ${detailData.nombre}`}
+        title={`Ficha 360° · ${detailData.apellido}, ${detailData.nombre}`}
         description={`CUIL ${detailData.cuil} — DNI ${detailData.dni}`}
       />
       <EmpleadoDetail360

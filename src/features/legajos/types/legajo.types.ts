@@ -81,6 +81,7 @@ export interface EmpleadoResponseDto {
   fotoPerfilKey: string;
   estadoActual: string;
   categoriaActual: string;
+  categoriaUocraId?: number;
 }
 
 export interface EmpleadoEstadoResponseDto {

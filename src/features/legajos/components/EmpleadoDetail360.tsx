@@ -59,6 +59,10 @@ export function EmpleadoDetail360({
       toast.success("Foto de perfil actualizada exitosamente.");
     } catch {
       toast.error("No se pudo actualizar la foto de perfil.");
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
@@ -94,12 +98,12 @@ export function EmpleadoDetail360({
             ) : (
               <Camera className="size-4" />
             )}
-            Cambiar Foto
+            {actualizarFotoMutation.isPending ? "Subiendo..." : "Cambiar Foto"}
           </Button>
           <input
             ref={fileInputRef}
             type="file"
-            accept="image/jpeg,image/png"
+            accept="image/jpeg, image/png"
             className="hidden"
             onChange={handleFotoChange}
           />

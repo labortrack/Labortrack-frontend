@@ -41,9 +41,12 @@ export function AppLayout() {
   const initials =
     `${user.nombre.at(0) ?? ""}${user.apellido.at(0) ?? ""}`.toUpperCase();
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
+  const isOperario = user?.rol === "ROLE_OPERARIO";
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { to: "/mis-datos", label: "Mis Datos", icon: User },
+    ...(isOperario
+      ? [{ to: "/mis-datos", label: "Mis Datos", icon: User }]
+      : []),
     ...(canManageUsers
       ? [
           { to: "/legajos", label: "Legajos", icon: UserCheck },
