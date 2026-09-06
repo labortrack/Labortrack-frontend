@@ -9,6 +9,7 @@ import {
   ArrowLeft,
   Building2,
   CalendarDays,
+  CircleX,
   Clock3,
   FileCheck2,
   History,
@@ -19,14 +20,18 @@ import {
   Users,
 } from "lucide-react";
 import { AsistenciaEstadosTimeline } from "../components/AsistenciaEstadosTimeline";
+import { AnulacionRegistroAsistenciaDialog } from "../components/AnulacionRegistroAsistenciaDialog";
 import { AsistenciaInfoItem } from "../components/AsistenciaInfoItem";
 import { AsistenciaStatusBadge } from "../components/AsistenciaStatusBadge";
 import { RegistroAsistenciaCard } from "../components/RegistroAsistenciaCard";
 import { RegistroManualAsistenciaDialog } from "../components/RegistroManualAsistenciaDialog";
 import { TrabajadorAvatar } from "../components/TrabajadorAvatar";
 import { useDetalleAsistenciaOperativa } from "../hooks/useAsistencias";
-import type { AccionAsistenciaOperativa } from "../types/asistencia.types";
-import type { TipoRegistroManual } from "../types/asistencia.types";
+import type {
+  AccionAsistenciaOperativa,
+  TipoAnulacionRegistro,
+  TipoRegistroManual,
+} from "../types/asistencia.types";
 import {
   ESTADO_JORNADA_LABELS,
   formatFecha,
@@ -62,6 +67,8 @@ export default function AsistenciaDetailPage() {
   const detalleQuery = useDetalleAsistenciaOperativa(idValido ? id : null);
   const [tipoRegistroManual, setTipoRegistroManual] =
     useState<TipoRegistroManual>();
+  const [tipoAnulacionRegistro, setTipoAnulacionRegistro] =
+    useState<TipoAnulacionRegistro>();
 
   if (!idValido) {
     return <Navigate to={volverAAsistencias} replace />;
@@ -256,6 +263,23 @@ export default function AsistenciaDetailPage() {
                         {ACCION_LABELS[accion]}
                       </span>
                     </Button>
+                  ) : accion === "ANULAR_INGRESO" ||
+                    accion === "ANULAR_EGRESO" ? (
+                    <Button
+                      key={accion}
+                      variant="destructive"
+                      className="w-full justify-between"
+                      onClick={() =>
+                        setTipoAnulacionRegistro(
+                          accion === "ANULAR_INGRESO" ? "ingreso" : "egreso",
+                        )
+                      }
+                    >
+                      <span className="flex items-center gap-2">
+                        <CircleX />
+                        {ACCION_LABELS[accion]}
+                      </span>
+                    </Button>
                   ) : (
                     <div
                       key={accion}
@@ -283,6 +307,17 @@ export default function AsistenciaDetailPage() {
           asistencia={asistencia}
           onOpenChange={(open) => {
             if (!open) setTipoRegistroManual(undefined);
+          }}
+        />
+      ) : null}
+
+      {tipoAnulacionRegistro ? (
+        <AnulacionRegistroAsistenciaDialog
+          open
+          tipo={tipoAnulacionRegistro}
+          asistencia={asistencia}
+          onOpenChange={(open) => {
+            if (!open) setTipoAnulacionRegistro(undefined);
           }}
         />
       ) : null}

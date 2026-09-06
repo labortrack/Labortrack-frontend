@@ -1,5 +1,9 @@
 import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
+  AnulacionEgresoResponseDto,
+  AnulacionIngresoResponseDto,
+  AnularEgresoRequestDto,
+  AnularIngresoRequestDto,
   AsistenciaDetalleResponseDto,
   AsistenciaHistorialResponseDto,
   AsistenciaHoyResponseDto,
@@ -137,6 +141,28 @@ export const asistenciaApi = {
     (
       await httpClient.post<RegistroEgresoManualResponseDto>(
         `${BASE_URL}/${asistenciaId}/egreso-manual`,
+        request,
+      )
+    ).data,
+
+  anularIngreso: async (
+    asistenciaId: number,
+    request: AnularIngresoRequestDto,
+  ) =>
+    (
+      await httpClient.post<AnulacionIngresoResponseDto>(
+        `${BASE_URL}/${asistenciaId}/anular-ingreso`,
+        request,
+      )
+    ).data,
+
+  anularEgreso: async (
+    asistenciaId: number,
+    request: AnularEgresoRequestDto,
+  ) =>
+    (
+      await httpClient.post<AnulacionEgresoResponseDto>(
+        `${BASE_URL}/${asistenciaId}/anular-egreso`,
         request,
       )
     ).data,
