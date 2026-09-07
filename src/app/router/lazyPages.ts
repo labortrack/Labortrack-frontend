@@ -29,4 +29,22 @@ export const MisDatosPage = lazy(
   () => import("@/features/legajos/pages/MisDatosPage"),
 );
 
+export const MisAsistenciasPage = lazy(
+  () => import("@/features/asistencia/pages/MisAsistenciasPage"),
+);
+export const MiAsistenciaDetailPage = lazy(
+  () => import("@/features/asistencia/pages/MiAsistenciaDetailPage"),
+);
+export const AsistenciaQrPage = lazy(
+  () => import("@/features/asistencia/pages/AsistenciaQrPage"),
+);
+export const AsistenciasPage = lazy(
+  () => import("@/features/asistencia/pages/AsistenciasPage"),
+);
+export const AsistenciaDetailPage = lazy(
+  () => import("@/features/asistencia/pages/AsistenciaDetailPage"),
+);
+export const MiEmpresaPage = lazy(
+  () => import("@/features/empresa/pages/MiEmpresaPage"),
+);
 

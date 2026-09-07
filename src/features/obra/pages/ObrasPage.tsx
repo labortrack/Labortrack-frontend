@@ -18,7 +18,13 @@ import {
   PageHeader,
   SearchInput,
 } from "@/shared/components";
-import { Button, Card, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
+import {
+  Button,
+  Card,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
 export default function ObrasPage() {
@@ -33,7 +39,7 @@ export default function ObrasPage() {
     useState<ObraResponseDto | null>(null);
 
   const obrasQuery = useObras(busqueda);
-  const obras = obrasQuery.data ?? [];
+  const obras = useMemo(() => obrasQuery.data ?? [], [obrasQuery.data]);
 
   // Breakdown of active status frequencies
   const estadosSummary = useMemo(() => {
@@ -104,7 +110,9 @@ export default function ObrasPage() {
         <span className="text-xs font-medium text-foreground-muted">
           {obras.length} obra{obras.length !== 1 ? "s" : ""}
           {busqueda ? (
-            <span className="ml-1">— filtrando por nomenclatura "{busqueda}"</span>
+            <span className="ml-1">
+              — filtrando por nomenclatura "{busqueda}"
+            </span>
           ) : null}
         </span>
         {estadosSummary.length > 0 ? (
@@ -175,10 +183,7 @@ export default function ObrasPage() {
       )}
 
       {/* ── Modales ────────────────────────────────────────────── */}
-      <CreateObraDialog
-        open={createOpen}
-        onOpenChange={setCreateOpen}
-      />
+      <CreateObraDialog open={createOpen} onOpenChange={setCreateOpen} />
 
       <EditObraDialog
         key={editingObra?.id ?? "edit-obra"}

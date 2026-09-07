@@ -30,7 +30,11 @@ export function ProtectedRoute() {
   return status === "authenticated" ? (
     <Outlet />
   ) : (
-    <Navigate to="/login" replace state={{ from: location.pathname }} />
+    <Navigate
+      to="/login"
+      replace
+      state={{ from: `${location.pathname}${location.search}${location.hash}` }}
+    />
   );
 }
 
