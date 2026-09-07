@@ -17,6 +17,8 @@ import { useLogout } from "@/features/auth/hooks/useAuthActions";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import type { RolNombre } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
+import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
+import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import {
   Avatar,
   Button,
@@ -37,6 +39,8 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
   const capacidadesQuery = useCapacidadesAsistencia();
+  const empresaQuery = useEmpresa();
+  const empresa = empresaQuery.data;
   const logout = useLogout();
   const location = useLocation();
   const navigate = useNavigate();
@@ -53,6 +57,9 @@ export function AppLayout() {
           { to: "/obras", label: "Obras", icon: HardHat },
           { to: "/usuarios", label: "Usuarios", icon: UserCog },
         ]
+      : []),
+    ...(user.rol === "ROLE_ADMIN"
+      ? [{ to: "/mi-empresa", label: "Mi Empresa", icon: Building2 }]
       : []),
     ...(capacidades?.parteDiario?.puedeConsultar
       ? [
@@ -92,19 +99,7 @@ export function AppLayout() {
       )}
     >
       <div className="flex h-[73px] items-center justify-between border-b border-border px-5">
-        <div className="flex min-w-0 items-center gap-3">
-          <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary text-white">
-            <Building2 className="size-6" strokeWidth={1.75} />
-          </span>
-          {!collapsed || mobileOpen ? (
-            <div className="min-w-0">
-              <div className="truncate text-lg font-medium">LaborTrack</div>
-              <div className="truncate text-[11px] text-foreground-muted">
-                Control de Personal
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <EmpresaBrandMark empresa={empresa} showLabel={!collapsed || mobileOpen} />
         <button
           className="rounded-control p-1.5 text-foreground-muted hover:bg-border lg:hidden"
           onClick={() => setMobileOpen(false)}

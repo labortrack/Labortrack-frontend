@@ -5,6 +5,7 @@ import { AuthLayout } from "@/app/layouts/AuthLayout";
 import { ErrorPage } from "./ErrorPage";
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from "./guards";
 import { AsistenciaCapabilityRoute } from "@/features/asistencia/components/AsistenciaCapabilityRoute";
+import { EmpresaInicializacionGate } from "@/features/empresa/components/EmpresaInicializacionGate";
 import { LoadingState } from "@/shared/components";
 import {
   DashboardPage,
@@ -20,6 +21,7 @@ import {
   AsistenciaQrPage,
   AsistenciasPage,
   AsistenciaDetailPage,
+  MiEmpresaPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -53,94 +55,97 @@ export const router = createBrowserRouter([
         element: <ProtectedRoute />,
         children: [
           {
-            element: <AppLayout />,
+            element: <EmpresaInicializacionGate />,
             children: [
-              { path: "/dashboard", element: suspense(<DashboardPage />) },
               {
-                path: "/usuarios",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<UsuariosPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ObrasPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras/:id",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ObraDetailPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras/configuracion",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ConfiguracionObrasPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/configuracion-obras",
-                element: <Navigate to="/obras/configuracion" replace />,
-              },
-              {
-                path: "/mis-asistencias",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="misAsistencias"
-                  >
-                    {suspense(<MisAsistenciasPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/mis-asistencias/:asistenciaId",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="misAsistencias"
-                  >
-                    {suspense(<MiAsistenciaDetailPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/asistencias/qr",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="misAsistencias"
-                  >
-                    {suspense(<AsistenciaQrPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/asistencias",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="parteDiario"
-                  >
-                    {suspense(<AsistenciasPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/asistencias/:asistenciaId",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="parteDiario"
-                  >
-                    {suspense(<AsistenciaDetailPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
+                element: <AppLayout />,
+                children: [
+                  { path: "/dashboard", element: suspense(<DashboardPage />) },
+                  {
+                    path: "/usuarios",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<UsuariosPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/obras",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<ObrasPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/obras/:id",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<ObraDetailPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/obras/configuracion",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<ConfiguracionObrasPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/configuracion-obras",
+                    element: <Navigate to="/obras/configuracion" replace />,
+                  },
+                  {
+                    path: "/mi-empresa",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN"]}>
+                        {suspense(<MiEmpresaPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/mis-asistencias",
+                    element: (
+                      <AsistenciaCapabilityRoute capacidad="misAsistencias">
+                        {suspense(<MisAsistenciasPage />)}
+                      </AsistenciaCapabilityRoute>
+                    ),
+                  },
+                  {
+                    path: "/mis-asistencias/:asistenciaId",
+                    element: (
+                      <AsistenciaCapabilityRoute capacidad="misAsistencias">
+                        {suspense(<MiAsistenciaDetailPage />)}
+                      </AsistenciaCapabilityRoute>
+                    ),
+                  },
+                  {
+                    path: "/asistencias/qr",
+                    element: (
+                      <AsistenciaCapabilityRoute capacidad="misAsistencias">
+                        {suspense(<AsistenciaQrPage />)}
+                      </AsistenciaCapabilityRoute>
+                    ),
+                  },
+                  {
+                    path: "/asistencias",
+                    element: (
+                      <AsistenciaCapabilityRoute capacidad="parteDiario">
+                        {suspense(<AsistenciasPage />)}
+                      </AsistenciaCapabilityRoute>
+                    ),
+                  },
+                  {
+                    path: "/asistencias/:asistenciaId",
+                    element: (
+                      <AsistenciaCapabilityRoute capacidad="parteDiario">
+                        {suspense(<AsistenciaDetailPage />)}
+                      </AsistenciaCapabilityRoute>
+                    ),
+                  },
+                ],
               },
             ],
           },
