@@ -176,4 +176,16 @@ export const legajosApi = {
     );
     return response.data;
   },
+
+  /**
+   * GET /api/v1/legajos/mi-legajo
+   * Obtiene la ficha de legajo completa del usuario autenticado (portal de autogestión).
+   */
+  obtenerMiLegajoCompleto: async (): Promise<EmpleadoResponseDto> => {
+    const response = await httpClient.get<EmpleadoResponseDto>(
+      "/legajos/mi-legajo",
+    );
+    return response.data;
+  },
 };
+

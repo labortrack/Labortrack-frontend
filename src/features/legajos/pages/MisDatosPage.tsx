@@ -1,33 +1,32 @@
 import { useState } from "react";
-import { useSessionStore } from "@/features/auth/store/sessionStore";
-import { useHistorialEstados, useLegajoDetail } from "../hooks/useLegajos";
+import { useHistorialEstados, useMiLegajo } from "../hooks/useLegajos";
 import { EmpleadoDetail360 } from "../components/EmpleadoDetail360";
 import { EmpleadoForm } from "../components/EmpleadoForm";
 import {
   EmptyState,
-  ErrorState,
   LoadingState,
   PageHeader,
 } from "@/shared/components";
 
 export default function MisDatosPage() {
-  const user = useSessionStore((state) => state.user);
-  const empleadoId = user?.empleadoId;
-
   const [isEditing, setIsEditing] = useState(false);
 
-  const {
-    data: detailData,
-    isLoading: isDetailLoading,
-    isError: isDetailError,
-    error: detailError,
-    refetch: refetchDetail,
-  } = useLegajoDetail(empleadoId);
+  const { data: legajo, isLoading, isError } = useMiLegajo();
+  const { data: historialEstadosData } = useHistorialEstados(legajo?.id);
 
-  const { data: historialEstadosData } = useHistorialEstados(empleadoId);
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Ficha 360° · Mis Datos"
+          description="Cargando tu ficha personal..."
+        />
+        <LoadingState label="Cargando tus datos laborales y personales..." />
+      </div>
+    );
+  }
 
-  // Si el usuario no posee un legajo vinculado
-  if (!empleadoId) {
+  if (isError || !legajo) {
     return (
       <div className="space-y-6">
         <PageHeader
@@ -44,36 +43,6 @@ export default function MisDatosPage() {
     );
   }
 
-  if (isDetailLoading) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Ficha 360° · Mis Datos"
-          description="Cargando tu ficha personal..."
-        />
-        <LoadingState label="Cargando tus datos laborales y personales..." />
-      </div>
-    );
-  }
-
-  if (isDetailError || !detailData) {
-    return (
-      <div className="space-y-6">
-        <PageHeader
-          title="Ficha 360° · Mis Datos"
-          description="Portal de autogestión para el trabajador."
-        />
-        <ErrorState
-          message={
-            detailError?.message ||
-            "No fue posible cargar la información de tu legajo."
-          }
-          onRetry={refetchDetail}
-        />
-      </div>
-    );
-  }
-
   if (isEditing) {
     return (
       <div className="space-y-6">
@@ -82,7 +51,7 @@ export default function MisDatosPage() {
           description="Actualizá tu domicilio, teléfono o contactos de emergencia."
         />
         <EmpleadoForm
-          empleadoId={empleadoId}
+          empleadoId={legajo.id}
           onSuccess={() => setIsEditing(false)}
           onCancel={() => setIsEditing(false)}
         />
@@ -93,14 +62,15 @@ export default function MisDatosPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title={`Ficha 360° · ${detailData.apellido}, ${detailData.nombre}`}
-        description={`CUIL ${detailData.cuil} — DNI ${detailData.dni}`}
+        title={`Ficha 360° · ${legajo.apellido}, ${legajo.nombre}`}
+        description={`CUIL ${legajo.cuil} — DNI ${legajo.dni}`}
       />
       <EmpleadoDetail360
-        legajo={detailData}
+        legajo={legajo}
         historialEstados={historialEstadosData || []}
         onEdit={() => setIsEditing(true)}
       />
     </div>
   );
 }
+

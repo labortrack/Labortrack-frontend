@@ -30,6 +30,7 @@ import { formatDate } from "./EmpleadoTable";
 import { EmpleadoTimeline } from "./EmpleadoTimeline";
 import { AvatarMinio } from "./AvatarMinio";
 import { useActualizarFotoPerfil } from "../hooks/useLegajos";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Badge, Button, Spinner } from "@/shared/ui";
 
 interface EmpleadoDetail360Props {
@@ -45,6 +46,7 @@ export function EmpleadoDetail360({
   onBack,
   onEdit,
 }: EmpleadoDetail360Props) {
+  const user = useSessionStore((state) => state.user);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const actualizarFotoMutation = useActualizarFotoPerfil();
 
@@ -326,8 +328,11 @@ export function EmpleadoDetail360({
         </div>
       </div>
 
-      {/* Bloque 3: Línea de Tiempo de Estados */}
-      <EmpleadoTimeline historialEstados={historialEstados} />
+      {/* Bloque 3: Línea de Tiempo de Estados (Solo visible para no-operarios: ROLE_ADMIN, ROLE_RRHH) */}
+      {user?.rol !== "ROLE_OPERARIO" && (
+        <EmpleadoTimeline historialEstados={historialEstados} />
+      )}
     </div>
   );
 }
+

@@ -21,7 +21,16 @@ export const legajosKeys = {
   detail: (id: number) => [...legajosKeys.all, "detail", id] as const,
   historial: (id: number) => [...legajosKeys.all, "historial", id] as const,
   fotoUrl: (id: number) => [...legajosKeys.all, "foto", id] as const,
+  miLegajo: () => [...legajosKeys.all, "mi-legajo"] as const,
 };
+
+export function useMiLegajo() {
+  return useQuery({
+    queryKey: legajosKeys.miLegajo(),
+    queryFn: () => legajosApi.obtenerMiLegajoCompleto(),
+  });
+}
+
 
 export function useLegajosList(
   filters: EmpleadoFilterParams,
