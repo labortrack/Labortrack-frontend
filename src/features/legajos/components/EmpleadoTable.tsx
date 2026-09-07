@@ -95,8 +95,7 @@ export function EmpleadoTable({
         </TableHeader>
         <TableBody>
           {data.map((empleado) => {
-            const initials =
-              `${empleado.nombre.at(0) ?? ""}${empleado.apellido.at(0) ?? ""}`.toUpperCase();
+
 
             return (
               <TableRow

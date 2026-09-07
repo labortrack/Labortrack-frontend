@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import {
   getEmpleadoFormSchema,
-  rolSchema,
   type EmpleadoFormValues,
 } from "../schemas/legajoSchemas";
 import {
