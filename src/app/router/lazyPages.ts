@@ -22,6 +22,13 @@ export const ConfiguracionObrasPage = lazy(
 export const ObraDetailPage = lazy(
   () => import("@/features/obra/pages/ObraDetailPage"),
 );
+export const LegajosPage = lazy(
+  () => import("@/features/legajos/pages/LegajosPage"),
+);
+export const MisDatosPage = lazy(
+  () => import("@/features/legajos/pages/MisDatosPage"),
+);
+
 export const MisAsistenciasPage = lazy(
   () => import("@/features/asistencia/pages/MisAsistenciasPage"),
 );

@@ -6,6 +6,9 @@ export interface CurrentUser {
   apellido: string;
   email: string;
   rol: RolNombre;
+  empleadoId?: number;
+  idEmpleado?: number;
+  legajoId?: number;
 }
 
 export interface AuthResponse {

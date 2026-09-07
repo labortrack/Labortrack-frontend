@@ -9,6 +9,8 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  User,
+  UserCheck,
   UserCog,
   X,
 } from "lucide-react";
@@ -47,37 +49,42 @@ export function AppLayout() {
   const initials =
     `${user.nombre.at(0) ?? ""}${user.apellido.at(0) ?? ""}`.toUpperCase();
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
+  const isOperario = user?.rol === "ROLE_OPERARIO";
   const capacidades = capacidadesQuery.isError
     ? undefined
     : capacidadesQuery.data;
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ...(isOperario
+      ? [{ to: "/mis-datos", label: "Mis Datos", icon: User }]
+      : []),
     ...(canManageUsers
       ? [
-          { to: "/obras", label: "Obras", icon: HardHat },
-          { to: "/usuarios", label: "Usuarios", icon: UserCog },
-        ]
+        { to: "/legajos", label: "Legajos", icon: UserCheck },
+        { to: "/obras", label: "Obras", icon: HardHat },
+        { to: "/usuarios", label: "Usuarios", icon: UserCog },
+      ]
       : []),
     ...(user.rol === "ROLE_ADMIN"
       ? [{ to: "/mi-empresa", label: "Mi Empresa", icon: Building2 }]
       : []),
     ...(capacidades?.parteDiario?.puedeConsultar
       ? [
-          {
-            to: "/asistencias",
-            label: "Asistencias",
-            icon: ClipboardCheck,
-          },
-        ]
+        {
+          to: "/asistencias",
+          label: "Asistencias",
+          icon: ClipboardCheck,
+        },
+      ]
       : []),
     ...(capacidades?.puedeConsultarMisAsistencias
       ? [
-          {
-            to: "/mis-asistencias",
-            label: "Mis asistencias",
-            icon: ClipboardList,
-          },
-        ]
+        {
+          to: "/mis-asistencias",
+          label: "Mis asistencias",
+          icon: ClipboardList,
+        },
+      ]
       : []),
   ];
 

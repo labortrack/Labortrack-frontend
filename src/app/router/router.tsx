@@ -16,6 +16,8 @@ import {
   ObrasPage,
   ConfiguracionObrasPage,
   ObraDetailPage,
+  LegajosPage,
+  MisDatosPage,
   MisAsistenciasPage,
   MiAsistenciaDetailPage,
   AsistenciaQrPage,
@@ -61,6 +63,7 @@ export const router = createBrowserRouter([
                 element: <AppLayout />,
                 children: [
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
+                  { path: "/mis-datos", element: suspense(<MisDatosPage />) },
                   {
                     path: "/usuarios",
                     element: (
@@ -74,6 +77,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
                         {suspense(<ObrasPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/legajos",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<LegajosPage />)}
                       </RoleRoute>
                     ),
                   },
@@ -156,3 +167,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
