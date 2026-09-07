@@ -59,57 +59,11 @@ export const router = createBrowserRouter([
           {
             element: <EmpresaInicializacionGate />,
             children: [
-<<<<<<< HEAD
-              { path: "/dashboard", element: suspense(<DashboardPage />) },
-              { path: "/mis-datos", element: suspense(<MisDatosPage />) },
-              {
-                path: "/usuarios",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<UsuariosPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ObrasPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/legajos",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<LegajosPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras/:id",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ObraDetailPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras/configuracion",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ConfiguracionObrasPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/configuracion-obras",
-                element: <Navigate to="/obras/configuracion" replace />,
-=======
               {
                 element: <AppLayout />,
                 children: [
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
+                  { path: "/mis-datos", element: suspense(<MisDatosPage />) },
                   {
                     path: "/usuarios",
                     element: (
@@ -123,6 +77,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
                         {suspense(<ObrasPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/legajos",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<LegajosPage />)}
                       </RoleRoute>
                     ),
                   },
@@ -195,7 +157,6 @@ export const router = createBrowserRouter([
                     ),
                   },
                 ],
->>>>>>> dfab22116cfb67b6c01a8936246554311b378cfb
               },
             ],
           },
@@ -206,3 +167,4 @@ export const router = createBrowserRouter([
     ],
   },
 ]);
+
