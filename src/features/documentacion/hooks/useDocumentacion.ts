@@ -79,14 +79,17 @@ export function useModificarTipoDocumento() {
   return useMutation({
     mutationFn: ({
       id,
+      data,
       payload,
     }: {
       id: number;
-      payload: Parameters<typeof documentacionApi.modificarTipoDocumento>[1];
-    }) => documentacionApi.modificarTipoDocumento(id, payload),
+      data?: Parameters<typeof documentacionApi.modificarTipoDocumento>[1];
+      payload?: Parameters<typeof documentacionApi.modificarTipoDocumento>[1];
+    }) => documentacionApi.modificarTipoDocumento(id, (data ?? payload)!),
     onSuccess: invalidate,
   });
 }
+
 
 export function useBajaTipoDocumento() {
   const invalidate = useInvalidateTipos();
@@ -159,7 +162,19 @@ export function useReactivarDocumento() {
   });
 }
 
+/**
+ * Mutation (Lazy Query) para obtener el string de URL prefirmada de visualización
+ * de un documento específico bajo demanda al hacer clic en "Abrir Visor".
+ */
+export function useObtenerUrlVisor() {
+  return useMutation({
+    mutationFn: (id: number) => documentacionApi.obtenerUrlVisor(id),
+  });
+}
+
+
 // ─── Hook: Búsqueda de empleados con debounce ──────────────────────────────────
+
 
 /**
  * Busca empleados por nombre/apellido con 300 ms de debounce.

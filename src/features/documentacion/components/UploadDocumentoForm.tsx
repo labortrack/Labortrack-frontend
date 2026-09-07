@@ -188,15 +188,12 @@ function EmpleadoCombobox({ value, onChange, error }: EmpleadoComboboxProps) {
 // ─── Tipos Permitidos para Operarios (Guardarraíl) ───────────────────────────
 
 const TIPOS_PERMITIDOS_OPERARIO = [
-  "Certificados Médicos",
-  "Certificado Médico",
-  "Documentación Personal",
-  "Documento de Identidad",
-  "Recibo de Sueldo",
-  "Licencia Médica",
-  "Apto Médico",
-  "Constancia",
-  "Declaración Jurada",
+  "certificados medicos",
+  "certificados médicos",
+  "certificado medico",
+  "certificado médico",
+  "documentacion personal",
+  "documentación personal",
 ];
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
@@ -214,23 +211,24 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
   const uploadMutation = useUploadDocumento();
 
   // ── Guardarraíl de tipos según Rol ─────────────────────────────────────────
-  // Si es ROLE_OPERARIO, solo mostramos los tipos habilitados para el trabajador.
+  // Si es ROLE_OPERARIO, traemos los tipos 'Certificados Médicos' y 'Documentación Personal'.
   // Si es ROLE_ADMIN o ROLE_RRHH, se muestra la lista completa.
   const tiposDisponibles = useMemo(() => {
     if (!esOperario) return tiposDocumento;
+
     const filtrados = tiposDocumento.filter((tipo) => {
       const nombreNorm = tipo.nombre.toLowerCase().trim();
-      const catNorm = tipo.categoriaRuteo?.toLowerCase().trim() || "";
+      const catNorm = (tipo.categoriaRuteo || "").toLowerCase().trim();
+
       return (
-        TIPOS_PERMITIDOS_OPERARIO.some(
-          (permitido) =>
-            nombreNorm.includes(permitido.toLowerCase()) ||
-            permitido.toLowerCase().includes(nombreNorm),
+        TIPOS_PERMITIDOS_OPERARIO.some((permitido) =>
+          nombreNorm.includes(permitido) || permitido.includes(nombreNorm),
         ) ||
-        catNorm.includes("personal") ||
-        catNorm.includes("rrhh")
+        catNorm === "legajo_personal" ||
+        catNorm === "ausentismo"
       );
     });
+
     return filtrados.length > 0 ? filtrados : tiposDocumento;
   }, [esOperario, tiposDocumento]);
 
@@ -243,7 +241,7 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
     () =>
       uploadDocumentoSchema.superRefine((data, ctx) => {
         const tipoSeleccionado = tiposDocumento.find(
-          (t) => t.idTipoDocumento === data.idTipoDocumento,
+          (t) => (t.idTipoDocumento ?? t.id) === data.idTipoDocumento,
         );
 
         if (
@@ -281,7 +279,7 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
   // Escucha el tipo seleccionado para mostrar el hint de PDF
   const idTipoSeleccionado = useWatch({ control, name: "idTipoDocumento" });
   const tipoActual = tiposDocumento.find(
-    (t) => t.idTipoDocumento === idTipoSeleccionado,
+    (t) => (t.idTipoDocumento ?? t.id) === idTipoSeleccionado,
   );
   const requierePdf = tipoActual?.procesarEnRag ?? false;
 
@@ -368,15 +366,19 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
                 />
               </SelectTrigger>
               <SelectContent>
-                {tiposDisponibles.map((tipo) => (
-                  <SelectItem
-                    key={tipo.idTipoDocumento}
-                    value={String(tipo.idTipoDocumento)}
-                  >
-                    {tipo.nombre}
-                    {tipo.procesarEnRag ? " — IA" : ""}
-                  </SelectItem>
-                ))}
+                {tiposDisponibles.map((tipo) => {
+                  const id = tipo.idTipoDocumento ?? tipo.id;
+                  if (id == null) return null;
+                  return (
+                    <SelectItem
+                      key={id}
+                      value={String(id)}
+                    >
+                      {tipo.nombre}
+                      {tipo.procesarEnRag ? " — IA" : ""}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           )}

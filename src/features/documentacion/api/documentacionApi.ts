@@ -52,35 +52,44 @@ function mapDocumentoFilters(filter: DocumentoFilterDto) {
 export const documentacionApi = {
   // ── Tipos de Documento ────────────────────────────────────────────────────
 
-  /** Crea un nuevo Tipo de Documento. */
-  crearTipoDocumento: async (payload: TipoDocumentoModificacionDto) =>
+  /**
+   * POST /api/v1/tipos-documento/crear
+   * Crea un nuevo Tipo de Documento.
+   */
+  crearTipoDocumento: async (data: TipoDocumentoDTO): Promise<TipoDocumentoDTO> =>
     (
       await httpClient.post<TipoDocumentoDTO>(
         `${TIPOS_BASE}/crear`,
-        payload,
+        data,
       )
     ).data,
 
-  /** Modifica un Tipo de Documento existente por su ID. */
+  /**
+   * PUT /api/v1/tipos-documento/modificar/{id}
+   * Modifica un Tipo de Documento existente por su ID.
+   */
   modificarTipoDocumento: async (
     id: number,
-    payload: TipoDocumentoModificacionDto,
-  ) =>
+    data: TipoDocumentoModificacionDto,
+  ): Promise<TipoDocumentoDTO> =>
     (
       await httpClient.put<TipoDocumentoDTO>(
         `${TIPOS_BASE}/modificar/${id}`,
-        payload,
+        data,
       )
     ).data,
 
   /** Da de baja (desactiva) un Tipo de Documento por su ID. */
-  bajaTipoDocumento: async (id: number) =>
+  bajaTipoDocumento: async (id: number): Promise<void> =>
     (
       await httpClient.delete<void>(`${TIPOS_BASE}/BajaTipoDocumento/${id}`)
     ).data,
 
-  /** Reactiva un Tipo de Documento previamente dado de baja. */
-  reactivarTipoDocumento: async (id: number) =>
+  /**
+   * PATCH /api/v1/tipos-documento/reactivarTipoDocumento/{id}
+   * Reactiva un Tipo de Documento previamente dado de baja.
+   */
+  reactivarTipoDocumento: async (id: number): Promise<{ mensaje: string }> =>
     (
       await httpClient.patch<{ mensaje: string }>(
         `${TIPOS_BASE}/reactivarTipoDocumento/${id}`,
@@ -88,8 +97,15 @@ export const documentacionApi = {
       )
     ).data,
 
-  /** Obtiene el listado completo de Tipos de Documento (histórico completo). */
+
+  /** Obtiene el listado completo de Tipos de Documento activos (accesible para formularios de todos los roles). */
   listadoCompletoTiposDocumento: async () =>
+    (
+      await httpClient.get<TipoDocumentoDTO[]>(`${TIPOS_BASE}/listarTiposDocumento`)
+    ).data,
+
+  /** Obtiene el listado histórico completo de Tipos de Documento (activos e inactivos, solo ADMIN). */
+  obtenerTiposDocumentoHistorico: async () =>
     (
       await httpClient.get<TipoDocumentoDTO[]>(`${TIPOS_BASE}/listado-completo`)
     ).data,
@@ -150,7 +166,22 @@ export const documentacionApi = {
       )
     ).data,
 
+  /**
+   * GET /api/v1/documentos/visualizarDocumento/{id}
+   * Retorna el string exacto de la propiedad `url` (URL prefirmada de MinIO/S3).
+   */
+  obtenerUrlVisor: async (id: number): Promise<string> => {
+    const response = await httpClient.get<{ url?: string; pathMinio?: string } | string>(
+      `${DOCS_BASE}/visualizarDocumento/${id}`,
+    );
+    if (typeof response.data === "string") {
+      return response.data;
+    }
+    return response.data.url || response.data.pathMinio || "";
+  },
+
   /** Reactiva un documento previamente dado de baja. */
+
   reactivarDocumento: async (id: number) =>
     (
       await httpClient.patch<DocumentoRespuestaDto>(

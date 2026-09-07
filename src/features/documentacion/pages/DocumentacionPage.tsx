@@ -26,15 +26,22 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
-import { useBajaDocumento, useBajaTipoDocumento } from "../hooks/useDocumentacion";
+import {
+  useBajaDocumento,
+  useBajaTipoDocumento,
+  useReactivarTipoDocumento,
+} from "../hooks/useDocumentacion";
 import { DocumentosTable } from "../components/DocumentosTable";
 import { UploadDocumentoForm } from "../components/UploadDocumentoForm";
 import { TiposDocumentoTable } from "../components/TiposDocumentoTable";
+import { TipoDocumentoFormModal } from "../components/TipoDocumentoFormModal";
 import { Documento360Modal } from "../components/Documento360Modal";
 import { TipoDocumento360Modal } from "../components/TipoDocumento360Modal";
-import type { DocumentoFilterDto, DocumentoRespuestaDto, TipoDocumentoDTO } from "../types/documentacion.types";
-
-// ─── Página ───────────────────────────────────────────────────────────────────
+import type {
+  DocumentoFilterDto,
+  DocumentoRespuestaDto,
+  TipoDocumentoDTO,
+} from "../types/documentacion.types";
 
 export default function DocumentacionPage() {
   // ── RBAC ───────────────────────────────────────────────────────────────────
@@ -65,14 +72,6 @@ export default function DocumentacionPage() {
     setSelectedDoc(doc);
   };
 
-  const handleDescargar = (doc: DocumentoRespuestaDto) => {
-    if (doc.pathMinio) {
-      window.open(doc.pathMinio, "_blank", "noopener,noreferrer");
-    } else {
-      toast.info("No hay enlace de descarga directo disponible");
-    }
-  };
-
   const handleConfirmarBajaDoc = async () => {
     if (!bajaDoc) return;
     try {
@@ -91,14 +90,17 @@ export default function DocumentacionPage() {
   const [selectedTipo, setSelectedTipo] = useState<TipoDocumentoDTO | null>(null);
   const [editingTipo, setEditingTipo] = useState<TipoDocumentoDTO | null>(null);
   const [bajaTipo, setBajaTipo] = useState<TipoDocumentoDTO | null>(null);
+  const [reactivarTipo, setReactivarTipo] = useState<TipoDocumentoDTO | null>(null);
 
   const bajaTipoMutation = useBajaTipoDocumento();
+  const reactivarTipoMutation = useReactivarTipoDocumento();
 
   const handleConfirmarBajaTipo = async () => {
-    if (!bajaTipo) return;
+    const id = bajaTipo?.idTipoDocumento ?? bajaTipo?.id;
+    if (!id) return;
     try {
-      await bajaTipoMutation.mutateAsync(bajaTipo.idTipoDocumento);
-      toast.success(`Tipo "${bajaTipo.nombre}" dado de baja correctamente.`);
+      await bajaTipoMutation.mutateAsync(id);
+      toast.success(`Tipo "${bajaTipo?.nombre}" dado de baja correctamente.`);
       setBajaTipo(null);
     } catch (error) {
       toast.error(
@@ -107,8 +109,28 @@ export default function DocumentacionPage() {
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
+  const handleReactivarTipo = (tipo: TipoDocumentoDTO) => {
+    setReactivarTipo(tipo);
+  };
 
+  const handleConfirmarReactivarTipo = async () => {
+    const id = reactivarTipo?.idTipoDocumento ?? reactivarTipo?.id;
+    if (!id) return;
+    try {
+      await reactivarTipoMutation.mutateAsync(id);
+      toast.success(`Tipo "${reactivarTipo?.nombre}" reactivado exitosamente.`);
+      setReactivarTipo(null);
+    } catch (error) {
+      toast.error(
+        normalizeApiError(
+          error,
+          "No se pudo reactivar el tipo de documento.",
+        ).message,
+      );
+    }
+  };
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* ── Encabezado ── */}
@@ -153,7 +175,12 @@ export default function DocumentacionPage() {
                     <Search />
                     Buscar
                   </Button>
-                  <Button variant="outline" size="icon" onClick={clearSearch} aria-label="Limpiar búsqueda">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={clearSearch}
+                    aria-label="Limpiar búsqueda"
+                  >
                     <RotateCcw />
                   </Button>
                 </div>
@@ -175,7 +202,6 @@ export default function DocumentacionPage() {
               <DocumentosTable
                 filters={filters}
                 onPrevisualizar={handlePrevisualizar}
-                onDescargar={handleDescargar}
                 onBaja={setBajaDoc}
               />
             </Card>
@@ -205,6 +231,7 @@ export default function DocumentacionPage() {
                   onSelect={setSelectedTipo}
                   onEdit={setEditingTipo}
                   onBaja={setBajaTipo}
+                  onReactivar={handleReactivarTipo}
                 />
               </Card>
             </div>
@@ -221,7 +248,6 @@ export default function DocumentacionPage() {
         onOpenChange={(open) => {
           if (!open) setSelectedDoc(null);
         }}
-        onDescargar={handleDescargar}
         onBaja={setBajaDoc}
       />
 
@@ -234,6 +260,7 @@ export default function DocumentacionPage() {
         }}
         onEdit={setEditingTipo}
         onBaja={setBajaTipo}
+        onReactivar={handleReactivarTipo}
       />
 
       {/* ══ Dialogs: Tab Documentos ══ */}
@@ -249,7 +276,7 @@ export default function DocumentacionPage() {
               <div>
                 <DialogTitle>Subir documento</DialogTitle>
                 <DialogDescription>
-                  Seleccioná el tipo y adjuntá el archivo.
+                  Seleccioná un archivo y completá los metadatos para guardarlo.
                 </DialogDescription>
               </div>
             </div>
@@ -261,7 +288,9 @@ export default function DocumentacionPage() {
       {/* Dialog: Confirmar baja de documento */}
       <Dialog
         open={Boolean(bajaDoc)}
-        onOpenChange={(o) => { if (!o) setBajaDoc(null); }}
+        onOpenChange={(o) => {
+          if (!o) setBajaDoc(null);
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -271,13 +300,14 @@ export default function DocumentacionPage() {
               <strong className="text-foreground">
                 {bajaDoc?.nombreDocumento}
               </strong>
-              ? El archivo dejará de estar disponible en el sistema.
+              ? Esta acción no se puede deshacer.
             </DialogDescription>
           </DialogHeader>
           {bajaDoc?.esIndexadoRag ? (
             <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
-              ⚠ Este documento está indexado en el motor IA (RAG). Darlo de baja
-              lo eliminará de las búsquedas inteligentes.
+              ⚠ Este documento está indexado en el motor de Inteligencia
+              Artificial (RAG). Darlo de baja lo eliminará de las búsquedas
+              inteligentes.
             </div>
           ) : null}
           <div className="flex justify-end gap-2 pt-2">
@@ -299,56 +329,30 @@ export default function DocumentacionPage() {
         </DialogContent>
       </Dialog>
 
-      {/* ══ Dialogs: Tab Tipos (solo ROLE_ADMIN) ══ */}
+      {/* ══ Modales: Tab Tipos (solo ROLE_ADMIN) ══ */}
 
-      {/* Dialog: Nuevo tipo */}
-      <Dialog open={createTipoOpen} onOpenChange={setCreateTipoOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-lg bg-primary text-white">
-                <Plus className="size-5" />
-              </span>
-              <div>
-                <DialogTitle>Nuevo tipo de documento</DialogTitle>
-                <DialogDescription>
-                  Completá los datos para crear un nuevo tipo.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          {/* TODO: <TipoDocumentoForm onSuccess={() => setCreateTipoOpen(false)} /> */}
-          <p className="py-6 text-center text-sm text-foreground-muted">
-            Formulario de creación en desarrollo.
-          </p>
-        </DialogContent>
-      </Dialog>
+      {/* Modal: Crear Tipo de Documento */}
+      <TipoDocumentoFormModal
+        open={createTipoOpen}
+        onOpenChange={setCreateTipoOpen}
+      />
 
-      {/* Dialog: Editar tipo */}
-      <Dialog open={Boolean(editingTipo)} onOpenChange={(o) => { if (!o) setEditingTipo(null); }}>
-        <DialogContent>
-          <DialogHeader>
-            <div className="flex items-center gap-3">
-              <span className="flex size-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
-                <FileText className="size-5" />
-              </span>
-              <div>
-                <DialogTitle>Editar tipo de documento</DialogTitle>
-                <DialogDescription>{editingTipo?.nombre}</DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          {/* TODO: <TipoDocumentoForm tipo={editingTipo} onSuccess={() => setEditingTipo(null)} /> */}
-          <p className="py-6 text-center text-sm text-foreground-muted">
-            Formulario de edición en desarrollo.
-          </p>
-        </DialogContent>
-      </Dialog>
+      {/* Modal: Editar Tipo de Documento */}
+      <TipoDocumentoFormModal
+        open={Boolean(editingTipo)}
+        onOpenChange={(o) => {
+          if (!o) setEditingTipo(null);
+        }}
+        tipo={editingTipo}
+        onSuccess={() => setEditingTipo(null)}
+      />
 
       {/* Dialog: Confirmar baja de tipo */}
       <Dialog
         open={Boolean(bajaTipo)}
-        onOpenChange={(o) => { if (!o) setBajaTipo(null); }}
+        onOpenChange={(o) => {
+          if (!o) setBajaTipo(null);
+        }}
       >
         <DialogContent>
           <DialogHeader>
@@ -379,6 +383,41 @@ export default function DocumentacionPage() {
               disabled={bajaTipoMutation.isPending}
             >
               {bajaTipoMutation.isPending ? "Procesando..." : "Confirmar baja"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmar reactivación de tipo */}
+      <Dialog
+        open={Boolean(reactivarTipo)}
+        onOpenChange={(o) => {
+          if (!o) setReactivarTipo(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reactivar tipo de documento</DialogTitle>
+            <DialogDescription>
+              ¿Estás seguro de que deseás reactivar el tipo de documento{" "}
+              <strong className="text-foreground">{reactivarTipo?.nombre}</strong>?
+              Volverá a estar disponible y operativo para todos los usuarios.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setReactivarTipo(null)}
+              disabled={reactivarTipoMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmarReactivarTipo}
+              disabled={reactivarTipoMutation.isPending}
+            >
+              {reactivarTipoMutation.isPending ? "Reactivando..." : "Confirmar reactivación"}
             </Button>
           </div>
         </DialogContent>

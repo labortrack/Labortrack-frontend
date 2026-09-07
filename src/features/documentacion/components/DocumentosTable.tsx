@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Brain, Download, Eye, RotateCcw, Trash2 } from "lucide-react";
+import { Brain, Eye, RotateCcw, Trash2 } from "lucide-react";
 import {
   EmptyState,
   ErrorState,
@@ -41,7 +41,6 @@ function formatFecha(iso: string) {
 interface DocumentosTableProps {
   filters: DocumentoFilterDto;
   onPrevisualizar: (doc: DocumentoRespuestaDto) => void;
-  onDescargar: (doc: DocumentoRespuestaDto) => void;
   onBaja: (doc: DocumentoRespuestaDto) => void;
 }
 
@@ -50,7 +49,6 @@ interface DocumentosTableProps {
 export function DocumentosTable({
   filters,
   onPrevisualizar,
-  onDescargar,
   onBaja,
 }: DocumentosTableProps) {
   const [page, setPage] = useState(0);
@@ -182,25 +180,6 @@ export function DocumentosTable({
                       </Button>
                     </TooltipTrigger>
                     <TooltipContent>Ver Vista 360°</TooltipContent>
-                  </Tooltip>
-
-                  {/* ── Descargar (todos los roles) ── */}
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDescargar(doc);
-                        }}
-                        aria-label={`Descargar ${doc.nombreDocumento}`}
-                      >
-                        <Download />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Descargar</TooltipContent>
                   </Tooltip>
 
                   {/* ── Dar de baja — SOLO ADMIN / RRHH ── */}

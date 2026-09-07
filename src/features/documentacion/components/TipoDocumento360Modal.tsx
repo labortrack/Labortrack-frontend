@@ -5,6 +5,7 @@ import {
   FileText,
   Globe,
   Lock,
+  RotateCcw,
   Route,
   Shield,
   Trash2,
@@ -26,6 +27,7 @@ interface TipoDocumento360ModalProps {
   onOpenChange: (open: boolean) => void;
   onEdit?: (tipo: TipoDocumentoDTO) => void;
   onBaja?: (tipo: TipoDocumentoDTO) => void;
+  onReactivar?: (tipo: TipoDocumentoDTO) => void;
 }
 
 export function TipoDocumento360Modal({
@@ -34,11 +36,14 @@ export function TipoDocumento360Modal({
   onOpenChange,
   onEdit,
   onBaja,
+  onReactivar,
 }: TipoDocumento360ModalProps) {
   const user = useSessionStore((state) => state.user);
   const esAdmin = user?.rol === "ROLE_ADMIN";
 
   if (!tipo) return null;
+
+  const isDadoDeBaja = Boolean(tipo.fechaBaja) || tipo.activo === false;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,6 +60,11 @@ export function TipoDocumento360Modal({
                 <Badge variant="neutral" className="font-mono text-xs">
                   TIPO #{tipo.idTipoDocumento}
                 </Badge>
+                {isDadoDeBaja ? (
+                  <Badge variant="error">Desactivado / Dado de baja</Badge>
+                ) : (
+                  <Badge variant="success">Activo</Badge>
+                )}
                 <Badge variant="neutral">
                   {tipo.categoriaRuteo || "General"}
                 </Badge>
@@ -93,58 +103,62 @@ export function TipoDocumento360Modal({
 
         {/* ── Contenido 360° ── */}
         <div className="space-y-4 px-6 py-5">
+          {/* Alerta si está dado de baja */}
+          {isDadoDeBaja && (
+            <div className="rounded-lg border border-error/30 bg-error-soft px-4 py-3 text-xs text-error-strong">
+              <strong>Estado:</strong> Este tipo de documento se encuentra actualmente desactivado o dado de baja.
+              {tipo.fechaBaja ? ` Fecha de baja registrada: ${tipo.fechaBaja}` : ""}
+            </div>
+          )}
+
           {/* Descripción */}
           <div className="rounded-lg border border-border bg-card p-4 space-y-2">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
               <FileText className="size-4 text-primary" />
               Descripción y Alcance
             </div>
-            <p className="text-sm leading-relaxed text-foreground whitespace-pre-wrap">
-              {tipo.descripcion || "Sin descripción detallada especificada."}
+            <p className="text-sm leading-relaxed text-foreground">
+              {tipo.descripcion || "Sin descripción detallada."}
             </p>
           </div>
 
-          {/* Grid: Ruteo y Visibilidad */}
+          {/* Grid de Reglas Técnicas */}
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Categoría de Ruteo */}
-            <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+            <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                 <Route className="size-4 text-primary" />
                 Categoría de Ruteo
               </div>
-              <div className="space-y-1">
-                <span className="font-semibold text-foreground">
-                  {tipo.categoriaRuteo || "No definida"}
-                </span>
-                <p className="text-xs text-foreground-muted">
-                  Determina el flujo y la clasificación de almacenamiento dentro de la organización.
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-foreground">
+                {tipo.categoriaRuteo || "General"}
+              </p>
+              <p className="text-xs text-foreground-muted">
+                Define la clasificación estructural del archivo en el sistema de gestión.
+              </p>
             </div>
 
             {/* Visibilidad por Defecto */}
-            <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+            <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                 <Shield className="size-4 text-primary" />
                 Visibilidad por Defecto
               </div>
-              <div className="space-y-1">
-                <span className="font-semibold text-foreground">
-                  {tipo.visibilidadDefecto || "PRIVADA"}
-                </span>
-                <p className="text-xs text-foreground-muted">
-                  Nivel de acceso inicial aplicado automáticamente a los nuevos documentos subidos.
-                </p>
-              </div>
+              <p className="text-sm font-semibold text-foreground">
+                {tipo.visibilidadDefecto || "PRIVADA"}
+              </p>
+              <p className="text-xs text-foreground-muted">
+                Nivel de acceso predeterminado aplicado a los archivos que se carguen.
+              </p>
             </div>
           </div>
 
-          {/* Reglas de IA & Procesamiento RAG */}
+          {/* Motor de IA / RAG */}
           <div className="rounded-lg border border-border bg-card p-4 space-y-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                 <Brain className="size-4 text-primary" />
-                Indexación e Inteligencia Artificial (RAG)
+                Integración RAG (Inteligencia Artificial)
               </div>
               {tipo.procesarEnRag ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
@@ -165,7 +179,7 @@ export function TipoDocumento360Modal({
         {/* ── Footer ── */}
         <div className="flex items-center justify-between border-t border-border bg-card px-6 py-4">
           <div>
-            {esAdmin && onBaja ? (
+            {esAdmin && !isDadoDeBaja && onBaja && (
               <Button
                 variant="ghost"
                 size="sm"
@@ -178,7 +192,22 @@ export function TipoDocumento360Modal({
                 <Trash2 className="mr-1.5 size-3.5" />
                 Dar de baja tipo
               </Button>
-            ) : null}
+            )}
+
+            {esAdmin && isDadoDeBaja && onReactivar && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs text-success hover:bg-success-soft hover:text-success"
+                onClick={() => {
+                  onOpenChange(false);
+                  onReactivar(tipo);
+                }}
+              >
+                <RotateCcw className="mr-1.5 size-3.5" />
+                Reactivar tipo
+              </Button>
+            )}
           </div>
 
           <div className="flex items-center gap-2">

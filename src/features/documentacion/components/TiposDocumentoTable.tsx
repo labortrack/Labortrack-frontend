@@ -36,6 +36,7 @@ interface TiposDocumentoTableProps {
   onSelect?: (tipo: TipoDocumentoDTO) => void;
   onEdit: (tipo: TipoDocumentoDTO) => void;
   onBaja: (tipo: TipoDocumentoDTO) => void;
+  onReactivar?: (tipo: TipoDocumentoDTO) => void;
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -44,7 +45,9 @@ export function TiposDocumentoTable({
   onSelect,
   onEdit,
   onBaja,
+  onReactivar,
 }: TiposDocumentoTableProps) {
+
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 10;
 
@@ -109,61 +112,123 @@ export function TiposDocumentoTable({
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedItems.map((tipo) => (
-            <TableRow
-              key={tipo.idTipoDocumento}
-              className="cursor-pointer transition-colors hover:bg-muted/60"
-              onClick={() => onSelect?.(tipo)}
-            >
-              {/* Nombre */}
-              <TableCell>
-                <div className="flex items-center gap-2">
-                  <FileText className="size-4 shrink-0 text-foreground-muted" />
-                  <span className="font-medium">{tipo.nombre}</span>
-                </div>
-              </TableCell>
+          {paginatedItems.map((tipo) => {
+            const isDadoDeBaja = Boolean(tipo.fechaBaja) || tipo.activo === false;
 
-              {/* Descripción */}
-              <TableCell className="hidden max-w-[260px] truncate text-sm text-foreground-muted md:table-cell">
-                {tipo.descripcion}
-              </TableCell>
-
-              {/* Procesar en RAG */}
-              <TableCell className="text-center">
-                {tipo.procesarEnRag ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
-                        <Brain className="size-3" />
-                        IA activa
+            return (
+              <TableRow
+                key={tipo.idTipoDocumento}
+                className={`cursor-pointer transition-colors hover:bg-muted/60 ${isDadoDeBaja ? "bg-muted/30 opacity-75" : ""
+                  }`}
+                onClick={() => onSelect?.(tipo)}
+              >
+                {/* Nombre y Estado */}
+                <TableCell>
+                  <div className="flex items-center gap-2">
+                    <FileText
+                      className={`size-4 shrink-0 ${isDadoDeBaja ? "text-error" : "text-foreground-muted"
+                        }`}
+                    />
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+                      <span
+                        className={`font-medium ${isDadoDeBaja ? "line-through text-foreground-muted" : "text-foreground"
+                          }`}
+                      >
+                        {tipo.nombre}
                       </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Los documentos de este tipo se indexan en el motor RAG.
-                      Solo acepta PDF.
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span className="text-xs text-foreground-muted">—</span>
-                )}
-              </TableCell>
+                      {isDadoDeBaja ? (
+                        <Badge variant="error" className="text-[10px] py-0 px-1.5 h-4">
+                          Desactivado
+                        </Badge>
+                      ) : (
+                        <Badge variant="success" className="text-[10px] py-0 px-1.5 h-4">
+                          Activo
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                </TableCell>
 
-              {/* Categoría */}
-              <TableCell className="hidden lg:table-cell">
-                <Badge variant="neutral">{tipo.categoriaRuteo}</Badge>
-              </TableCell>
+                {/* Descripción */}
+                <TableCell className="hidden max-w-[260px] truncate text-sm text-foreground-muted md:table-cell">
+                  {tipo.descripcion}
+                </TableCell>
 
-              {/* Visibilidad */}
-              <TableCell className="hidden lg:table-cell">
-                <span className="text-sm text-foreground-muted">
-                  {tipo.visibilidadDefecto}
-                </span>
-              </TableCell>
+                {/* Procesar en RAG */}
+                <TableCell className="text-center">
+                  {tipo.procesarEnRag ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
+                          <Brain className="size-3" />
+                          IA activa
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        Los documentos de este tipo se indexan en el motor RAG.
+                        Solo acepta PDF.
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <span className="text-xs text-foreground-muted">—</span>
+                  )}
+                </TableCell>
 
-              {/* Acciones */}
-              <TableCell onClick={(e) => e.stopPropagation()}>
-                <div className="flex justify-end gap-1">
-                  {onSelect && (
+                {/* Categoría */}
+                <TableCell className="hidden lg:table-cell">
+                  <Badge variant="neutral">{tipo.categoriaRuteo}</Badge>
+                </TableCell>
+
+                {/* Visibilidad */}
+                <TableCell className="hidden lg:table-cell">
+                  <span className="text-sm text-foreground-muted">
+                    {tipo.visibilidadDefecto}
+                  </span>
+                </TableCell>
+
+                {/* Acciones */}
+                <TableCell onClick={(e) => e.stopPropagation()}>
+                  <div className="flex justify-end gap-1">
+                    {onSelect && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onSelect(tipo);
+                            }}
+                            aria-label={`Ver detalle 360° de tipo ${tipo.nombre}`}
+                          >
+                            <Eye className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Ver Vista 360°</TooltipContent>
+                      </Tooltip>
+                    )}
+
+                    {isDadoDeBaja && onReactivar && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-success hover:bg-success-soft hover:text-success"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onReactivar(tipo);
+                            }}
+                            aria-label={`Reactivar tipo ${tipo.nombre}`}
+                          >
+                            <RotateCcw className="size-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Reactivar tipo</TooltipContent>
+                      </Tooltip>
+                    )}
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -172,57 +237,42 @@ export function TiposDocumentoTable({
                           className="size-8"
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSelect(tipo);
+                            onEdit(tipo);
                           }}
-                          aria-label={`Ver detalle 360° de tipo ${tipo.nombre}`}
+                          aria-label={`Editar tipo ${tipo.nombre}`}
                         >
-                          <Eye className="size-4" />
+                          <Edit2 />
                         </Button>
                       </TooltipTrigger>
-                      <TooltipContent>Ver Vista 360°</TooltipContent>
+                      <TooltipContent>Editar</TooltipContent>
                     </Tooltip>
-                  )}
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onEdit(tipo);
-                        }}
-                        aria-label={`Editar tipo ${tipo.nombre}`}
-                      >
-                        <Edit2 />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Editar</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 hover:bg-error-soft hover:text-error"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onBaja(tipo);
-                        }}
-                        aria-label={`Dar de baja tipo ${tipo.nombre}`}
-                      >
-                        <Trash2 />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Dar de baja</TooltipContent>
-                  </Tooltip>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
+                    {!isDadoDeBaja && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 hover:bg-error-soft hover:text-error"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onBaja(tipo);
+                            }}
+                            aria-label={`Dar de baja tipo ${tipo.nombre}`}
+                          >
+                            <Trash2 />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Dar de baja</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
+
       </Table>
 
       <Pagination

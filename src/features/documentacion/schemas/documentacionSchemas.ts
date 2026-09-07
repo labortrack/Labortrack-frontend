@@ -2,7 +2,24 @@ import { z } from "zod";
 
 // ─── Tipos de Documento ───────────────────────────────────────────────────────
 
-export const tipoDocumentoSchema = z.object({
+/** Categorías de Ruteo soportadas por el backend Spring Boot. */
+export const CATEGORIAS_RUTEO_VALUES = [
+  "LEGAJO_PERSONAL",
+  "RECIBOS_SUELDOS",
+  "HIGIENE_Y_SEGURIDAD",
+  "INSTITUCIONAL",
+  "AUSENTISMO",
+] as const;
+
+/** Visibilidades soportadas por el backend Spring Boot. */
+export const VISIBILIDADES_VALUES = [
+  "PUBLICO",
+  "RRHH",
+  "EMPLEADO",
+] as const;
+
+/** Schema Zod para creación de Tipo de Documento (POST). */
+export const tipoDocumentoCreacionSchema = z.object({
   nombre: z
     .string()
     .trim()
@@ -12,7 +29,7 @@ export const tipoDocumentoSchema = z.object({
     .string()
     .trim()
     .min(3, "La descripción debe tener al menos 3 caracteres.")
-    .max(255, "La descripción no puede superar los 255 caracteres."),
+    .max(100, "La descripción no puede superar los 100 caracteres."),
   procesarEnRag: z.boolean({
     required_error: "Indicá si el tipo debe procesarse en RAG.",
   }),
@@ -26,7 +43,30 @@ export const tipoDocumentoSchema = z.object({
     .min(1, "Seleccioná la visibilidad por defecto."),
 });
 
-export type TipoDocumentoForm = z.infer<typeof tipoDocumentoSchema>;
+/** Schema Zod para modificación de Tipo de Documento (PUT). */
+export const tipoDocumentoModificacionSchema = z.object({
+  nombre: z
+    .string()
+    .trim()
+    .min(4, "El nombre debe tener al menos 4 caracteres.")
+    .max(100, "El nombre no puede superar los 100 caracteres."),
+  descripcion: z
+    .string()
+    .trim()
+    .min(5, "La descripción debe tener al menos 5 caracteres.")
+    .max(255, "La descripción no puede superar los 255 caracteres."),
+  procesarEnRag: z.boolean({
+    required_error: "Indicá si el tipo debe procesarse en RAG.",
+  }),
+  categoriaRuteo: z.string().optional(),
+  visibilidadDefecto: z.string().optional(),
+});
+
+export const tipoDocumentoSchema = tipoDocumentoCreacionSchema;
+
+export type TipoDocumentoForm = z.infer<typeof tipoDocumentoCreacionSchema>;
+export type TipoDocumentoModificacionForm = z.infer<typeof tipoDocumentoModificacionSchema>;
+
 
 // ─── Subida de Documentos ─────────────────────────────────────────────────────
 
