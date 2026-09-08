@@ -24,6 +24,7 @@ import {
   AsistenciasPage,
   AsistenciaDetailPage,
   MiEmpresaPage,
+  RecibosPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -113,6 +114,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN"]}>
                         {suspense(<MiEmpresaPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/recibos",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN"]}>
+                        {suspense(<RecibosPage />)}
                       </RoleRoute>
                     ),
                   },

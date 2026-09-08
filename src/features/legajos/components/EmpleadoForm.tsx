@@ -25,6 +25,8 @@ import {
 } from "../hooks/useLegajos";
 import { GENERO_LABELS } from "../types/legajo.types";
 import type { Genero, EmpleadoUpdateDto } from "../types/legajo.types";
+import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
+import { useZonasActivas } from "@/features/cuadroTarifario/hooks/useZonas";
 import { FormField, LoadingState } from "@/shared/components";
 import {
   Alert,
@@ -37,16 +39,7 @@ import {
   SelectValue,
   Spinner,
 } from "@/shared/ui";
-import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
-
-const CATEGORIA_UOCRA_OPTIONS = [
-  { value: 1, label: "Oficial Especializado" },
-  { value: 2, label: "Oficial" },
-  { value: 3, label: "Medio Oficial" },
-  { value: 4, label: "Peón" },
-  { value: 5, label: "Ayudante" },
-];
 
 const GRUPO_SANGUINEO_OPTIONS = [
   "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-",
@@ -75,9 +68,6 @@ export function EmpleadoForm({
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
 
-  const currentUser = useSessionStore((state) => state.user);
-  const isOperario = currentUser?.rol === "ROLE_OPERARIO";
-
   const { data: empleadoData, isLoading: isLoadingEmpleado } = useLegajoDetail(
     empleadoId,
   );
@@ -85,6 +75,8 @@ export function EmpleadoForm({
   const altaMutation = useAltaEmpleado();
   const modificarMutation = useModificarEmpleado();
   const actualizarFotoMutation = useActualizarFotoPerfil();
+  const categoriasQuery = useCategoriasUocraActivas();
+  const zonasQuery = useZonasActivas();
 
   const [submitError, setSubmitError] = useState<string>();
   const [fotoFile, setFotoFile] = useState<File | null>(null);
@@ -113,7 +105,8 @@ export function EmpleadoForm({
       nombreContactoEmergencia: "",
       celularContactoEmergencia: "",
       numeroIeric: "",
-      categoriaUocraId: undefined,
+      idCategoriaUocra: undefined,
+      idZona: undefined,
       genero: undefined,
       usuario: {
         nombre: "",
@@ -140,7 +133,8 @@ export function EmpleadoForm({
         nombreContactoEmergencia: empleadoData.nombreContactoEmergencia || "",
         celularContactoEmergencia: empleadoData.celularContactoEmergencia || "",
         numeroIeric: empleadoData.numeroIeric || "",
-        categoriaUocraId: empleadoData.categoriaUocraId ?? undefined,
+        idCategoriaUocra: undefined,
+        idZona: undefined,
         genero: empleadoData.genero,
         usuario: {
           nombre: empleadoData.nombre || "",
@@ -178,7 +172,6 @@ export function EmpleadoForm({
     setSubmitError(undefined);
     try {
       if (isEdit && empleadoId) {
-        const originalCategoriaUocraId = empleadoData?.categoriaUocraId;
         // En modo edición solo enviamos los campos permitidos por EmpleadoUpdateDto
         const updatePayload: EmpleadoUpdateDto = {
           nacionalidad: values.nacionalidad,
@@ -186,9 +179,6 @@ export function EmpleadoForm({
           numeroCelular: values.numeroCelular,
           nombreContactoEmergencia: values.nombreContactoEmergencia,
           celularContactoEmergencia: values.celularContactoEmergencia,
-          categoriaUocraId: isOperario
-            ? originalCategoriaUocraId
-            : (values.categoriaUocraId ?? originalCategoriaUocraId),
         };
 
         await modificarMutation.mutateAsync({
@@ -612,36 +602,73 @@ export function EmpleadoForm({
             />
           </FormField>
 
-          {!isOperario ? (
-            <FormField
-              id="empleado-categoria-uocra"
-              label="Categoría UOCRA"
-              error={errors.categoriaUocraId?.message}
-            >
-              <Controller
-                name="categoriaUocraId"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ? String(field.value) : ""}
-                    onValueChange={(val) =>
-                      field.onChange(val ? Number(val) : undefined)
-                    }
-                  >
-                    <SelectTrigger id="empleado-categoria-uocra">
-                      <SelectValue placeholder="Seleccioná una categoría" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {CATEGORIA_UOCRA_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={String(opt.value)}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            </FormField>
+          {!isEdit ? (
+            <>
+              <FormField
+                id="empleado-categoria-uocra"
+                label="Categoría UOCRA"
+                error={errors.idCategoriaUocra?.message}
+                required
+              >
+                <Controller
+                  name="idCategoriaUocra"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={(val) =>
+                        field.onChange(val ? Number(val) : undefined)
+                      }
+                    >
+                      <SelectTrigger id="empleado-categoria-uocra">
+                        <SelectValue placeholder="Seleccioná una categoría" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(categoriasQuery.data ?? []).map((categoria) => (
+                          <SelectItem
+                            key={categoria.id}
+                            value={String(categoria.id)}
+                          >
+                            {categoria.nombreCategoria}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </FormField>
+
+              <FormField
+                id="empleado-zona"
+                label="Zona"
+                error={errors.idZona?.message}
+                required
+              >
+                <Controller
+                  name="idZona"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={(val) =>
+                        field.onChange(val ? Number(val) : undefined)
+                      }
+                    >
+                      <SelectTrigger id="empleado-zona">
+                        <SelectValue placeholder="Seleccioná una zona" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(zonasQuery.data ?? []).map((zona) => (
+                          <SelectItem key={zona.id} value={String(zona.id)}>
+                            {zona.nombreZona}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </FormField>
+            </>
           ) : null}
         </div>
       </fieldset>
