@@ -30,9 +30,7 @@ export const tipoDocumentoCreacionSchema = z.object({
     .trim()
     .min(3, "La descripción debe tener al menos 3 caracteres.")
     .max(100, "La descripción no puede superar los 100 caracteres."),
-  procesarEnRag: z.boolean({
-    required_error: "Indicá si el tipo debe procesarse en RAG.",
-  }),
+  procesarEnRag: z.boolean(),
   categoriaRuteo: z
     .string()
     .trim()
@@ -55,11 +53,12 @@ export const tipoDocumentoModificacionSchema = z.object({
     .trim()
     .min(5, "La descripción debe tener al menos 5 caracteres.")
     .max(255, "La descripción no puede superar los 255 caracteres."),
-  procesarEnRag: z.boolean({
-    required_error: "Indicá si el tipo debe procesarse en RAG.",
-  }),
-  categoriaRuteo: z.string().optional(),
-  visibilidadDefecto: z.string().optional(),
+  procesarEnRag: z.boolean(),
+  categoriaRuteo: z.string(),
+  visibilidadDefecto: z
+    .string()
+    .trim()
+    .min(1, "Seleccioná la visibilidad por defecto."),
 });
 
 export const tipoDocumentoSchema = tipoDocumentoCreacionSchema;
@@ -111,15 +110,15 @@ export const uploadDocumentoSchema = z.object({
 
   /** ID del Tipo de Documento al que pertenece este archivo. */
   idTipoDocumento: z
-    .number({ required_error: "Seleccioná un tipo de documento." })
+    .number({ message: "Seleccioná un tipo de documento." })
     .int()
     .positive("El tipo de documento debe ser válido."),
 
   /**
    * ID del empleado propietario del documento.
-   * Opcional: se omite cuando el documento es institucional (no asociado a persona).
+   * Opcional: se omite cuando el documento es institucional (no asociado a persona) o público.
    */
-  empleadoId: z.number().int().positive().optional(),
+  empleadoId: z.number().int().positive().nullable().optional(),
 
   /**
    * Nombre descriptivo del documento (visible para los usuarios).

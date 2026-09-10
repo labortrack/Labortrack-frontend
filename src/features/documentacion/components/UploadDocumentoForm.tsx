@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import {
   Check,
   ChevronDown,
   FileUp,
+  Globe,
   Loader2,
   UserRound,
   X,
@@ -185,17 +186,6 @@ function EmpleadoCombobox({ value, onChange, error }: EmpleadoComboboxProps) {
   );
 }
 
-// ─── Tipos Permitidos para Operarios (Guardarraíl) ───────────────────────────
-
-const TIPOS_PERMITIDOS_OPERARIO = [
-  "certificados medicos",
-  "certificados médicos",
-  "certificado medico",
-  "certificado médico",
-  "documentacion personal",
-  "documentación personal",
-];
-
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
 export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
@@ -210,26 +200,15 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
 
   const uploadMutation = useUploadDocumento();
 
-  // ── Guardarraíl de tipos según Rol ─────────────────────────────────────────
-  // Si es ROLE_OPERARIO, traemos los tipos 'Certificados Médicos' y 'Documentación Personal'.
+  // ── Filtro Inteligente para Operarios ───────────────────────────────────────
+  // Si el rol es ROLE_OPERARIO, solo se muestran opciones con categoriaRuteo === 'LEGAJO_PERSONAL'.
   // Si es ROLE_ADMIN o ROLE_RRHH, se muestra la lista completa.
   const tiposDisponibles = useMemo(() => {
     if (!esOperario) return tiposDocumento;
 
-    const filtrados = tiposDocumento.filter((tipo) => {
-      const nombreNorm = tipo.nombre.toLowerCase().trim();
-      const catNorm = (tipo.categoriaRuteo || "").toLowerCase().trim();
-
-      return (
-        TIPOS_PERMITIDOS_OPERARIO.some((permitido) =>
-          nombreNorm.includes(permitido) || permitido.includes(nombreNorm),
-        ) ||
-        catNorm === "legajo_personal" ||
-        catNorm === "ausentismo"
-      );
-    });
-
-    return filtrados.length > 0 ? filtrados : tiposDocumento;
+    return tiposDocumento.filter(
+      (tipo) => tipo.categoriaRuteo === "LEGAJO_PERSONAL",
+    );
   }, [esOperario, tiposDocumento]);
 
   // ── Construcción dinámica del resolver ─────────────────────────────────────
@@ -276,12 +255,22 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
     },
   });
 
-  // Escucha el tipo seleccionado para mostrar el hint de PDF
+  // Escucha el tipo seleccionado para identificar visibilidad y requerimientos
   const idTipoSeleccionado = useWatch({ control, name: "idTipoDocumento" });
   const tipoActual = tiposDocumento.find(
     (t) => (t.idTipoDocumento ?? t.id) === idTipoSeleccionado,
   );
+  const esTipoPublico = tipoActual?.visibilidadDefecto === "PUBLICO";
   const requierePdf = tipoActual?.procesarEnRag ?? false;
+
+  // Desactivar / Limpiar Legajo según Contexto (Principio de Menor Privilegio)
+  useEffect(() => {
+    if (esTipoPublico) {
+      setValue("empleadoId", null as unknown as undefined);
+    } else if (esOperario && user?.empleadoId) {
+      setValue("empleadoId", user.empleadoId);
+    }
+  }, [esTipoPublico, esOperario, user?.empleadoId, setValue]);
 
   // ── Submit ─────────────────────────────────────────────────────────────────
   //
@@ -294,10 +283,16 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
     formData.append("idTipoDocumento", String(values.idTipoDocumento));
     formData.append("nombrePersonalizado", values.nombrePersonalizado);
 
-    // Lógica de empleadoId según rol:
-    // • Operario  → autoasocia su user.empleadoId de sesión.
-    // • Admin/RRHH → usa el empleado seleccionado en el combobox (opcional).
-    const empleadoIdFinal = esOperario ? user?.empleadoId : values.empleadoId;
+    // Lógica de empleadoId según tipo y rol:
+    // • Tipo Público → NUNCA se asocia legajo (principio de menor privilegio).
+    // • Operario     → autoasocia su user.empleadoId de sesión.
+    // • Admin/RRHH   → usa el empleado seleccionado en el combobox (opcional).
+    const empleadoIdFinal = esTipoPublico
+      ? undefined
+      : esOperario
+        ? user?.empleadoId
+        : (values.empleadoId ?? undefined);
+
     if (empleadoIdFinal !== undefined && empleadoIdFinal !== null) {
       formData.append("empleadoId", String(empleadoIdFinal));
     }
@@ -401,8 +396,8 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
         />
       </FormField>
 
-      {/* ── Empleado Asociado (solo Admin / RRHH) ── */}
-      {esAdminOrRRHH && (
+      {/* ── Empleado Asociado (solo Admin / RRHH si no es público) ── */}
+      {esAdminOrRRHH && !esTipoPublico && (
         <FormField
           id="upload-empleado"
           label="Empleado asociado"
@@ -414,7 +409,7 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
             name="empleadoId"
             render={({ field }) => (
               <EmpleadoCombobox
-                value={field.value}
+                value={field.value ?? undefined}
                 onChange={field.onChange}
                 error={errors.empleadoId?.message}
               />
@@ -423,8 +418,18 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
         </FormField>
       )}
 
-      {/* Indicador de empleado auto-asociado para Operario */}
-      {esOperario && (
+      {/* Indicador de documento público (sin legajo) */}
+      {esTipoPublico && (
+        <div className="flex items-center gap-2.5 rounded-lg border border-primary/20 bg-primary-soft/50 px-3.5 py-3 text-sm text-foreground">
+          <Globe className="size-4 shrink-0 text-primary" />
+          <span>
+            Este tipo de documento tiene visibilidad <strong>Pública</strong> (no se asocia a ningún legajo).
+          </span>
+        </div>
+      )}
+
+      {/* Indicador de empleado auto-asociado para Operario (solo si no es público) */}
+      {esOperario && !esTipoPublico && (
         <div className="flex items-center gap-2 rounded-lg border border-border bg-subtle px-3 py-2.5 text-sm text-foreground-muted">
           <UserRound className="size-4 shrink-0" />
           El documento se asociará a tu legajo automáticamente.

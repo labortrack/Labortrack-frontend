@@ -34,7 +34,10 @@ export function normalizeApiError(
   }
 
   const payload = error.response.data;
-  const message = typeof payload === "string" ? payload : payload?.message;
+  const message =
+    typeof payload === "string"
+      ? payload
+      : payload?.message || payload?.error || payload?.details;
   return {
     status: error.response.status,
     message: message || fallback,

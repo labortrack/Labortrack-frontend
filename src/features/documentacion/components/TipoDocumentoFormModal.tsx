@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Brain, FileText, Plus, Save, X } from "lucide-react";
+import { Brain, FileText, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import {
   tipoDocumentoCreacionSchema,
@@ -15,7 +15,7 @@ import {
   VISIBILIDAD_LABELS,
   type CategoriaRuteo,
   type TipoDocumentoDTO,
-  type Visibilidad,
+  type TipoDocumentoModificacionDto,
 } from "../types/documentacion.types";
 import {
   useCrearTipoDocumento,
@@ -23,7 +23,6 @@ import {
 } from "../hooks/useDocumentacion";
 import { FormField } from "@/shared/components";
 import {
-  Badge,
   Button,
   Dialog,
   DialogContent,
@@ -66,7 +65,7 @@ export function TipoDocumentoFormModal({
     handleSubmit,
     control,
     reset,
-    formState: { errors },
+    formState: { errors, dirtyFields },
   } = useForm<TipoDocumentoForm>({
     resolver: zodResolver(
       isEditing ? tipoDocumentoModificacionSchema : tipoDocumentoCreacionSchema,
@@ -106,15 +105,54 @@ export function TipoDocumentoFormModal({
   const onSubmit = async (values: TipoDocumentoForm) => {
     try {
       if (isEditing && tipo?.idTipoDocumento) {
+        // Si no se modificó ningún campo en dirtyFields, evitar llamada a API
+        if (Object.keys(dirtyFields).length === 0) {
+          toast.info("No se detectaron cambios.");
+          onOpenChange(false);
+          return;
+        }
+
+        // Construir payload parcial con solo campos modificados y limpios (trim)
+        const payloadParcial: TipoDocumentoModificacionDto = {};
+
+        if (dirtyFields.nombre) {
+          const trimmedNombre = values.nombre.trim();
+          if (trimmedNombre !== (tipo.nombre ?? "").trim()) {
+            payloadParcial.nombre = trimmedNombre;
+          }
+        }
+
+        if (dirtyFields.descripcion) {
+          const trimmedDesc = values.descripcion.trim();
+          if (trimmedDesc !== (tipo.descripcion ?? "").trim()) {
+            payloadParcial.descripcion = trimmedDesc;
+          }
+        }
+
+        if (dirtyFields.procesarEnRag) {
+          if (values.procesarEnRag !== Boolean(tipo.procesarEnRag)) {
+            payloadParcial.procesarEnRag = values.procesarEnRag;
+          }
+        }
+
+        if (dirtyFields.visibilidadDefecto) {
+          if (values.visibilidadDefecto !== tipo.visibilidadDefecto) {
+            payloadParcial.visibilidadDefecto = values.visibilidadDefecto;
+          }
+        }
+
+        // Si tras el trim y comparación no hay cambios efectivos
+        if (Object.keys(payloadParcial).length === 0) {
+          toast.info("No se detectaron cambios.");
+          onOpenChange(false);
+          return;
+        }
+
         await modificarMutation.mutateAsync({
           id: tipo.idTipoDocumento,
-          data: {
-            nombre: values.nombre.trim(),
-            descripcion: values.descripcion.trim(),
-            procesarEnRag: values.procesarEnRag,
-          },
+          data: payloadParcial,
         });
-        toast.success(`Tipo "${values.nombre}" modificado correctamente.`);
+        toast.success(`Tipo "${values.nombre.trim()}" modificado correctamente.`);
       } else {
         await crearMutation.mutateAsync({
           nombre: values.nombre.trim(),
@@ -123,7 +161,7 @@ export function TipoDocumentoFormModal({
           categoriaRuteo: values.categoriaRuteo,
           visibilidadDefecto: values.visibilidadDefecto,
         });
-        toast.success(`Tipo "${values.nombre}" creado exitosamente.`);
+        toast.success(`Tipo "${values.nombre.trim()}" creado exitosamente.`);
       }
 
       onOpenChange(false);
@@ -291,51 +329,39 @@ export function TipoDocumentoFormModal({
           <FormField
             id="tipo-visibilidadDefecto"
             label="Visibilidad por Defecto"
-            required={!isEditing}
+            required
             error={errors.visibilidadDefecto?.message}
-            hint={
-              isEditing
-                ? "La visibilidad por defecto se establece durante la creación."
-                : "Define el nivel de acceso inicial para los archivos de este tipo."
-            }
+            hint="Define el nivel de acceso por defecto para los archivos de este tipo."
           >
-            {isEditing ? (
-              <div className="flex h-10 w-full items-center rounded-control border border-border-strong bg-subtle px-3 text-sm text-foreground-muted">
-                {VISIBILIDAD_LABELS[tipo?.visibilidadDefecto as Visibilidad]?.label ||
-                  tipo?.visibilidadDefecto ||
-                  "No definida"}
-              </div>
-            ) : (
-              <Controller
-                control={control}
-                name="visibilidadDefecto"
-                render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={field.onChange}
-                    disabled={isSubmitting}
-                  >
-                    <SelectTrigger id="tipo-visibilidadDefecto">
-                      <SelectValue placeholder="Seleccioná la visibilidad..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {VISIBILIDADES_VALUES.map((vis) => (
-                        <SelectItem key={vis} value={vis}>
-                          <div className="py-0.5">
-                            <span className="font-medium text-foreground block">
-                              {VISIBILIDAD_LABELS[vis]?.label || vis}
-                            </span>
-                            <span className="text-xs text-foreground-muted block">
-                              {VISIBILIDAD_LABELS[vis]?.desc}
-                            </span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
-            )}
+            <Controller
+              control={control}
+              name="visibilidadDefecto"
+              render={({ field }) => (
+                <Select
+                  value={field.value}
+                  onValueChange={field.onChange}
+                  disabled={isSubmitting}
+                >
+                  <SelectTrigger id="tipo-visibilidadDefecto">
+                    <SelectValue placeholder="Seleccioná la visibilidad..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {VISIBILIDADES_VALUES.map((vis) => (
+                      <SelectItem key={vis} value={vis}>
+                        <div className="py-0.5">
+                          <span className="font-medium text-foreground block">
+                            {VISIBILIDAD_LABELS[vis]?.label || vis}
+                          </span>
+                          <span className="text-xs text-foreground-muted block">
+                            {VISIBILIDAD_LABELS[vis]?.desc}
+                          </span>
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+            />
           </FormField>
 
           {/* Footer de Acciones */}

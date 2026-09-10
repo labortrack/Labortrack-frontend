@@ -53,9 +53,10 @@ export interface TipoDocumentoDTO {
 
 /** DTO enviado al backend para modificar un Tipo de Documento (PUT). */
 export interface TipoDocumentoModificacionDto {
-  nombre: string;
-  descripcion: string;
-  procesarEnRag: boolean;
+  nombre?: string;
+  descripcion?: string;
+  procesarEnRag?: boolean;
+  visibilidadDefecto?: Visibilidad | string;
 }
 
 
@@ -76,6 +77,11 @@ export interface DocumentoRespuestaDto {
   usuarioSubidaId: number;
   /** Presente únicamente cuando el documento está asociado a un empleado. */
   empleadoId: number | null;
+  empleadoNombreCompleto?: string | null;
+  empleadoDni?: string | null;
+  subidoPorUsername?: string | null;
+  tamanioBytes?: number | null;
+  tamanioLegible?: string | null;
   /** URL prefirmada devuelta por el endpoint de visualización */
   url?: string;
 }

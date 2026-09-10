@@ -1,10 +1,8 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import {
   AlertCircle,
   Brain,
   Calendar,
-  Check,
-  Copy,
   ExternalLink,
   Eye,
   EyeOff,
@@ -12,11 +10,8 @@ import {
   FileSpreadsheet,
   FileText,
   Globe,
-  HardDrive,
-  Hash,
   Layers,
   Lock,
-  ShieldCheck,
   Trash2,
   User,
   UserCheck,
@@ -46,13 +41,13 @@ interface Documento360ModalProps {
 function formatFechaCompleta(iso: string) {
   try {
     const fecha = new Date(iso);
+    if (isNaN(fecha.getTime())) return iso;
     return new Intl.DateTimeFormat("es-AR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-      second: "2-digit",
     }).format(fecha);
   } catch {
     return iso;
@@ -99,9 +94,6 @@ export function Documento360Modal({
   onOpenChange,
   onBaja,
 }: Documento360ModalProps) {
-  const [copiedHash, setCopiedHash] = useState(false);
-  const [copiedPath, setCopiedPath] = useState(false);
-
   // Estados de visualización
   const [visorUrl, setVisorUrl] = useState<string | null>(null);
   const [incompatibleNotice, setIncompatibleNotice] = useState<string | null>(null);
@@ -109,41 +101,27 @@ export function Documento360Modal({
   const obtenerUrlVisorMutation = useObtenerUrlVisor();
 
   const user = useSessionStore((state) => state.user);
+  const esOperario = user?.rol === "ROLE_OPERARIO";
   const esAdmin = user?.rol === "ROLE_ADMIN";
   const puedeEliminar =
     user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
 
   // Resetear preview cuando cambia el documento o se abre/cierra el modal
-  useEffect(() => {
+  const [prevDocKey, setPrevDocKey] = useState<string | null>(null);
+  const currentDocKey = open && doc ? `${doc.idDocumento}` : null;
+
+  if (currentDocKey !== prevDocKey) {
+    setPrevDocKey(currentDocKey);
     setVisorUrl(null);
     setIncompatibleNotice(null);
-  }, [doc?.idDocumento, open]);
+  }
 
   if (!doc) return null;
 
-  const handleCopyHash = async () => {
-    if (!doc.hashSha256) return;
-    try {
-      await navigator.clipboard.writeText(doc.hashSha256);
-      setCopiedHash(true);
-      toast.success("Hash SHA-256 copiado al portapapeles");
-      setTimeout(() => setCopiedHash(false), 2000);
-    } catch {
-      toast.error("No se pudo copiar el hash");
-    }
-  };
-
-  const handleCopyPath = async () => {
-    if (!doc.pathMinio) return;
-    try {
-      await navigator.clipboard.writeText(doc.pathMinio);
-      setCopiedPath(true);
-      toast.success("Ruta de almacenamiento copiada");
-      setTimeout(() => setCopiedPath(false), 2000);
-    } catch {
-      toast.error("No se pudo copiar la ruta");
-    }
-  };
+  const esDocumentoPublico =
+    doc.visibilidad?.toUpperCase() === "PUBLICO" ||
+    doc.visibilidad?.toUpperCase() === "PUBLICA" ||
+    (!doc.empleadoId && !doc.empleadoNombreCompleto);
 
   const handleAbrirOPrevisualizar = async () => {
     // 1. Evaluar previamente el tipo MIME para no llamar al visor si es incompatible
@@ -152,7 +130,7 @@ export function Documento360Modal({
     if (!compatible) {
       setVisorUrl(null);
       setIncompatibleNotice(
-        "La vista previa nativa no está disponible para este formato."
+        "La vista previa nativa no está disponible para este formato. Podés descargarlo o consultarlo con tu administrador.",
       );
       return;
     }
@@ -162,14 +140,14 @@ export function Documento360Modal({
       const url = await obtenerUrlVisorMutation.mutateAsync(doc.idDocumento);
 
       if (!url) {
-        toast.error("No se pudo obtener la URL de visualización del archivo");
+        toast.error("No se pudo obtener la URL de visualización del archivo.");
         return;
       }
 
       setIncompatibleNotice(null);
       setVisorUrl(url);
     } catch {
-      toast.error("Error al obtener la URL del archivo para visualización");
+      toast.error("Error al obtener la URL del archivo para visualización.");
     }
   };
 
@@ -212,12 +190,12 @@ export function Documento360Modal({
                   variant="neutral"
                   className="flex items-center gap-1 text-xs"
                 >
-                  {doc.visibilidad?.toUpperCase() === "PUBLICA" ? (
-                    <Globe className="size-3" />
+                  {esDocumentoPublico ? (
+                    <Globe className="size-3 text-primary" />
                   ) : (
-                    <Lock className="size-3" />
+                    <Lock className="size-3 text-foreground-muted" />
                   )}
-                  {doc.visibilidad || "PRIVADA"}
+                  {doc.visibilidad || (esDocumentoPublico ? "PUBLICO" : "PRIVADO")}
                 </Badge>
               </div>
 
@@ -236,8 +214,8 @@ export function Documento360Modal({
           {/* Barra de Acciones Directas */}
           <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/40 p-3">
             <div className="flex items-center gap-2 text-xs text-foreground-muted">
-              <HardDrive className="size-4 text-primary" />
-              <span>Acciones sobre el archivo:</span>
+              <Eye className="size-4 text-primary" />
+              <span>Visualización de archivo:</span>
             </div>
             <div className="flex items-center gap-2">
               <Button
@@ -316,155 +294,170 @@ export function Documento360Modal({
             </div>
           )}
 
-          {/* Grid de Metadatos Principales */}
-          <div className="grid gap-4 sm:grid-cols-2">
-            {/* Metadato: Empleado Asociado */}
-            <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                <User className="size-4 text-primary" />
-                Empleado / Titular
-              </div>
-              <p className="text-sm font-semibold text-foreground">
-                {doc.empleadoNombreCompleto || "Documento General (Sin Empleado)"}
-              </p>
-              {doc.empleadoDni && (
-                <p className="text-xs font-mono text-foreground-muted">
-                  DNI: {doc.empleadoDni}
-                </p>
+          {/* ── VISTA PARA OPERARIOS (Clara, contextual y sin ruido técnico) ── */}
+          {esOperario ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {esDocumentoPublico ? (
+                <>
+                  {/* Tarjeta 1: Alcance Institucional */}
+                  <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                      <Globe className="size-4 text-primary" />
+                      Alcance del documento
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      Documento Institucional / Público
+                    </p>
+                    <p className="text-xs text-foreground-muted">
+                      Normativa o información accesible para todo el personal.
+                    </p>
+                  </div>
+
+                  {/* Tarjeta 2: Fecha de Publicación */}
+                  <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                      <Calendar className="size-4 text-primary" />
+                      Fecha de publicación
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {doc.fechaSubida ? formatFechaCompleta(doc.fechaSubida) : "Disponible"}
+                    </p>
+                    <p className="text-xs text-foreground-muted">
+                      Clasificación: {doc.tipoDocumentoNombre || "General"}
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  {/* Tarjeta 1: Titular del Legajo */}
+                  <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                      <User className="size-4 text-primary" />
+                      Titular del Documento
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {doc.empleadoNombreCompleto || "Mi Legajo Personal"}
+                    </p>
+                    <p className="text-xs text-foreground-muted">
+                      {doc.empleadoDni ? `DNI: ${doc.empleadoDni}` : "Documentación personal asociada"}
+                    </p>
+                  </div>
+
+                  {/* Tarjeta 2: Fecha de Subida */}
+                  <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                      <Calendar className="size-4 text-primary" />
+                      Fecha de registro
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      {doc.fechaSubida ? formatFechaCompleta(doc.fechaSubida) : "—"}
+                    </p>
+                    <p className="text-xs text-foreground-muted">
+                      Tipo: {doc.tipoDocumentoNombre || "General"}
+                    </p>
+                  </div>
+                </>
               )}
             </div>
-
-            {/* Metadato: Usuario que subió */}
-            <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                <UserCheck className="size-4 text-primary" />
-                Subido por
-              </div>
-              <p className="text-sm font-semibold text-foreground">
-                {doc.subidoPorUsername || "Sistema"}
-              </p>
-              <p className="flex items-center gap-1 text-xs text-foreground-muted">
-                <Calendar className="size-3" />
-                {doc.fechaSubida ? formatFechaCompleta(doc.fechaSubida) : "—"}
-              </p>
-            </div>
-          </div>
-
-          {/* Grid de Detalles Técnicos del Archivo */}
-          <div className="space-y-3 rounded-lg border border-border bg-card p-4">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-              <Layers className="size-4 text-primary" />
-              Especificaciones del Archivo
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div>
-                <span className="text-xs text-foreground-muted block">Tipo MIME:</span>
-                <span className="text-xs font-mono font-medium text-foreground">
-                  {doc.contentType || "Desconocido"}
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-foreground-muted block">Tamaño:</span>
-                <span className="text-xs font-mono font-medium text-foreground">
-                  {doc.tamanioLegible || `${doc.tamanioBytes || 0} bytes`}
-                </span>
-              </div>
-              <div>
-                <span className="text-xs text-foreground-muted block">Visibilidad configurada:</span>
-                <span className="text-xs font-medium text-foreground">
-                  {doc.visibilidad}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* ── Secciones Avanzadas (ESTRICTAMENTE SOLO PARA ROLE_ADMIN) ── */}
-          {esAdmin && (
+          ) : (
+            /* ── VISTA PARA GESTIÓN (ROLE_ADMIN / ROLE_RRHH) ── */
             <>
-              {/* Sección: Inteligencia Artificial (RAG) */}
-              <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-                <div className="flex items-center justify-between">
+              <div className="grid gap-4 sm:grid-cols-2">
+                {/* Metadato: Empleado Asociado o Clasificación */}
+                <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
                   <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                    <Brain className="size-4 text-primary" />
-                    Motor de Búsqueda IA & RAG
+                    {esDocumentoPublico ? (
+                      <Globe className="size-4 text-primary" />
+                    ) : (
+                      <User className="size-4 text-primary" />
+                    )}
+                    {esDocumentoPublico ? "Clasificación" : "Empleado / Titular"}
                   </div>
-                  {doc.esIndexadoRag ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                      <Brain className="size-3" /> Activo en IA
-                    </span>
-                  ) : (
-                    <span className="text-xs text-foreground-muted">Inactivo</span>
-                  )}
+                  <p className="text-sm font-semibold text-foreground">
+                    {esDocumentoPublico
+                      ? "Documento Institucional / Público"
+                      : doc.empleadoNombreCompleto || (doc.empleadoId ? `Empleado #${doc.empleadoId}` : "Sin Titular")}
+                  </p>
+                  {esDocumentoPublico ? (
+                    <p className="text-xs text-foreground-muted">
+                      Disponible para toda la organización
+                    </p>
+                  ) : doc.empleadoDni ? (
+                    <p className="text-xs font-mono text-foreground-muted">
+                      DNI: {doc.empleadoDni}
+                    </p>
+                  ) : null}
                 </div>
-                <p className="text-xs leading-relaxed text-foreground-muted">
-                  {doc.esIndexadoRag
-                    ? "Este documento ha sido vectorizado e indexado en el motor RAG de LaborTrack. Su contenido puede ser consultado y referenciado de forma semántica por los modelos de IA del sistema."
-                    : "Este documento no forma parte de la base de conocimiento vectorial del asistente de IA. Se encuentra almacenado para descarga y archivo administrativo."}
-                </p>
+
+                {/* Metadato: Usuario que subió */}
+                <div className="space-y-1.5 rounded-lg border border-border bg-card p-4">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                    <UserCheck className="size-4 text-primary" />
+                    Subido por
+                  </div>
+                  <p className="text-sm font-semibold text-foreground">
+                    {doc.subidoPorUsername ||
+                      (doc.usuarioSubidaId ? `Usuario #${doc.usuarioSubidaId}` : "Sistema")}
+                  </p>
+                  <p className="flex items-center gap-1 text-xs text-foreground-muted">
+                    <Calendar className="size-3" />
+                    {doc.fechaSubida ? formatFechaCompleta(doc.fechaSubida) : "—"}
+                  </p>
+                </div>
               </div>
 
-              {/* Sección: Seguridad & Trazabilidad Criptográfica */}
+              {/* Grid de Detalles Técnicos del Archivo */}
               <div className="space-y-3 rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                  <ShieldCheck className="size-4 text-primary" />
-                  Seguridad, Integridad y Storage
+                  <Layers className="size-4 text-primary" />
+                  Especificaciones del Archivo
                 </div>
 
-                {/* Hash SHA-256 */}
-                <div>
-                  <div className="flex items-center justify-between text-xs text-foreground-muted">
-                    <span className="flex items-center gap-1">
-                      <Hash className="size-3" /> Hash SHA-256 de Integridad:
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div>
+                    <span className="text-xs text-foreground-muted block">Tipo MIME:</span>
+                    <span className="text-xs font-mono font-medium text-foreground">
+                      {doc.contentType || "Desconocido"}
                     </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyHash}
-                      className="flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
-                    >
-                      {copiedHash ? (
-                        <>
-                          <Check className="size-3 text-success" /> Copiado
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="size-3" /> Copiar Hash
-                        </>
-                      )}
-                    </button>
                   </div>
-                  <div className="mt-1 rounded border border-border/80 bg-muted/60 p-2 font-mono text-[11px] break-all text-foreground">
-                    {doc.hashSha256 || "No disponible"}
-                  </div>
-                </div>
-
-                {/* Path MinIO */}
-                <div>
-                  <div className="flex items-center justify-between text-xs text-foreground-muted">
-                    <span className="flex items-center gap-1">
-                      <HardDrive className="size-3" /> Ruta en Almacenamiento MinIO:
+                  <div>
+                    <span className="text-xs text-foreground-muted block">Tamaño:</span>
+                    <span className="text-xs font-mono font-medium text-foreground">
+                      {doc.tamanioLegible || (doc.tamanioBytes ? `${doc.tamanioBytes} bytes` : "—")}
                     </span>
-                    <button
-                      type="button"
-                      onClick={handleCopyPath}
-                      className="flex items-center gap-1 text-[11px] font-medium text-primary hover:underline"
-                    >
-                      {copiedPath ? (
-                        <>
-                          <Check className="size-3 text-success" /> Copiado
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="size-3" /> Copiar Ruta
-                        </>
-                      )}
-                    </button>
                   </div>
-                  <div className="mt-1 rounded border border-border/80 bg-muted/60 p-2 font-mono text-[11px] break-all text-foreground-muted">
-                    {doc.pathMinio || "No disponible"}
+                  <div>
+                    <span className="text-xs text-foreground-muted block">Visibilidad configurada:</span>
+                    <span className="text-xs font-medium text-foreground">
+                      {doc.visibilidad}
+                    </span>
                   </div>
                 </div>
               </div>
+
+              {/* Sección IA / RAG (Solo ROLE_ADMIN) */}
+              {esAdmin && (
+                <div className="rounded-lg border border-border bg-card p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
+                      <Brain className="size-4 text-primary" />
+                      Motor de Búsqueda IA & RAG
+                    </div>
+                    {doc.esIndexadoRag ? (
+                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                        <Brain className="size-3" /> Activo en IA
+                      </span>
+                    ) : (
+                      <span className="text-xs text-foreground-muted">Inactivo</span>
+                    )}
+                  </div>
+                  <p className="text-xs leading-relaxed text-foreground-muted">
+                    {doc.esIndexadoRag
+                      ? "Este documento ha sido vectorizado e indexado en el motor RAG de LaborTrack para consultas semánticas en el asistente inteligente."
+                      : "Este documento no forma parte de la base vectorial de IA. Se encuentra almacenado para archivo administrativo y consulta directa."}
+                  </p>
+                </div>
+              )}
             </>
           )}
         </div>
