@@ -22,6 +22,8 @@ export interface EmpleadoDto {
   celularContactoEmergencia: string;
   numeroIeric: string;
   fechaIngreso: string; // YYYY-MM-DD
+  idCategoriaUocra: number;
+  idZona: number;
   genero: Genero;
   usuario: CreateUsuarioRequestDto;
 }
@@ -32,7 +34,6 @@ export interface EmpleadoUpdateDto {
   numeroCelular?: string;
   nombreContactoEmergencia?: string;
   celularContactoEmergencia?: string;
-  categoriaUocraId?: number;
 }
 
 export interface EmpleadoBajaDto {
@@ -81,7 +82,6 @@ export interface EmpleadoResponseDto {
   fotoPerfilKey: string;
   estadoActual: string;
   categoriaActual: string;
-  categoriaUocraId?: number;
 }
 
 export interface EmpleadoEstadoResponseDto {

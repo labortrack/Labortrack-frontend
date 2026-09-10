@@ -1,19 +1,20 @@
 import { useMemo } from "react";
-import { Calendar, CheckCircle2, History } from "lucide-react";
-import type { EmpleadoEstadoResponseDto } from "../types/legajo.types";
-import { ESTADO_LABELS } from "../types/legajo.types";
+import { Calendar, CheckCircle2, History, MapPin, Tag } from "lucide-react";
+import type { EmpleadoCategoriaResponseDto } from "../types/empleadoCategoria.types";
 import { ordenarHistorialPorVigencia } from "../utils/ordenarHistorial";
 import { formatDate } from "./EmpleadoTable";
 import { Badge } from "@/shared/ui";
 
-interface EmpleadoTimelineProps {
-  historialEstados: EmpleadoEstadoResponseDto[];
+interface EmpleadoCategoriaTimelineProps {
+  historialCategoria: EmpleadoCategoriaResponseDto[];
 }
 
-export function EmpleadoTimeline({ historialEstados }: EmpleadoTimelineProps) {
+export function EmpleadoCategoriaTimeline({
+  historialCategoria,
+}: EmpleadoCategoriaTimelineProps) {
   const historialOrdenado = useMemo(
-    () => ordenarHistorialPorVigencia(historialEstados),
-    [historialEstados],
+    () => ordenarHistorialPorVigencia(historialCategoria),
+    [historialCategoria],
   );
 
   return (
@@ -21,20 +22,18 @@ export function EmpleadoTimeline({ historialEstados }: EmpleadoTimelineProps) {
       <div className="mb-4 flex items-center gap-2 border-b border-border pb-3">
         <History className="size-5 text-primary" />
         <h3 className="text-base font-semibold text-foreground">
-          Historial de Estados Operativos
+          Historial de Categoría UOCRA
         </h3>
       </div>
 
-      {historialEstados.length === 0 ? (
+      {historialCategoria.length === 0 ? (
         <p className="py-6 text-center text-sm text-foreground-muted">
-          Sin historial de estados registrado para este legajo.
+          Sin historial de categoría registrado para este legajo.
         </p>
       ) : (
         <div className="relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
           {historialOrdenado.map((item, index) => {
             const isCurrent = !item.fechaHasta;
-            const estadoDisplay =
-              ESTADO_LABELS[item.nombreEstado] || item.nombreEstado;
 
             return (
               <div key={item.id || index} className="relative pb-6 last:pb-0">
@@ -50,12 +49,18 @@ export function EmpleadoTimeline({ historialEstados }: EmpleadoTimelineProps) {
 
                 <div className="rounded-lg border border-border bg-subtle/50 p-3.5">
                   <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold text-foreground">
-                      Estado: {estadoDisplay}
+                    <span className="flex items-center gap-1.5 font-semibold text-foreground">
+                      <Tag className="size-3.5 text-foreground-muted" />
+                      {item.nombreCategoria}
                     </span>
                     {isCurrent ? (
-                      <Badge variant="success">Estado Actual</Badge>
+                      <Badge variant="success">Categoría Actual</Badge>
                     ) : null}
+                  </div>
+
+                  <div className="mt-1.5 flex items-center gap-1.5 text-xs text-foreground-muted">
+                    <MapPin className="size-3.5" />
+                    <span>{item.nombreZona}</span>
                   </div>
 
                   <div className="mt-2 flex items-center gap-2 text-xs text-foreground-muted">
@@ -71,12 +76,6 @@ export function EmpleadoTimeline({ historialEstados }: EmpleadoTimelineProps) {
                       </strong>
                     </span>
                   </div>
-
-                  {item.motivo ? (
-                    <p className="mt-2 text-xs italic text-foreground-muted">
-                      Motivo: "{item.motivo}"
-                    </p>
-                  ) : null}
                 </div>
               </div>
             );

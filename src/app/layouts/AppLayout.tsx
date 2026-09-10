@@ -9,6 +9,7 @@ import {
   LayoutDashboard,
   LogOut,
   Menu,
+  Receipt,
   User,
   UserCheck,
   UserCog,
@@ -66,7 +67,10 @@ export function AppLayout() {
       ]
       : []),
     ...(user.rol === "ROLE_ADMIN"
-      ? [{ to: "/mi-empresa", label: "Mi Empresa", icon: Building2 }]
+      ? [
+        { to: "/mi-empresa", label: "Mi Empresa", icon: Building2 },
+        { to: "/recibos", label: "Recibos", icon: Receipt },
+      ]
       : []),
     ...(capacidades?.parteDiario?.puedeConsultar
       ? [

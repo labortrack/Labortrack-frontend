@@ -21,16 +21,13 @@ import type {
   EmpleadoEstadoResponseDto,
   EmpleadoResponseDto,
 } from "../types/legajo.types";
-import {
-  CATEGORIA_LABELS,
-  ESTADO_LABELS,
-  GENERO_LABELS,
-} from "../types/legajo.types";
+import { ESTADO_LABELS, GENERO_LABELS } from "../types/legajo.types";
 import { formatDate } from "./EmpleadoTable";
 import { EmpleadoTimeline } from "./EmpleadoTimeline";
+import { EmpleadoCategoriaTimeline } from "./EmpleadoCategoriaTimeline";
 import { AvatarMinio } from "./AvatarMinio";
 import { useActualizarFotoPerfil } from "../hooks/useLegajos";
-import { useSessionStore } from "@/features/auth/store/sessionStore";
+import { useHistorialCategoria } from "../hooks/useEmpleadoCategoria";
 import { Badge, Button, Spinner } from "@/shared/ui";
 
 interface EmpleadoDetail360Props {
@@ -46,9 +43,12 @@ export function EmpleadoDetail360({
   onBack,
   onEdit,
 }: EmpleadoDetail360Props) {
-  const user = useSessionStore((state) => state.user);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const actualizarFotoMutation = useActualizarFotoPerfil();
+  const historialCategoriaQuery = useHistorialCategoria(legajo.id);
+  const categoriaVigente = historialCategoriaQuery.data?.find(
+    (item) => !item.fechaHasta,
+  );
 
   const handleFotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -297,17 +297,6 @@ export function EmpleadoDetail360({
 
             <div>
               <span className="text-xs text-foreground-muted block font-medium">
-                Categoría UOCRA Actual
-              </span>
-              <span className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
-                <ShieldCheck className="size-3.5 text-primary" />
-                {CATEGORIA_LABELS[legajo.categoriaActual] ||
-                  legajo.categoriaActual}
-              </span>
-            </div>
-
-            <div>
-              <span className="text-xs text-foreground-muted block font-medium">
                 Número de IERIC
               </span>
               <span className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
@@ -316,7 +305,7 @@ export function EmpleadoDetail360({
               </span>
             </div>
 
-            <div>
+            <div className="sm:col-span-2">
               <span className="text-xs text-foreground-muted block font-medium">
                 Estado Actual
               </span>
@@ -325,13 +314,35 @@ export function EmpleadoDetail360({
               </span>
             </div>
           </div>
+
+          {/* Sub-bloque: Asignación UOCRA (categoría + zona van siempre juntas) */}
+          <div className="mt-4 pt-3 border-t border-border rounded-lg bg-subtle/60 p-3.5">
+            <div className="flex items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider text-primary">
+              <ShieldCheck className="size-4" />
+              Asignación UOCRA Actual
+            </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-1 text-sm">
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <ShieldCheck className="size-3.5 text-primary" />
+                {legajo.categoriaActual}
+              </span>
+              <span className="font-semibold text-foreground flex items-center gap-1.5">
+                <MapPin className="size-3.5 text-primary" />
+                {categoriaVigente?.nombreZona ?? "Sin zona asignada"}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Bloque 3: Línea de Tiempo de Estados (Solo visible para no-operarios: ROLE_ADMIN, ROLE_RRHH) */}
-      {user?.rol !== "ROLE_OPERARIO" && (
-        <EmpleadoTimeline historialEstados={historialEstados} />
-      )}
+      {/* Bloque 3: Línea de Tiempo de Estados. El backend ya restringe esto a
+          ADMIN/RRHH o al propio empleado (isSelf), así que se muestra siempre. */}
+      <EmpleadoTimeline historialEstados={historialEstados} />
+
+      {/* Bloque 4: Historial de Categoría UOCRA (misma regla de acceso que arriba) */}
+      <EmpleadoCategoriaTimeline
+        historialCategoria={historialCategoriaQuery.data ?? []}
+      />
     </div>
   );
 }

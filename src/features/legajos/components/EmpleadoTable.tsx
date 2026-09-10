@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { ArrowRight, Trash2, UserX2 } from "lucide-react";
+import { ArrowRight, Pencil, RotateCcw, Trash2, UserX2 } from "lucide-react";
 import type { EmpleadoResumenResponseDto } from "../types/legajo.types";
 import { CATEGORIA_LABELS, ESTADO_LABELS } from "../types/legajo.types";
 import { AvatarMinio } from "./AvatarMinio";
 import { BajaEmpleadoModal } from "./BajaEmpleadoModal";
+import { ReactivarEmpleadoModal } from "./ReactivarEmpleadoModal";
+import { EditarEmpleadoDialog } from "./EditarEmpleadoDialog";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Pagination } from "@/shared/components";
 import {
@@ -15,6 +17,9 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
 } from "@/shared/ui";
 
 interface EmpleadoTableProps {
@@ -58,11 +63,19 @@ export function EmpleadoTable({
 }: EmpleadoTableProps) {
   const [isBajaModalOpen, setIsBajaModalOpen] = useState(false);
   const [empleadoIdParaBaja, setEmpleadoIdParaBaja] = useState<number | null>(null);
+  const [empleadoIdParaReactivar, setEmpleadoIdParaReactivar] = useState<
+    number | null
+  >(null);
+  const [empleadoParaEditar, setEmpleadoParaEditar] =
+    useState<EmpleadoResumenResponseDto | null>(null);
 
   const user = useSessionStore((state) => state.user);
   const canBaja = user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
 
   const empleadoSeleccionado = data.find((e) => e.id === empleadoIdParaBaja);
+  const empleadoParaReactivar = data.find(
+    (e) => e.id === empleadoIdParaReactivar,
+  );
 
   if (!isLoading && data.length === 0) {
     return (
@@ -155,21 +168,63 @@ export function EmpleadoTable({
                     </Button>
 
                     {canBaja && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEmpleadoIdParaBaja(empleado.id);
-                          setIsBajaModalOpen(true);
-                        }}
-                        className="text-error hover:bg-error-soft hover:text-error"
-                        title="Dar de baja empleado"
-                        aria-label="Dar de baja empleado"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEmpleadoParaEditar(empleado);
+                            }}
+                            className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary"
+                            aria-label="Editar legajo"
+                          >
+                            <Pencil className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Editar legajo</TooltipContent>
+                      </Tooltip>
                     )}
+
+                    {canBaja && empleado.estadoActual === "INACTIVO" ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEmpleadoIdParaReactivar(empleado.id);
+                            }}
+                            className="size-8 text-foreground-muted hover:bg-success-soft hover:text-success"
+                            aria-label="Reactivar empleado"
+                          >
+                            <RotateCcw className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Reactivar</TooltipContent>
+                      </Tooltip>
+                    ) : canBaja ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEmpleadoIdParaBaja(empleado.id);
+                              setIsBajaModalOpen(true);
+                            }}
+                            className="size-8 text-foreground-muted hover:bg-error-soft hover:text-error"
+                            aria-label="Dar de baja empleado"
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Dar de baja</TooltipContent>
+                      </Tooltip>
+                    ) : null}
                   </div>
                 </TableCell>
               </TableRow>
@@ -199,6 +254,27 @@ export function EmpleadoTable({
             : undefined
         }
       />
+
+      <ReactivarEmpleadoModal
+        empleadoId={empleadoIdParaReactivar}
+        onClose={() => setEmpleadoIdParaReactivar(null)}
+        nombreEmpleado={
+          empleadoParaReactivar
+            ? `${empleadoParaReactivar.nombre} ${empleadoParaReactivar.apellido}`
+            : undefined
+        }
+      />
+
+      {empleadoParaEditar ? (
+        <EditarEmpleadoDialog
+          empleadoId={empleadoParaEditar.id}
+          nombreCompleto={`${empleadoParaEditar.nombre} ${empleadoParaEditar.apellido}`}
+          open={Boolean(empleadoParaEditar)}
+          onOpenChange={(open) => {
+            if (!open) setEmpleadoParaEditar(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
