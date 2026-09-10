@@ -1,5 +1,7 @@
+import { useMemo } from "react";
 import { Calendar, CheckCircle2, History, MapPin, Tag } from "lucide-react";
 import type { EmpleadoCategoriaResponseDto } from "../types/empleadoCategoria.types";
+import { ordenarHistorialPorVigencia } from "../utils/ordenarHistorial";
 import { formatDate } from "./EmpleadoTable";
 import { Badge } from "@/shared/ui";
 
@@ -10,6 +12,11 @@ interface EmpleadoCategoriaTimelineProps {
 export function EmpleadoCategoriaTimeline({
   historialCategoria,
 }: EmpleadoCategoriaTimelineProps) {
+  const historialOrdenado = useMemo(
+    () => ordenarHistorialPorVigencia(historialCategoria),
+    [historialCategoria],
+  );
+
   return (
     <div className="rounded-card border border-border bg-card p-5 shadow-soft">
       <div className="mb-4 flex items-center gap-2 border-b border-border pb-3">
@@ -25,7 +32,7 @@ export function EmpleadoCategoriaTimeline({
         </p>
       ) : (
         <div className="relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-          {historialCategoria.map((item, index) => {
+          {historialOrdenado.map((item, index) => {
             const isCurrent = !item.fechaHasta;
 
             return (

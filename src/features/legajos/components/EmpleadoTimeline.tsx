@@ -1,6 +1,8 @@
+import { useMemo } from "react";
 import { Calendar, CheckCircle2, History } from "lucide-react";
 import type { EmpleadoEstadoResponseDto } from "../types/legajo.types";
 import { ESTADO_LABELS } from "../types/legajo.types";
+import { ordenarHistorialPorVigencia } from "../utils/ordenarHistorial";
 import { formatDate } from "./EmpleadoTable";
 import { Badge } from "@/shared/ui";
 
@@ -9,6 +11,11 @@ interface EmpleadoTimelineProps {
 }
 
 export function EmpleadoTimeline({ historialEstados }: EmpleadoTimelineProps) {
+  const historialOrdenado = useMemo(
+    () => ordenarHistorialPorVigencia(historialEstados),
+    [historialEstados],
+  );
+
   return (
     <div className="rounded-card border border-border bg-card p-5 shadow-soft">
       <div className="mb-4 flex items-center gap-2 border-b border-border pb-3">
@@ -24,7 +31,7 @@ export function EmpleadoTimeline({ historialEstados }: EmpleadoTimelineProps) {
         </p>
       ) : (
         <div className="relative pl-6 before:absolute before:left-2.5 before:top-2 before:bottom-2 before:w-0.5 before:bg-border">
-          {historialEstados.map((item, index) => {
+          {historialOrdenado.map((item, index) => {
             const isCurrent = !item.fechaHasta;
             const estadoDisplay =
               ESTADO_LABELS[item.nombreEstado] || item.nombreEstado;

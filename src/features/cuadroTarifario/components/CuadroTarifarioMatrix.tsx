@@ -90,7 +90,10 @@ export function CuadroTarifarioMatrix({
                 return (
                   <TableRow
                     key={`${fila.idCategoria}-${zona.id}`}
-                    className={cn(isFirstZonaRow && "border-t-2 border-border-strong")}
+                    className={cn(
+                      "hover:bg-transparent",
+                      isFirstZonaRow && "border-t-2 border-border-strong",
+                    )}
                   >
                     {isFirstZonaRow ? (
                       <>

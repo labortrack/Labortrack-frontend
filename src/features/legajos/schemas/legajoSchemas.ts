@@ -102,3 +102,15 @@ export const bajaEmpleadoSchema = z.object({
 });
 
 export type BajaEmpleadoFormValues = z.infer<typeof bajaEmpleadoSchema>;
+
+// ─── Schema: Reactivación de Empleado ────────────────────────────────────────
+
+export const reactivarEmpleadoSchema = z.object({
+  motivo: z
+    .string()
+    .trim()
+    .min(1, "El motivo de la reactivación es obligatorio.")
+    .min(5, "El motivo debe contener al menos 5 caracteres."),
+});
+
+export type ReactivarEmpleadoFormValues = z.infer<typeof reactivarEmpleadoSchema>;
