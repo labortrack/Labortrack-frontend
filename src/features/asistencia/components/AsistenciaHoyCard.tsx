@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Building2,
   CalendarDays,
@@ -17,12 +18,15 @@ import {
 import { AsistenciaInfoItem } from "./AsistenciaInfoItem";
 import { AsistenciaStatusBadge } from "./AsistenciaStatusBadge";
 import { RegistroAsistenciaCard } from "./RegistroAsistenciaCard";
+import { QrAttendanceFlow } from "./QrAttendanceFlow";
+import type { TipoOperacionQr } from "../types/asistencia.types";
 
 interface AsistenciaHoyCardProps {
   asistencia: AsistenciaHoyResponseDto;
 }
 
 export function AsistenciaHoyCard({ asistencia }: AsistenciaHoyCardProps) {
+  const [operacionQr, setOperacionQr] = useState<TipoOperacionQr>();
   const accion = (() => {
     switch (asistencia.accionDisponible) {
       case "REGISTRAR_INGRESO_QR":
@@ -88,13 +92,31 @@ export function AsistenciaHoyCard({ asistencia }: AsistenciaHoyCardProps) {
 
         {accion ? (
           <div className="flex justify-end border-t border-border pt-5">
-            <Button className="w-full sm:w-auto">
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() =>
+                setOperacionQr(
+                  asistencia.accionDisponible === "REGISTRAR_INGRESO_QR"
+                    ? "ingreso"
+                    : "egreso",
+                )
+              }
+            >
               <QrCode />
               {accion}
             </Button>
           </div>
         ) : null}
       </CardContent>
+      {operacionQr ? (
+        <QrAttendanceFlow
+          tipo={operacionQr}
+          open
+          onOpenChange={(open) => {
+            if (!open) setOperacionQr(undefined);
+          }}
+        />
+      ) : null}
     </Card>
   );
 }

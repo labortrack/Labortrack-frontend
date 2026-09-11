@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Info } from "lucide-react";
 import type { EstadoAsistenciaHistorialResponseDto } from "../types/asistencia.types";
 import { formatFechaHora } from "../utils/asistenciaFormatters";
 import { AsistenciaStatusBadge } from "./AsistenciaStatusBadge";
@@ -35,14 +35,27 @@ export function AsistenciaEstadosTimeline({
               )}
             </span>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-              <AsistenciaStatusBadge estado={item.estado} />
-              <span className="text-xs text-foreground-muted">
+              <div>
+                <AsistenciaStatusBadge estado={item.estado} />
+                {item.usuarioResponsable ? (
+                  <p className="mt-1 text-xs text-foreground-muted">
+                    Responsable: {item.usuarioResponsable}
+                  </p>
+                ) : null}
+              </div>
+              <span className="text-xs text-foreground-muted sm:text-right">
                 {formatFechaHora(item.fechaHoraDesde)}
                 {item.fechaHoraHasta
                   ? ` — ${formatFechaHora(item.fechaHoraHasta)}`
                   : " — Actualidad"}
               </span>
             </div>
+            {item.observacion ? (
+              <div className="mt-2 flex items-start gap-2 rounded-lg bg-warning-soft px-3 py-2 text-xs text-warning">
+                <Info className="mt-0.5 size-3.5 shrink-0" />
+                <span>{item.observacion}</span>
+              </div>
+            ) : null}
           </div>
         );
       })}

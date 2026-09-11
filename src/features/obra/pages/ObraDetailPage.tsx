@@ -10,6 +10,7 @@ import {
   MapPin,
   Pencil,
   Trash2,
+  Users,
 } from "lucide-react";
 import {
   CloseObraDialog,
@@ -120,6 +121,14 @@ export default function ObraDetailPage() {
           description={`Nomenclatura Contractual: ${obra.nomenclatura} • ID #${obra.id}`}
           actions={
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <Button
+                variant="primary"
+                onClick={() => navigate(`/obras/${obra.id}/cuadrillas`)}
+                className="w-full sm:w-auto justify-center gap-1.5 font-semibold shadow-xs"
+              >
+                <Users className="size-4" />
+                Gestionar Cuadrillas
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => setTransicionOpen(true)}
