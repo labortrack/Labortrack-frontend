@@ -63,89 +63,6 @@ export const router = createBrowserRouter([
             element: <EmpresaInicializacionGate />,
             children: [
               {
-                path: "/usuarios",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<UsuariosPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ObrasPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras/:id",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ObraDetailPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/obras/configuracion",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
-                    {suspense(<ConfiguracionObrasPage />)}
-                  </RoleRoute>
-                ),
-              },
-              {
-                path: "/configuracion-obras",
-                element: <Navigate to="/obras/configuracion" replace />,
-              },
-              {
-                path: "/documentacion",
-                element: (
-                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
-                    {suspense(<DocumentacionPage />)}
-                  </RoleRoute>
-                ),
-              },
-
-              {
-                path: "/mis-asistencias",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarMisAsistencias"
-                  >
-                    {suspense(<MisAsistenciasPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/mis-asistencias/:asistenciaId",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarMisAsistencias"
-                  >
-                    {suspense(<MiAsistenciaDetailPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/asistencias",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarParteDiario"
-                  >
-                    {suspense(<AsistenciasPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
-              },
-              {
-                path: "/asistencias/:asistenciaId",
-                element: (
-                  <AsistenciaCapabilityRoute
-                    capacidad="puedeConsultarParteDiario"
-                  >
-                    {suspense(<AsistenciaDetailPage />)}
-                  </AsistenciaCapabilityRoute>
-                ),
                 element: <AppLayout />,
                 children: [
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
@@ -201,6 +118,14 @@ export const router = createBrowserRouter([
                   {
                     path: "/configuracion-obras",
                     element: <Navigate to="/obras/configuracion" replace />,
+                  },
+                  {
+                    path: "/documentacion",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                        {suspense(<DocumentacionPage />)}
+                      </RoleRoute>
+                    ),
                   },
                   {
                     path: "/mi-empresa",

@@ -74,7 +74,6 @@ export function AppLayout() {
       ]
       : []),
     { to: "/documentacion", label: "Documentación", icon: FileText },
-    ...(capacidades?.puedeConsultarParteDiario
     ...(capacidades?.parteDiario?.puedeConsultar
       ? [
         {
