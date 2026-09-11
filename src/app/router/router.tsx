@@ -24,6 +24,7 @@ import {
   AsistenciaQrPage,
   AsistenciasPage,
   AsistenciaDetailPage,
+  DocumentacionPage,
   MiEmpresaPage,
   RecibosPage,
 } from "./lazyPages";
@@ -117,6 +118,14 @@ export const router = createBrowserRouter([
                   {
                     path: "/configuracion-obras",
                     element: <Navigate to="/obras/configuracion" replace />,
+                  },
+                  {
+                    path: "/documentacion",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                        {suspense(<DocumentacionPage />)}
+                      </RoleRoute>
+                    ),
                   },
                   {
                     path: "/mi-empresa",

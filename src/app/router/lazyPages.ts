@@ -47,6 +47,9 @@ export const AsistenciasPage = lazy(
 export const AsistenciaDetailPage = lazy(
   () => import("@/features/asistencia/pages/AsistenciaDetailPage"),
 );
+export const DocumentacionPage = lazy(
+  () => import("@/features/documentacion/pages/DocumentacionPage"),
+);
 export const MiEmpresaPage = lazy(
   () => import("@/features/empresa/pages/MiEmpresaPage"),
 );

@@ -5,6 +5,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
+  FileText,
   HardHat,
   LayoutDashboard,
   LogOut,
@@ -72,6 +73,7 @@ export function AppLayout() {
         { to: "/recibos", label: "Recibos", icon: Receipt },
       ]
       : []),
+    { to: "/documentacion", label: "Documentación", icon: FileText },
     ...(capacidades?.parteDiario?.puedeConsultar
       ? [
         {
