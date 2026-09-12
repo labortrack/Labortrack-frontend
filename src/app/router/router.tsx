@@ -25,6 +25,7 @@ import {
   AsistenciasPage,
   AsistenciaDetailPage,
   DocumentacionPage,
+  AsistenteVirtualPage,
   MiEmpresaPage,
   RecibosPage,
 } from "./lazyPages";
@@ -124,6 +125,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
                         {suspense(<DocumentacionPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/asistente-virtual",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                        {suspense(<AsistenteVirtualPage />)}
                       </RoleRoute>
                     ),
                   },

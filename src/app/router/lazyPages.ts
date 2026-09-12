@@ -50,6 +50,9 @@ export const AsistenciaDetailPage = lazy(
 export const DocumentacionPage = lazy(
   () => import("@/features/documentacion/pages/DocumentacionPage"),
 );
+export const AsistenteVirtualPage = lazy(
+  () => import("@/features/documentacion/pages/AsistenteVirtualPage"),
+);
 export const MiEmpresaPage = lazy(
   () => import("@/features/empresa/pages/MiEmpresaPage"),
 );

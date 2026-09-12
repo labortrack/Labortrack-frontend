@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Bot,
   Building2,
   ChevronLeft,
   ChevronRight,
@@ -74,6 +75,7 @@ export function AppLayout() {
       ]
       : []),
     { to: "/documentacion", label: "Documentación", icon: FileText },
+    { to: "/asistente-virtual", label: "Asistente Virtual", icon: Bot },
     ...(capacidades?.parteDiario?.puedeConsultar
       ? [
         {

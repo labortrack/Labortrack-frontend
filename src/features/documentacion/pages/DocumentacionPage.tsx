@@ -49,6 +49,7 @@ export default function DocumentacionPage() {
   // ── RBAC ───────────────────────────────────────────────────────────────────
   const user = useSessionStore((state) => state.user);
   const esAdmin = user?.rol === "ROLE_ADMIN";
+  const isOperario = user?.rol === "ROLE_OPERARIO";
 
   // ── Estado: Tab "Documentos" ────────────────────────────────────────────────
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -142,11 +143,13 @@ export default function DocumentacionPage() {
       />
 
       {/* ── Tabs ── */}
-      <Tabs defaultValue="mis-documentos">
+      <Tabs defaultValue={isOperario ? "mis-documentos" : "institucionales"}>
         <TabsList>
-          <TabsTrigger value="mis-documentos">
-            Mis Documentos
-          </TabsTrigger>
+          {isOperario && (
+            <TabsTrigger value="mis-documentos">
+              Mis Documentos
+            </TabsTrigger>
+          )}
           <TabsTrigger value="institucionales">
             Documentos Institucionales
           </TabsTrigger>
@@ -155,60 +158,62 @@ export default function DocumentacionPage() {
           )}
         </TabsList>
 
-        {/* ══ Tab: Mis Documentos ══ */}
-        <TabsContent value="mis-documentos">
-          <div className="space-y-4">
-            {/* Acciones del tab (disponible para todos los roles) */}
-            <div className="flex justify-end">
-              <Button onClick={() => setUploadOpen(true)}>
-                <FileUp />
-                Subir documento
-              </Button>
-            </div>
-
-            {/* Barra de búsqueda */}
-            <Card>
-              <CardContent>
-                <div className="flex gap-2">
-                  <SearchInput
-                    placeholder="Buscar en mis documentos..."
-                    aria-label="Buscar en mis documentos"
-                    value={nombreFiltro}
-                    onChange={(e) => setNombreFiltro(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={clearSearch}
-                    aria-label="Limpiar búsqueda"
-                  >
-                    <RotateCcw />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Tabla de mis documentos */}
-            <Card className="overflow-hidden">
-              <div className="flex items-center gap-2 border-b border-border px-5 py-4">
-                <FolderArchive className="size-5 text-primary" />
-                <h2 className="font-semibold">Mis Documentos</h2>
-                {nombreFiltro.trim() ? (
-                  <Badge variant="neutral" className="ml-auto text-xs">
-                    Filtrado
-                  </Badge>
-                ) : null}
+        {/* ══ Tab: Mis Documentos (Solo ROLE_OPERARIO) ══ */}
+        {isOperario && (
+          <TabsContent value="mis-documentos">
+            <div className="space-y-4">
+              {/* Acciones del tab (disponible para todos los roles) */}
+              <div className="flex justify-end">
+                <Button onClick={() => setUploadOpen(true)}>
+                  <FileUp />
+                  Subir documento
+                </Button>
               </div>
 
-              <MiDocumentacionTable
-                searchTerm={nombreFiltro}
-                onPrevisualizar={handlePrevisualizar}
-                onBaja={setBajaDoc}
-              />
-            </Card>
-          </div>
-        </TabsContent>
+              {/* Barra de búsqueda */}
+              <Card>
+                <CardContent>
+                  <div className="flex gap-2">
+                    <SearchInput
+                      placeholder="Buscar en mis documentos..."
+                      aria-label="Buscar en mis documentos"
+                      value={nombreFiltro}
+                      onChange={(e) => setNombreFiltro(e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={clearSearch}
+                      aria-label="Limpiar búsqueda"
+                    >
+                      <RotateCcw />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Tabla de mis documentos */}
+              <Card className="overflow-hidden">
+                <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+                  <FolderArchive className="size-5 text-primary" />
+                  <h2 className="font-semibold">Mis Documentos</h2>
+                  {nombreFiltro.trim() ? (
+                    <Badge variant="neutral" className="ml-auto text-xs">
+                      Filtrado
+                    </Badge>
+                  ) : null}
+                </div>
+
+                <MiDocumentacionTable
+                  searchTerm={nombreFiltro}
+                  onPrevisualizar={handlePrevisualizar}
+                  onBaja={setBajaDoc}
+                />
+              </Card>
+            </div>
+          </TabsContent>
+        )}
 
         {/* ══ Tab: Documentos Institucionales ══ */}
         <TabsContent value="institucionales">
