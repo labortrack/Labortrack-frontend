@@ -24,6 +24,7 @@ export const documentacionKeys = {
     page: number,
     size: number,
   ) => ["documentos", "list", filters, page, size] as const,
+  miDocumentacion: () => ["documentos", "mi-documentacion"] as const,
 };
 
 // ─── Helpers de invalidación ──────────────────────────────────────────────────
@@ -126,6 +127,17 @@ export function useListarDocumentos(
         size,
         sort: pageable?.sort ?? "fechaSubida,desc",
       }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/**
+ * Listado directo (array plano) de los documentos personales del usuario / operario autenticado.
+ */
+export function useMiDocumentacion() {
+  return useQuery({
+    queryKey: documentacionKeys.miDocumentacion(),
+    queryFn: () => documentacionApi.miDocumentacion(),
     placeholderData: keepPreviousData,
   });
 }
