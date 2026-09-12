@@ -209,3 +209,15 @@ export function useBuscarEmpleados(buscar: string) {
     staleTime: 30_000,
   });
 }
+
+// ─── Hook: Chat RAG (IA) ──────────────────────────────────────────────────────
+
+/**
+ * Mutation para enviar una consulta al chat RAG de IA (Tracky).
+ */
+export function useConsultarChat() {
+  return useMutation({
+    mutationFn: (pregunta: string) =>
+      documentacionApi.consultarChat({ pregunta }),
+  });
+}

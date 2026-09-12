@@ -6,6 +6,10 @@ import type {
   DocumentoFilterDto,
 } from "../types/documentacion.types";
 import type {
+  ConsultarChatRequestDto,
+  ConsultarChatResponseDto,
+} from "../types/ragChat.types";
+import type {
   PageableParams,
   SpringPage,
 } from "@/shared/types/pagination.types";
@@ -14,6 +18,7 @@ import type {
 
 const TIPOS_BASE = "/api/v1/tipos-documento";
 const DOCS_BASE = "/api/v1/documentos";
+const CHAT_BASE = "/api/v1/chat";
 const LEGAJOS_BASE = "/legajos";
 
 // ─── Tipos locales ────────────────────────────────────────────────────────────
@@ -216,6 +221,23 @@ export const documentacionApi = {
     (
       await httpClient.get<DocumentoRespuestaDto[]>(
         `${DOCS_BASE}/mi-documentacion`,
+      )
+    ).data,
+
+  // ── Chat RAG (IA) ─────────────────────────────────────────────────────────
+
+  /**
+   * POST /api/v1/chat/consultar
+   * Realiza una consulta RAG al asistente virtual Tracky.
+   * Envía { pregunta: string } y el token JWT se inyecta automáticamente en headers.
+   */
+  consultarChat: async (
+    data: ConsultarChatRequestDto,
+  ): Promise<ConsultarChatResponseDto> =>
+    (
+      await httpClient.post<ConsultarChatResponseDto>(
+        `${CHAT_BASE}/consultar`,
+        data,
       )
     ).data,
 
