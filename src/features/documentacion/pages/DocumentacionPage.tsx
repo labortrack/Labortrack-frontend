@@ -3,6 +3,7 @@ import {
   FileUp,
   Files,
   FileText,
+  FolderArchive,
   Plus,
   Search,
   RotateCcw,
@@ -32,6 +33,7 @@ import {
   useReactivarTipoDocumento,
 } from "../hooks/useDocumentacion";
 import { DocumentosTable } from "../components/DocumentosTable";
+import { MiDocumentacionTable } from "../components/MiDocumentacionTable";
 import { UploadDocumentoForm } from "../components/UploadDocumentoForm";
 import { TiposDocumentoTable } from "../components/TiposDocumentoTable";
 import { TipoDocumentoFormModal } from "../components/TipoDocumentoFormModal";
@@ -140,16 +142,76 @@ export default function DocumentacionPage() {
       />
 
       {/* ── Tabs ── */}
-      <Tabs defaultValue="documentos">
+      <Tabs defaultValue="mis-documentos">
         <TabsList>
-          <TabsTrigger value="documentos">Documentos Cargados</TabsTrigger>
+          <TabsTrigger value="mis-documentos">
+            Mis Documentos
+          </TabsTrigger>
+          <TabsTrigger value="institucionales">
+            Documentos Institucionales
+          </TabsTrigger>
           {esAdmin && (
             <TabsTrigger value="tipos">Administrar Tipos</TabsTrigger>
           )}
         </TabsList>
 
-        {/* ══ Tab: Documentos Cargados ══ */}
-        <TabsContent value="documentos">
+        {/* ══ Tab: Mis Documentos ══ */}
+        <TabsContent value="mis-documentos">
+          <div className="space-y-4">
+            {/* Acciones del tab (disponible para todos los roles) */}
+            <div className="flex justify-end">
+              <Button onClick={() => setUploadOpen(true)}>
+                <FileUp />
+                Subir documento
+              </Button>
+            </div>
+
+            {/* Barra de búsqueda */}
+            <Card>
+              <CardContent>
+                <div className="flex gap-2">
+                  <SearchInput
+                    placeholder="Buscar en mis documentos..."
+                    aria-label="Buscar en mis documentos"
+                    value={nombreFiltro}
+                    onChange={(e) => setNombreFiltro(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={clearSearch}
+                    aria-label="Limpiar búsqueda"
+                  >
+                    <RotateCcw />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Tabla de mis documentos */}
+            <Card className="overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-border px-5 py-4">
+                <FolderArchive className="size-5 text-primary" />
+                <h2 className="font-semibold">Mis Documentos</h2>
+                {nombreFiltro.trim() ? (
+                  <Badge variant="neutral" className="ml-auto text-xs">
+                    Filtrado
+                  </Badge>
+                ) : null}
+              </div>
+
+              <MiDocumentacionTable
+                searchTerm={nombreFiltro}
+                onPrevisualizar={handlePrevisualizar}
+                onBaja={setBajaDoc}
+              />
+            </Card>
+          </div>
+        </TabsContent>
+
+        {/* ══ Tab: Documentos Institucionales ══ */}
+        <TabsContent value="institucionales">
           <div className="space-y-4">
             {/* Acciones del tab (disponible para todos los roles) */}
             <div className="flex justify-end">
@@ -187,11 +249,11 @@ export default function DocumentacionPage() {
               </CardContent>
             </Card>
 
-            {/* Tabla de documentos */}
+            {/* Tabla de documentos institucionales */}
             <Card className="overflow-hidden">
               <div className="flex items-center gap-2 border-b border-border px-5 py-4">
                 <Files className="size-5 text-primary" />
-                <h2 className="font-semibold">Documentos</h2>
+                <h2 className="font-semibold">Documentos Institucionales</h2>
                 {Object.keys(filters).length > 0 ? (
                   <Badge variant="neutral" className="ml-auto text-xs">
                     Filtrado

@@ -208,6 +208,17 @@ export const documentacionApi = {
       )
     ).data,
 
+  /**
+   * GET /api/v1/documentos/mi-documentacion
+   * Obtiene la lista directa de documentos personales pertenecientes al operario/usuario logueado.
+   */
+  miDocumentacion: async (): Promise<DocumentoRespuestaDto[]> =>
+    (
+      await httpClient.get<DocumentoRespuestaDto[]>(
+        `${DOCS_BASE}/mi-documentacion`,
+      )
+    ).data,
+
   // ── Empleados (para el combobox de asociación de documentos) ────────────────
 
   /**
