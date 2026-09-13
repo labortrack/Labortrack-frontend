@@ -12,7 +12,6 @@ import {
   LogOut,
   Menu,
   Receipt,
-  Settings2,
   User,
   UserCheck,
   UserCog,
@@ -60,7 +59,7 @@ export function AppLayout() {
   const navItems = [
     { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     ...(user.rol === "ROLE_RRHH"
-      ? [{ to: "/ausencias/tipos-solicitud", label: "Tipos de ausencia", icon: Settings2 }]
+      ? [{ to: "/ausencias/solicitudes", label: "Solicitudes de ausencia", icon: ClipboardList }]
       : []),
     ...(isOperario
       ? [{ to: "/mis-datos", label: "Mis Datos", icon: User }, { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList }]
