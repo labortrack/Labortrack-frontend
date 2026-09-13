@@ -1,5 +1,12 @@
 import { lazy } from "react";
 
+export const TiposSolicitudAusenciaPage = lazy(
+  () => import("@/features/ausentismo/pages/TiposSolicitudAusenciaPage"),
+);
+export const TipoSolicitudAusenciaDetailPage = lazy(
+  () => import("@/features/ausentismo/pages/TipoSolicitudAusenciaDetailPage"),
+);
+
 export const LoginPage = lazy(() => import("@/features/auth/pages/LoginPage"));
 export const ForgotPasswordPage = lazy(
   () => import("@/features/auth/pages/ForgotPasswordPage"),
