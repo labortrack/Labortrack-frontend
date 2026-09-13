@@ -63,7 +63,7 @@ export function AppLayout() {
       ? [{ to: "/ausencias/tipos-solicitud", label: "Tipos de ausencia", icon: Settings2 }]
       : []),
     ...(isOperario
-      ? [{ to: "/mis-datos", label: "Mis Datos", icon: User }]
+      ? [{ to: "/mis-datos", label: "Mis Datos", icon: User }, { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList }]
       : []),
     ...(canManageUsers
       ? [

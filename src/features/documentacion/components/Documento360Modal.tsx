@@ -1,9 +1,9 @@
 import { useState } from "react";
+import { DocumentoVisorIntegrado } from "./DocumentoVisorIntegrado";
 import {
   AlertCircle,
   Brain,
   Calendar,
-  ExternalLink,
   Eye,
   EyeOff,
   FileCode,
@@ -258,40 +258,7 @@ export function Documento360Modal({
 
           {/* Visor nativo integrado (PDF / Imágenes) */}
           {visorUrl && (
-            <div className="space-y-2 rounded-lg border border-border bg-card p-3 shadow-soft animate-in fade-in-50">
-              <div className="flex items-center justify-between px-1">
-                <span className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                  <Eye className="size-4 text-primary" />
-                  Visor integrado de documento
-                </span>
-                <div className="flex items-center gap-2">
-                  <a
-                    href={visorUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 rounded px-2 py-1 text-xs font-medium text-primary hover:bg-primary-soft hover:underline"
-                  >
-                    <ExternalLink className="size-3" />
-                    Abrir en pestaña nueva
-                  </a>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 text-xs text-foreground-muted"
-                    onClick={handleCerrarVisor}
-                  >
-                    Cerrar visor
-                  </Button>
-                </div>
-              </div>
-              <div className="relative h-[600px] w-full overflow-hidden rounded-md border border-border bg-muted/20">
-                <iframe
-                  src={visorUrl}
-                  title={`Visor de ${doc.nombreDocumento}`}
-                  className="h-full w-full border-0"
-                />
-              </div>
-            </div>
+            <DocumentoVisorIntegrado url={visorUrl} titulo={doc.nombreDocumento} contentType={doc.contentType} onClose={handleCerrarVisor} />
           )}
 
           {/* ── VISTA PARA OPERARIOS (Clara, contextual y sin ruido técnico) ── */}

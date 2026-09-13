@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronDown, FileClock, Pencil, Power } from "lucide-react";
+import { ArrowLeft, ChevronDown, FileClock, Pencil, Power, CalendarDays } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { Alert, Button, Card, CardContent, CardHeader } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
@@ -35,8 +35,8 @@ export default function TipoSolicitudAusenciaDetailPage() {
       <CardHeader><h2 className="text-base font-semibold">Datos vigentes</h2></CardHeader>
       <CardContent><TipoSolicitudAusenciaDatos datos={tipo} />
         <dl className="mt-5 grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
-          <div><dt className="text-xs text-foreground-muted">Inicio de vigencia de la versión actual</dt><dd className="mt-1 text-sm font-semibold">{formatFechaHoraTipoAusencia(tipo.fechaHoraDesdeVigencia)}</dd></div>
-          <div><dt className="text-xs text-foreground-muted">Fecha de baja</dt><dd className="mt-1 text-sm font-semibold">{tipo.fechaBaja ? formatFechaHoraTipoAusencia(tipo.fechaBaja) : "No aplica"}</dd></div>
+          <div><dt className="flex items-center gap-2 text-xs text-foreground-muted"><FileClock className="size-4 shrink-0 text-primary" aria-hidden="true" />Inicio de vigencia de la versión actual</dt><dd className="mt-1 text-sm font-semibold">{formatFechaHoraTipoAusencia(tipo.fechaHoraDesdeVigencia)}</dd></div>
+          <div><dt className="flex items-center gap-2 text-xs text-foreground-muted"><CalendarDays className="size-4 shrink-0 text-primary" aria-hidden="true" />Fecha de baja</dt><dd className="mt-1 text-sm font-semibold">{tipo.fechaBaja ? formatFechaHoraTipoAusencia(tipo.fechaBaja) : "No aplica"}</dd></div>
         </dl>
       </CardContent>
     </Card>

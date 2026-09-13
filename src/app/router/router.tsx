@@ -8,6 +8,8 @@ import { AsistenciaCapabilityRoute } from "@/features/asistencia/components/Asis
 import { EmpresaInicializacionGate } from "@/features/empresa/components/EmpresaInicializacionGate";
 import { LoadingState } from "@/shared/components";
 import {
+  MisSolicitudesAusenciaPage,
+  MiSolicitudAusenciaDetailPage,
   DashboardPage,
   ForgotPasswordPage,
   LoginPage,
@@ -69,6 +71,8 @@ export const router = createBrowserRouter([
                 element: <AppLayout />,
                 children: [
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
+                  { path: "/mis-ausencias", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisSolicitudesAusenciaPage />)}</RoleRoute> },
+                  { path: "/mis-ausencias/:solicitudId", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MiSolicitudAusenciaDetailPage />)}</RoleRoute> },
                   { path: "/mis-datos", element: suspense(<MisDatosPage />) },
                   {
                     path: "/ausencias/tipos-solicitud",
