@@ -10,6 +10,8 @@ import { LoadingState } from "@/shared/components";
 import {
   MisSolicitudesAusenciaPage,
   MiSolicitudAusenciaDetailPage,
+  SolicitudesAusenciaPage,
+  SolicitudAusenciaAdministrativaDetailPage,
   DashboardPage,
   ForgotPasswordPage,
   LoginPage,
@@ -73,6 +75,8 @@ export const router = createBrowserRouter([
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
                   { path: "/mis-ausencias", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisSolicitudesAusenciaPage />)}</RoleRoute> },
                   { path: "/mis-ausencias/:solicitudId", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MiSolicitudAusenciaDetailPage />)}</RoleRoute> },
+                  { path: "/ausencias/solicitudes", element: <RoleRoute allowed={["ROLE_RRHH"]}>{suspense(<SolicitudesAusenciaPage />)}</RoleRoute> },
+                  { path: "/ausencias/solicitudes/:solicitudId", element: <RoleRoute allowed={["ROLE_RRHH"]}>{suspense(<SolicitudAusenciaAdministrativaDetailPage />)}</RoleRoute> },
                   { path: "/mis-datos", element: suspense(<MisDatosPage />) },
                   {
                     path: "/ausencias/tipos-solicitud",
