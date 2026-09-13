@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertCircle, Info, Power } from "lucide-react";
+import { AlertCircle, Info, Power, Tags, AlignLeft, CalendarDays, History, Paperclip } from "lucide-react";
 import { toast } from "sonner";
 import { ConfirmDialog, FormField } from "@/shared/components";
 import { Alert, Button, Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, Input, Label, Spinner, Switch, Textarea } from "@/shared/ui";
@@ -54,22 +54,22 @@ export function TipoSolicitudAusenciaFormDialog({ tipo, onClose }: {
         {tipo && <Alert><Info className="mt-0.5 size-4 shrink-0" /><p>Al modificar este tipo, se creará una nueva versión. Las solicitudes ya registradas conservarán las reglas vigentes al momento de su creación.</p></Alert>}
         {submitError && <Alert variant="error"><AlertCircle className="mt-0.5 size-4 shrink-0" />{submitError}</Alert>}
         <fieldset disabled={mutation.isPending} className="min-w-0 space-y-5">
-          <FormField id="tipo-ausencia-nombre" label="Nombre" error={form.formState.errors.nombre?.message} required>
+          <FormField icon={Tags} id="tipo-ausencia-nombre" label="Nombre" error={form.formState.errors.nombre?.message} required>
             <Input id="tipo-ausencia-nombre" autoComplete="off" aria-invalid={Boolean(form.formState.errors.nombre)} aria-describedby={form.formState.errors.nombre ? "tipo-ausencia-nombre-error" : undefined} {...form.register("nombre")} />
           </FormField>
-          <FormField id="tipo-ausencia-descripcion" label="Descripción" error={form.formState.errors.descripcion?.message} required>
+          <FormField icon={AlignLeft} id="tipo-ausencia-descripcion" label="Descripción" error={form.formState.errors.descripcion?.message} required>
             <Textarea id="tipo-ausencia-descripcion" rows={3} aria-invalid={Boolean(form.formState.errors.descripcion)} aria-describedby={form.formState.errors.descripcion ? "tipo-ausencia-descripcion-error" : undefined} {...form.register("descripcion")} />
           </FormField>
-          <FormField id="tipo-ausencia-maxDias" label="Máximo de días" error={form.formState.errors.maxDias?.message} required>
+          <FormField icon={CalendarDays} id="tipo-ausencia-maxDias" label="Máximo de días" error={form.formState.errors.maxDias?.message} required>
             <Input id="tipo-ausencia-maxDias" type="number" min={1} step={1} aria-invalid={Boolean(form.formState.errors.maxDias)} aria-describedby={form.formState.errors.maxDias ? "tipo-ausencia-maxDias-error" : undefined} {...form.register("maxDias")} />
           </FormField>
           <div className="grid gap-3 sm:grid-cols-2">
             <Controller name="permiteRetroactiva" control={form.control} render={({ field }) => <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-4">
-              <Label htmlFor="tipo-ausencia-retroactiva">Permite retroactividad</Label>
+              <Label htmlFor="tipo-ausencia-retroactiva" className="flex items-center gap-2"><History className="size-4 shrink-0 text-primary" aria-hidden="true" />Permite retroactividad</Label>
               <Switch id="tipo-ausencia-retroactiva" checked={field.value} onCheckedChange={field.onChange} onBlur={field.onBlur} ref={field.ref} disabled={mutation.isPending} />
             </div>} />
             <Controller name="requiereDocumento" control={form.control} render={({ field }) => <div className="flex items-center justify-between gap-3 rounded-lg border border-border p-4">
-              <Label htmlFor="tipo-ausencia-documento">Requiere documentación</Label>
+              <Label htmlFor="tipo-ausencia-documento" className="flex items-center gap-2"><Paperclip className="size-4 shrink-0 text-primary" aria-hidden="true" />Requiere documentación</Label>
               <Switch id="tipo-ausencia-documento" checked={field.value} onCheckedChange={field.onChange} onBlur={field.onBlur} ref={field.ref} disabled={mutation.isPending} />
             </div>} />
           </div>
