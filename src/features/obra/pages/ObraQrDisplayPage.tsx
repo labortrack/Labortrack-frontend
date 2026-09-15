@@ -60,6 +60,13 @@ export default function ObraQrDisplayPage() {
         : Math.max(0, Date.parse(qrQuery.data?.venceEn ?? "") - ahora - 30_000),
     [ahora, qrQuery.data?.venceEn],
   );
+  const urlRegistro = useMemo(() => {
+    if (!qrQuery.data?.tokenQr) return "";
+
+    const url = new URL("/asistencias/qr", window.location.origin);
+    url.searchParams.set("token", qrQuery.data.tokenQr);
+    return url.toString();
+  }, [qrQuery.data?.tokenQr]);
 
   const alternarPantallaCompleta = async () => {
     if (document.fullscreenElement) {
@@ -180,7 +187,7 @@ export default function ObraQrDisplayPage() {
               <Card className="border-2 border-primary/15 bg-white p-4 shadow-xl sm:p-6">
                 <div className="aspect-square w-full rounded-xl bg-white p-2 sm:p-4">
                   <QRCodeSVG
-                    value={qrQuery.data.tokenQr}
+                    value={urlRegistro}
                     size={1024}
                     level="M"
                     marginSize={2}
