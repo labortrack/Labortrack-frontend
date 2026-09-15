@@ -111,3 +111,15 @@ export function useEmpleadosActivos() {
       }),
   });
 }
+
+export function useEmpleadosPorGrupo(
+  idGrupo: number | null | undefined,
+  filter?: EmpleadoGrupoFilterDto
+) {
+  return useQuery({
+    queryKey: [...estructuraLaboralKeys.all, "porGrupo", idGrupo, filter] as const,
+    queryFn: () =>
+      estructuraLaboralApi.getEmpleadoGruposPorGrupo(idGrupo!, filter, 0, 100),
+    enabled: Boolean(idGrupo),
+  });
+}
