@@ -5,6 +5,7 @@ import type {
   HistorialEstadoObraDto,
   ModifyObraRequestDto,
   ObraResponseDto,
+  QrObraResponseDto,
   TransicionarEstadoObraDto,
 } from "../types/obra.types";
 
@@ -58,6 +59,17 @@ export const obraApi = {
     (
       await httpClient.get<HistorialEstadoObraDto[]>(
         `${BASE_URL}/${id}/historial-estados`,
+      )
+    ).data,
+
+  asegurarQr: async (id: number) => {
+    await httpClient.post(`/api/asistencias/qr/obras/${id}/asegurar`);
+  },
+
+  generarQr: async (id: number) =>
+    (
+      await httpClient.get<QrObraResponseDto>(
+        `/api/asistencias/qr/obras/${id}`,
       )
     ).data,
 };

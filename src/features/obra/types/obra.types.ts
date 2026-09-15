@@ -43,5 +43,12 @@ export interface HistorialEstadoObraDto {
   motivoCambio: string;
 }
 
+export interface QrObraResponseDto {
+  obraId: number;
+  nombreObra: string;
+  tokenQr: string;
+  venceEn: string;
+}
+
 // Alias for convenience across components
 export type Obra = ObraResponseDto;

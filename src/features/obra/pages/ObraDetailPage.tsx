@@ -8,6 +8,7 @@ import {
   History,
   Lock,
   MapPin,
+  MonitorUp,
   Pencil,
   Trash2,
   Users,
@@ -34,10 +35,12 @@ import {
   Separator,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 
 export default function ObraDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const esAdmin = useSessionStore((state) => state.user?.rol === "ROLE_ADMIN");
   const obraId = Number(id);
 
   // Modals state
@@ -121,8 +124,18 @@ export default function ObraDetailPage() {
           description={`Nomenclatura Contractual: ${obra.nomenclatura} • ID #${obra.id}`}
           actions={
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              {esAdmin ? (
+                <Button
+                  variant="primary"
+                  onClick={() => navigate(`/obras/${obra.id}/qr`)}
+                  className="w-full sm:w-auto justify-center gap-1.5 font-semibold shadow-xs"
+                >
+                  <MonitorUp className="size-4" />
+                  Mostrar QR
+                </Button>
+              ) : null}
               <Button
-                variant="primary"
+                variant={esAdmin ? "outline" : "primary"}
                 onClick={() => navigate(`/obras/${obra.id}/cuadrillas`)}
                 className="w-full sm:w-auto justify-center gap-1.5 font-semibold shadow-xs"
               >

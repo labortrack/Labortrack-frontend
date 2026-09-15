@@ -33,6 +33,9 @@ export const ConfiguracionObrasPage = lazy(
 export const ObraDetailPage = lazy(
   () => import("@/features/obra/pages/ObraDetailPage"),
 );
+export const ObraQrDisplayPage = lazy(
+  () => import("@/features/obra/pages/ObraQrDisplayPage"),
+);
 export const CuadrillasPage = lazy(
   () => import("@/features/cuadrilla/pages/CuadrillasPage"),
 );

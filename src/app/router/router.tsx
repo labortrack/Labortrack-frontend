@@ -20,6 +20,7 @@ import {
   ObrasPage,
   ConfiguracionObrasPage,
   ObraDetailPage,
+  ObraQrDisplayPage,
   CuadrillasPage,
   LegajosPage,
   MisDatosPage,
@@ -219,6 +220,14 @@ export const router = createBrowserRouter([
                     ),
                   },
                 ],
+              },
+              {
+                path: "/obras/:id/qr",
+                element: (
+                  <RoleRoute allowed={["ROLE_ADMIN"]}>
+                    {suspense(<ObraQrDisplayPage />)}
+                  </RoleRoute>
+                ),
               },
             ],
           },
