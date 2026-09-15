@@ -15,8 +15,7 @@ import {
   SelectItem,
 } from "@/shared/ui";
 import { useAsignarLider } from "../../hooks/useCuadrillas";
-import { legajosApi } from "@/features/legajos/api/legajosApi";
-import { useQuery } from "@tanstack/react-query";
+import { useEmpleadosPorGrupo } from "@/features/estructuraLaboral/hooks/useEstructuraLaboral";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { HardHat, AlertCircle } from "lucide-react";
 import type { CuadrillaResponseDto } from "../../types/cuadrilla.types";
@@ -39,14 +38,11 @@ export function AsignarLiderDialog({
 
   const asignarLiderMutation = useAsignarLider(obraId);
 
-  // Consultar empleados activos de la empresa para seleccionar líder
-  const { data: empleadosData, isLoading: isLoadingEmpleados } = useQuery({
-    queryKey: ["empleados", "activos", "select"],
-    queryFn: () => legajosApi.getPaginados({ page: 0, size: 50 }),
-    enabled: open,
-  });
+  // Consultar operarios con asignación activa a la especialidad/grupo de la cuadrilla
+  const { data: operariosGrupoData, isLoading: isLoadingOperarios } =
+    useEmpleadosPorGrupo(cuadrilla?.grupo?.id, { activo: true });
 
-  const empleados = empleadosData?.content ?? [];
+  const operariosGrupo = operariosGrupoData?.content ?? [];
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -112,6 +108,17 @@ export function AsignarLiderDialog({
               </div>
             )}
 
+            {operariosGrupo.length === 0 && !isLoadingOperarios && (
+              <div className="rounded-lg bg-amber-500/10 p-3 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400">
+                <span>
+                  No hay operarios activos asignados a la especialidad{" "}
+                  <strong>{cuadrilla.grupo?.tipoActividad}</strong>. Para
+                  designar un líder, el trabajador debe pertenecer primero a este
+                  grupo en Estructura Laboral.
+                </span>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="empleado-lider" className="text-xs font-semibold">
                 Seleccionar Nuevo Líder *
@@ -119,23 +126,42 @@ export function AsignarLiderDialog({
               <Select
                 value={empleadoId}
                 onValueChange={setEmpleadoId}
-                disabled={asignarLiderMutation.isPending || isLoadingEmpleados}
+                disabled={
+                  asignarLiderMutation.isPending ||
+                  isLoadingOperarios ||
+                  operariosGrupo.length === 0
+                }
               >
                 <SelectTrigger id="empleado-lider" className="text-sm">
                   <SelectValue
                     placeholder={
-                      isLoadingEmpleados
-                        ? "Cargando trabajadores..."
-                        : "Seleccionar empleado"
+                      isLoadingOperarios
+                        ? "Cargando operarios de la especialidad..."
+                        : operariosGrupo.length === 0
+                        ? "Sin operarios en esta especialidad"
+                        : "Seleccionar operario"
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {empleados.map((emp) => (
-                    <SelectItem key={emp.id} value={String(emp.id)}>
-                      {emp.apellido}, {emp.nombre} — Legajo #{emp.id}
-                    </SelectItem>
-                  ))}
+                  {operariosGrupo.map((asig) => {
+                    const esLiderActual =
+                      cuadrilla.lider != null &&
+                      cuadrilla.lider.idEmpleado === asig.empleadoId;
+                    return (
+                      <SelectItem
+                        key={asig.id}
+                        value={String(asig.empleadoId)}
+                        disabled={esLiderActual}
+                      >
+                        {asig.apellidoEmpleado}, {asig.nombreEmpleado}
+                        {asig.dniEmpleado
+                          ? ` (DNI: ${asig.dniEmpleado})`
+                          : ` (Legajo #${asig.empleadoId})`}
+                        {esLiderActual ? " — Líder actual" : ""}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
@@ -155,7 +181,11 @@ export function AsignarLiderDialog({
             </Button>
             <Button
               type="submit"
-              disabled={asignarLiderMutation.isPending}
+              disabled={
+                asignarLiderMutation.isPending ||
+                operariosGrupo.length === 0 ||
+                !empleadoId
+              }
             >
               {asignarLiderMutation.isPending
                 ? "Guardando..."

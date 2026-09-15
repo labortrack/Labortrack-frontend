@@ -9,8 +9,14 @@ import {
   Button,
   Input,
   Label,
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/shared/ui";
 import { useAsignarOperario } from "../../hooks/useCuadrillas";
+import { useEmpleadosPorGrupo } from "@/features/estructuraLaboral/hooks/useEstructuraLaboral";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { Users, AlertCircle } from "lucide-react";
 import type { CuadrillaResponseDto } from "../../types/cuadrilla.types";
@@ -22,24 +28,35 @@ interface AsignarOperarioDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
+function getInitialDates() {
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
+  const nextMonth = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .split("T")[0];
+  return { today, nextMonth };
+}
+
 export function AsignarOperarioDialog({
   obraId,
   cuadrilla,
   open,
   onOpenChange,
 }: AsignarOperarioDialogProps) {
-  const today = new Date().toISOString().split("T")[0];
-  const nextMonth = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-    .toISOString()
-    .split("T")[0];
-
   const [empleadoGrupoId, setEmpleadoGrupoId] = useState<string>("");
   const [descripcionActividad, setDescripcionActividad] = useState<string>("");
-  const [fechaDesde, setFechaDesde] = useState<string>(today);
-  const [fechaHasta, setFechaHasta] = useState<string>(nextMonth);
+  const [fechaDesde, setFechaDesde] = useState<string>(() => getInitialDates().today);
+  const [fechaHasta, setFechaHasta] = useState<string>(() => getInitialDates().nextMonth);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const asignarMutation = useAsignarOperario(cuadrilla?.id ?? 0, obraId);
+
+  // Consultar operarios activos vinculados a la especialidad/grupo de la cuadrilla
+  const { data: operariosGrupoData, isLoading: isLoadingOperarios } =
+    useEmpleadosPorGrupo(cuadrilla?.grupo?.id, { activo: true });
+
+  const asignacionesDisponibles = operariosGrupoData?.content ?? [];
+  const liderId = cuadrilla?.lider?.idEmpleado;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,7 +64,7 @@ export function AsignarOperarioDialog({
     setErrorMsg(null);
 
     if (!empleadoGrupoId.trim()) {
-      setErrorMsg("Debes ingresar el ID de asignación de grupo del empleado (empleadoGrupoId).");
+      setErrorMsg("Debes seleccionar un operario de la especialidad.");
       return;
     }
     if (!descripcionActividad.trim()) {
@@ -114,21 +131,61 @@ export function AsignarOperarioDialog({
               </div>
             )}
 
+            {asignacionesDisponibles.length === 0 && !isLoadingOperarios && (
+              <div className="rounded-lg bg-amber-500/10 p-3 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400">
+                <span>
+                  No hay operarios activos asignados a la especialidad{" "}
+                  <strong>{cuadrilla.grupo?.tipoActividad}</strong>. Puedes
+                  asignar trabajadores en el módulo de Estructura Laboral.
+                </span>
+              </div>
+            )}
+
             <div className="space-y-1.5">
               <Label htmlFor="empleadoGrupoId" className="text-xs font-semibold">
-                ID de Asignación Empleado-Grupo (empleadoGrupoId) *
+                Operario de la Especialidad *
               </Label>
-              <Input
-                id="empleadoGrupoId"
-                type="number"
-                placeholder="Ej. 1"
+              <Select
                 value={empleadoGrupoId}
-                onChange={(e) => setEmpleadoGrupoId(e.target.value)}
-                disabled={asignarMutation.isPending}
-                className="text-sm"
-              />
+                onValueChange={setEmpleadoGrupoId}
+                disabled={
+                  asignarMutation.isPending ||
+                  isLoadingOperarios ||
+                  asignacionesDisponibles.length === 0
+                }
+              >
+                <SelectTrigger id="empleadoGrupoId" className="text-sm">
+                  <SelectValue
+                    placeholder={
+                      isLoadingOperarios
+                        ? "Cargando operarios de la especialidad..."
+                        : asignacionesDisponibles.length === 0
+                        ? "Sin operarios disponibles en este grupo"
+                        : "Seleccionar operario"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {asignacionesDisponibles.map((asig) => {
+                    const esLider = liderId != null && asig.empleadoId === liderId;
+                    return (
+                      <SelectItem
+                        key={asig.id}
+                        value={String(asig.id)}
+                        disabled={esLider}
+                      >
+                        {asig.apellidoEmpleado}, {asig.nombreEmpleado}
+                        {asig.dniEmpleado
+                          ? ` (DNI: ${asig.dniEmpleado})`
+                          : ` (Legajo #${asig.empleadoId})`}
+                        {esLider ? " — Líder actual" : ""}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
               <p className="text-[11px] text-muted-foreground">
-                Corresponde a la vinculación activa del empleado con la especialidad {cuadrilla.grupo?.tipoActividad}.
+                Muestra los trabajadores con asignación activa a la especialidad {cuadrilla.grupo?.tipoActividad}.
               </p>
             </div>
 
