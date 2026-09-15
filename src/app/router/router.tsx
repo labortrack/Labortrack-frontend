@@ -23,6 +23,7 @@ import {
   ObraQrDisplayPage,
   CuadrillasPage,
   LegajosPage,
+  EstructuraLaboralPage,
   MisDatosPage,
   MisAsistenciasPage,
   MiAsistenciaDetailPage,
@@ -116,6 +117,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
                         {suspense(<LegajosPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/estructura-laboral",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<EstructuraLaboralPage />)}
                       </RoleRoute>
                     ),
                   },

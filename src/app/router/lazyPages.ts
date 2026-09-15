@@ -42,6 +42,9 @@ export const CuadrillasPage = lazy(
 export const LegajosPage = lazy(
   () => import("@/features/legajos/pages/LegajosPage"),
 );
+export const EstructuraLaboralPage = lazy(
+  () => import("@/features/estructuraLaboral/pages/EstructuraLaboralPage"),
+);
 export const MisDatosPage = lazy(
   () => import("@/features/legajos/pages/MisDatosPage"),
 );
