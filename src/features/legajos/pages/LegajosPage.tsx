@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Plus } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Layers } from "lucide-react";
 import type { EmpleadoFilterParams } from "../types/legajo.types";
 import {
   useHistorialEstados,
@@ -20,6 +21,7 @@ const DEFAULT_FILTERS: EmpleadoFilterParams = {
 };
 
 export default function LegajosPage() {
+  const navigate = useNavigate();
   const [filters, setFilters] = useState<EmpleadoFilterParams>(DEFAULT_FILTERS);
   const [page, setPage] = useState<number>(0);
   const [selectedEmpleadoId, setSelectedEmpleadoId] = useState<number | null>(
@@ -144,10 +146,22 @@ export default function LegajosPage() {
         title="Gestión de Legajos Digitales"
         description="Consulta de legajos, situación contractual y localización operativa de trabajadores."
         actions={
-          <Button onClick={() => setMostrarAlta(true)}>
-            <Plus className="size-4" />
-            Nuevo Legajo
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/estructura-laboral")}
+              className="flex items-center gap-2 border-[#0036a4] text-[#0036a4] hover:bg-[#e8f0ff] rounded-[0.25rem] h-10 px-4"
+            >
+              <Layers className="size-4" />
+              <span className="font-bold text-[#0036a4]">
+                Configurar Estructura Laboral
+              </span>
+            </Button>
+            <Button onClick={() => setMostrarAlta(true)}>
+              <Plus className="size-4" />
+              Nuevo Legajo
+            </Button>
+          </div>
         }
       />
 
