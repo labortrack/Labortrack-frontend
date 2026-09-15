@@ -5,19 +5,25 @@ import {
   ArrowRightLeft,
   Building2,
   Globe,
+  HardHat,
   History,
   Lock,
+  Mail,
   MapPin,
   MonitorUp,
   Pencil,
+  Phone,
   Trash2,
+  UserCheck,
   Users,
 } from "lucide-react";
 import {
+  AsignarCapatazDialog,
   CloseObraDialog,
   EditObraDialog,
   TransicionarEstadoObraDialog,
 } from "../components/ObraDialogs";
+import { CapatazAvatar } from "../components/CapatazAvatar";
 import { HistorialEstadosTimeline } from "../components/HistorialEstadosTimeline";
 import { EstadoBadge } from "../estado/components/EstadoBadge";
 import { getEstadoStyle } from "../estado/utils/estadoStyles";
@@ -47,6 +53,7 @@ export default function ObraDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [closeOpen, setCloseOpen] = useState(false);
   const [transicionOpen, setTransicionOpen] = useState(false);
+  const [asignarCapatazOpen, setAsignarCapatazOpen] = useState(false);
 
   const obraQuery = useObra(obraId);
   const historialQuery = useHistorialEstadosObra(obraId);
@@ -150,6 +157,17 @@ export default function ObraDetailPage() {
                 <ArrowRightLeft className="mr-1.5 size-4" />
                 Cambiar Estado
               </Button>
+              {esAdmin ? (
+                <Button
+                  variant="outline"
+                  onClick={() => setAsignarCapatazOpen(true)}
+                  disabled={isFinalizada}
+                  className="w-full sm:w-auto justify-center"
+                >
+                  <HardHat className="mr-1.5 size-4" />
+                  {obra.capataz ? "Cambiar Capataz" : "Asignar Capataz"}
+                </Button>
+              ) : null}
               <Button
                 variant="outline"
                 onClick={() => setEditOpen(true)}
@@ -250,6 +268,100 @@ export default function ObraDetailPage() {
             </CardContent>
           </Card>
 
+          {/* Card: Capataz Responsable */}
+          <Card>
+            <CardHeader className="pb-3 border-b border-border flex flex-row items-center justify-between">
+              <h3 className="text-base font-semibold flex items-center gap-2">
+                <HardHat className="size-4 text-primary" />
+                Capataz Responsable
+              </h3>
+              {esAdmin && obra.capataz && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAsignarCapatazOpen(true)}
+                  disabled={isFinalizada}
+                  className="h-7 px-2 text-xs text-foreground-muted hover:text-primary cursor-pointer"
+                >
+                  <ArrowRightLeft className="size-3 mr-1" />
+                  Cambiar
+                </Button>
+              )}
+            </CardHeader>
+            <CardContent className="p-4 space-y-3 text-sm">
+              {obra.capataz ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <CapatazAvatar
+                      nombre={`${obra.capataz.nombre} ${obra.capataz.apellido}`}
+                      size="md"
+                    />
+                    <div className="min-w-0">
+                      <p className="font-semibold text-foreground truncate">
+                        {obra.capataz.nombre} {obra.capataz.apellido}
+                      </p>
+                      <span className="inline-flex items-center rounded-full bg-primary-soft px-2 py-0.5 text-[10px] font-semibold text-primary">
+                        Jefatura de Obra
+                      </span>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-1.5 text-xs text-foreground-muted">
+                    <div className="flex items-center justify-between">
+                      <span>DNI:</span>
+                      <span className="font-mono font-medium text-foreground">
+                        {obra.capataz.dni}
+                      </span>
+                    </div>
+                    {obra.capataz.email ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Mail className="size-3 text-primary/70" /> Email:
+                        </span>
+                        <span
+                          className="truncate font-medium text-foreground text-right"
+                          title={obra.capataz.email}
+                        >
+                          {obra.capataz.email}
+                        </span>
+                      </div>
+                    ) : null}
+                    {obra.capataz.telefono ? (
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="flex items-center gap-1 shrink-0">
+                          <Phone className="size-3 text-primary/70" /> Teléfono:
+                        </span>
+                        <span className="font-medium text-foreground">
+                          {obra.capataz.telefono}
+                        </span>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 text-center py-2">
+                  <p className="text-xs text-foreground-muted">
+                    No se encuentra asignado un capataz responsable a este proyecto.
+                  </p>
+                  {esAdmin && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setAsignarCapatazOpen(true)}
+                      disabled={isFinalizada}
+                      className="w-full text-xs"
+                    >
+                      <UserCheck className="size-3.5 mr-1" />
+                      Asignar Capataz
+                    </Button>
+                  )}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
           {/* Card: Ubicación Geográfica */}
           <Card>
             <CardHeader className="pb-3 border-b border-border">
@@ -330,6 +442,13 @@ export default function ObraDetailPage() {
         key={transicionOpen ? `trans-${obra.id}` : "trans-closed"}
         obra={transicionOpen ? obra : null}
         onOpenChange={setTransicionOpen}
+      />
+
+      <AsignarCapatazDialog
+        key={asignarCapatazOpen ? `capataz-${obra.id}` : "capataz-closed"}
+        obra={asignarCapatazOpen ? obra : null}
+        open={asignarCapatazOpen}
+        onOpenChange={setAsignarCapatazOpen}
       />
     </div>
   );

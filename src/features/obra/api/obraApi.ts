@@ -1,6 +1,8 @@
 import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
+  AsignarCapatazRequestDto,
   BajaObraRequestDto,
+  CapatazResponseDto,
   CreateObraDto,
   HistorialEstadoObraDto,
   ModifyObraRequestDto,
@@ -35,6 +37,24 @@ export const obraApi = {
 
   create: async (payload: CreateObraDto) =>
     (await httpClient.post<ObraResponseDto>(`${BASE_URL}/crear`, payload)).data,
+
+  asignarCapataz: async (id: number, payload: AsignarCapatazRequestDto) =>
+    (
+      await httpClient.patch<ObraResponseDto>(
+        `${BASE_URL}/${id}/asignar-capataz`,
+        payload,
+      )
+    ).data,
+
+  getCapatacesDisponibles: async (obraIdExcluir?: number) =>
+    (
+      await httpClient.get<CapatazResponseDto[]>(
+        `${BASE_URL}/capataces-disponibles`,
+        {
+          params: obraIdExcluir ? { obraIdExcluir } : undefined,
+        },
+      )
+    ).data,
 
   modify: async (id: number, payload: ModifyObraRequestDto) =>
     (await httpClient.put<ObraResponseDto>(`${BASE_URL}/${id}`, payload)).data,

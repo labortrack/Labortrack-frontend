@@ -6,31 +6,38 @@ import {
   ArrowRightLeft,
   Building2,
   CheckCircle2,
+  HardHat,
   Lock,
   Plus,
   Trash2,
+  UserCheck,
 } from "lucide-react";
 import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { useEstadosObraActivos } from "../estado/hooks/useEstadosObra";
 import { EstadoBadge } from "../estado/components/EstadoBadge";
 import {
+  asignarCapatazSchema,
   bajaObraSchema,
   createObraSchema,
   modifyObraSchema,
   transicionarEstadoObraSchema,
+  type AsignarCapatazForm,
   type BajaObraForm,
   type CreateObraForm,
   type ModifyObraForm,
   type TransicionarEstadoObraForm,
 } from "../schemas/obraSchemas";
 import {
+  useAsignarCapataz,
   useBajaObra,
   useCambiarEstadoObra,
+  useCapatacesDisponibles,
   useCreateObra,
   useModifyObra,
 } from "../hooks/useObras";
 import type { ObraResponseDto } from "../types/obra.types";
+import { CapatazAvatar } from "./CapatazAvatar";
 import { FormField } from "@/shared/components";
 import {
   Alert,
@@ -66,8 +73,12 @@ export function CreateObraDialog({
   const mutation = useCreateObra();
   const [submitError, setSubmitError] = useState<string>();
 
+  const { data: capatacesDisponibles = [], isLoading: isLoadingCapataces } =
+    useCapatacesDisponibles();
+
   const {
     register,
+    control,
     reset,
     handleSubmit,
     formState: { errors },
@@ -80,6 +91,7 @@ export function CreateObraDialog({
       provincia: "",
       localidad: "",
       motivoCambio: "Alta inicial de frente de trabajo",
+      idCapataz: undefined,
     },
   });
 
@@ -102,6 +114,7 @@ export function CreateObraDialog({
         provincia: values.provincia.trim(),
         localidad: values.localidad.trim(),
         motivoCambio: values.motivoCambio.trim(),
+        idCapataz: Number(values.idCapataz),
       });
       toast.success("Frente de trabajo registrado correctamente.", {
         description: `"${created.nombreObra}" ha sido dado de alta con estado inicial ${created.estadoActual}.`,
@@ -215,6 +228,80 @@ export function CreateObraDialog({
                   />
                 </FormField>
               </div>
+            </div>
+
+            <div>
+              <span className="mb-2 block text-xs font-semibold text-primary">
+                Jefatura y Responsable de Obra
+              </span>
+              <Controller
+                name="idCapataz"
+                control={control}
+                render={({ field }) => (
+                  <FormField
+                    id="create-obra-capataz"
+                    label="Capataz Responsable *"
+                    error={errors.idCapataz?.message}
+                    required
+                  >
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={(val) =>
+                        field.onChange(val ? Number(val) : undefined)
+                      }
+                      disabled={
+                        mutation.isPending ||
+                        isLoadingCapataces ||
+                        capatacesDisponibles.length === 0
+                      }
+                    >
+                      <SelectTrigger
+                        id="create-obra-capataz"
+                        aria-invalid={Boolean(errors.idCapataz)}
+                      >
+                        <SelectValue
+                          placeholder={
+                            isLoadingCapataces
+                              ? "Cargando capataces disponibles..."
+                              : capatacesDisponibles.length === 0
+                              ? "No hay capataces disponibles"
+                              : "Seleccionar capataz responsable..."
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {capatacesDisponibles.map((c) => (
+                          <SelectItem
+                            key={c.idEmpleadoGrupo}
+                            value={String(c.idEmpleadoGrupo)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">
+                                {c.apellido}, {c.nombre}
+                              </span>
+                              <span className="text-xs text-foreground-muted">
+                                (DNI: {c.dni})
+                                {c.email ? ` • ${c.email}` : ""}
+                              </span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                )}
+              />
+
+              {!isLoadingCapataces && capatacesDisponibles.length === 0 && (
+                <div className="mt-2 rounded-lg bg-amber-500/10 p-3 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400 flex items-start gap-2">
+                  <AlertTriangle className="size-4 shrink-0 mt-0.5" />
+                  <span>
+                    No hay capataces disponibles en el sistema. Asegúrese de que existan empleados
+                    activos con la función <strong>Capataz</strong> en Estructura Laboral y que no
+                    tengan frentes de trabajo activos a cargo.
+                  </span>
+                </div>
+              )}
             </div>
 
             <FormField
@@ -765,3 +852,256 @@ export function TransicionarEstadoObraDialog({
     </Dialog>
   );
 }
+
+// ─── Modal 5: Asignar / Cambiar Capataz ──────────────────────────────────────────
+
+interface AsignarCapatazDialogProps {
+  obra: ObraResponseDto | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function AsignarCapatazDialog({
+  obra,
+  open,
+  onOpenChange,
+}: AsignarCapatazDialogProps) {
+  const mutation = useAsignarCapataz();
+  const [submitError, setSubmitError] = useState<string>();
+
+  // Consultar capataces disponibles excluyendo la obra actual para evitar conflictos
+  const { data: capatacesDisponibles = [], isLoading: isLoadingCapataces } =
+    useCapatacesDisponibles(obra?.id);
+
+  const {
+    control,
+    reset,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<AsignarCapatazForm>({
+    resolver: zodResolver(asignarCapatazSchema),
+    defaultValues: {
+      idCapataz: undefined,
+    },
+  });
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      reset();
+      setSubmitError(undefined);
+      mutation.reset();
+    }
+    onOpenChange(nextOpen);
+  };
+
+  const onSubmit = handleSubmit(async (values) => {
+    if (!obra) return;
+    setSubmitError(undefined);
+    try {
+      await mutation.mutateAsync({
+        id: obra.id,
+        payload: {
+          idCapataz: Number(values.idCapataz),
+        },
+      });
+      toast.success("Capataz asignado correctamente.", {
+        description: `Se ha actualizado la jefatura de obra para "${obra.nombreObra}".`,
+      });
+      handleOpenChange(false);
+    } catch (error) {
+      setSubmitError(
+        normalizeApiError(error, "No se pudo asignar el capataz.").message,
+      );
+    }
+  });
+
+  if (!obra) return null;
+
+  const isFinalizada =
+    obra.estadoActual.toUpperCase() === "SUSPENDIDA" ||
+    obra.estadoActual.toUpperCase() === "FINALIZADA" ||
+    obra.estadoActual.toUpperCase() === "ARCHIVADA";
+
+  return (
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-md p-0 overflow-hidden">
+        <DialogHeader className="px-6 py-5 border-b border-border bg-card">
+          <div className="flex items-center gap-3">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <HardHat className="size-5" />
+            </span>
+            <div>
+              <DialogTitle>
+                {obra.capataz ? "Cambiar Capataz" : "Asignar Capataz Responsable"}
+              </DialogTitle>
+              <DialogDescription>
+                {obra.nombreObra} ({obra.nomenclatura})
+              </DialogDescription>
+            </div>
+          </div>
+        </DialogHeader>
+
+        <form onSubmit={onSubmit} className="flex flex-col" noValidate>
+          <div className="px-6 py-5 space-y-4">
+            {submitError && (
+              <Alert variant="error">
+                <AlertCircle className="mt-0.5 size-4" />
+                {submitError}
+              </Alert>
+            )}
+
+            {isFinalizada && (
+              <Alert variant="warning">
+                <AlertTriangle className="mt-0.5 size-4" />
+                No es posible asignar o modificar el capataz de una obra en estado{" "}
+                <strong>{obra.estadoActual}</strong>.
+              </Alert>
+            )}
+
+            {obra.capataz ? (
+              <div className="rounded-lg border border-border bg-subtle/60 p-3.5 space-y-2">
+                <span className="text-[11px] font-semibold text-foreground-muted uppercase tracking-wider block">
+                  Capataz Asignado Actualmente
+                </span>
+                <div className="flex items-center gap-3">
+                  <CapatazAvatar
+                    nombre={`${obra.capataz.nombre} ${obra.capataz.apellido}`}
+                    size="md"
+                  />
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground truncate">
+                      {obra.capataz.nombre} {obra.capataz.apellido}
+                    </p>
+                    <p className="text-xs text-foreground-muted">
+                      DNI: {obra.capataz.dni}
+                      {obra.capataz.email ? ` • ${obra.capataz.email}` : ""}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-lg border border-amber-500/20 bg-amber-500/10 p-3 text-xs text-amber-600 dark:text-amber-400 flex items-center gap-2">
+                <AlertTriangle className="size-4 shrink-0" />
+                <span>Esta obra no tiene actualmente un capataz responsable asignado.</span>
+              </div>
+            )}
+
+            <div>
+              <Controller
+                name="idCapataz"
+                control={control}
+                render={({ field }) => (
+                  <FormField
+                    id="asignar-capataz-select"
+                    label="Seleccionar Nuevo Capataz *"
+                    error={errors.idCapataz?.message}
+                    required
+                  >
+                    <Select
+                      value={field.value ? String(field.value) : ""}
+                      onValueChange={(val) =>
+                        field.onChange(val ? Number(val) : undefined)
+                      }
+                      disabled={
+                        mutation.isPending ||
+                        isLoadingCapataces ||
+                        isFinalizada ||
+                        capatacesDisponibles.length === 0
+                      }
+                    >
+                      <SelectTrigger
+                        id="asignar-capataz-select"
+                        aria-invalid={Boolean(errors.idCapataz)}
+                      >
+                        <SelectValue
+                          placeholder={
+                            isLoadingCapataces
+                              ? "Cargando capataces disponibles..."
+                              : capatacesDisponibles.length === 0
+                              ? "No hay otros capataces disponibles"
+                              : "Seleccionar capataz..."
+                          }
+                        />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {capatacesDisponibles.map((c) => {
+                          const esCapatazActual =
+                            obra.capataz != null &&
+                            obra.capataz.idEmpleadoGrupo === c.idEmpleadoGrupo;
+                          return (
+                            <SelectItem
+                              key={c.idEmpleadoGrupo}
+                              value={String(c.idEmpleadoGrupo)}
+                              disabled={esCapatazActual}
+                            >
+                              <div className="flex items-center gap-2">
+                                <span className="font-medium">
+                                  {c.apellido}, {c.nombre}
+                                </span>
+                                <span className="text-xs text-foreground-muted">
+                                  (DNI: {c.dni})
+                                </span>
+                                {esCapatazActual && (
+                                  <span className="text-xs font-semibold text-primary">
+                                    — Asignado actualmente
+                                  </span>
+                                )}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </FormField>
+                )}
+              />
+
+              {!isLoadingCapataces && capatacesDisponibles.length === 0 && (
+                <div className="mt-2 rounded-lg bg-subtle p-3 text-xs text-foreground-muted flex items-start gap-2">
+                  <AlertCircle className="size-4 shrink-0 mt-0.5" />
+                  <span>
+                    No hay capataces libres disponibles para asignación. Asegúrese de que existan
+                    empleados activos en el grupo Capataz sin asignación a otra obra activa.
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <DialogFooter className="px-6 py-4 border-t border-border bg-subtle">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => handleOpenChange(false)}
+              disabled={mutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={
+                mutation.isPending ||
+                isFinalizada ||
+                isLoadingCapataces ||
+                capatacesDisponibles.length === 0
+              }
+            >
+              {mutation.isPending ? (
+                <>
+                  <Spinner className="text-white" />
+                  Guardando...
+                </>
+              ) : (
+                <>
+                  <UserCheck className="mr-1.5 size-4" />
+                  Confirmar Capataz
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+

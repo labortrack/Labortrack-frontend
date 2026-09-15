@@ -1,7 +1,8 @@
-import { ArrowRightLeft, MapPin, Pencil, Trash2 } from "lucide-react";
+import { ArrowRightLeft, HardHat, MapPin, Pencil, Trash2 } from "lucide-react";
 import { EstadoBadge } from "../estado/components/EstadoBadge";
 import { getEstadoStyle } from "../estado/utils/estadoStyles";
 import type { ObraResponseDto } from "../types/obra.types";
+import { CapatazAvatar } from "./CapatazAvatar";
 import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 
@@ -11,6 +12,7 @@ interface ObraCardProps {
   onClose: (o: ObraResponseDto) => void;
   onChangeEstado?: (o: ObraResponseDto) => void;
   onDetalle?: (o: ObraResponseDto) => void;
+  onAsignarCapataz?: (o: ObraResponseDto) => void;
 }
 
 export function ObraCard({
@@ -19,6 +21,7 @@ export function ObraCard({
   onClose,
   onChangeEstado,
   onDetalle,
+  onAsignarCapataz,
 }: ObraCardProps) {
   const isFinalizada =
     obra.estadoActual.toUpperCase() === "SUSPENDIDA" ||
@@ -66,6 +69,27 @@ export function ObraCard({
             </span>
           </div>
 
+          {/* Capataz Responsable */}
+          {obra.capataz ? (
+            <div className="flex items-center gap-2 text-xs text-foreground-muted">
+              <CapatazAvatar
+                nombre={`${obra.capataz.nombre} ${obra.capataz.apellido}`}
+                size="xs"
+              />
+              <span className="truncate">
+                Capataz:{" "}
+                <strong className="font-medium text-foreground">
+                  {obra.capataz.apellido}, {obra.capataz.nombre}
+                </strong>
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
+              <HardHat className="size-3 shrink-0" />
+              <span>Sin capataz asignado</span>
+            </div>
+          )}
+
           {/* Estado badge */}
           <div className="flex items-center justify-between pt-1">
             <EstadoBadge estado={obra.estadoActual} />
@@ -99,6 +123,27 @@ export function ObraCard({
                 </Button>
               </TooltipTrigger>
               <TooltipContent>Transicionar estado</TooltipContent>
+            </Tooltip>
+          ) : null}
+
+          {onAsignarCapataz ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onAsignarCapataz(obra)}
+                  disabled={isFinalizada}
+                  className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary disabled:opacity-30"
+                  aria-label={obra.capataz ? "Cambiar capataz" : "Asignar capataz"}
+                >
+                  <HardHat className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {obra.capataz ? "Cambiar capataz" : "Asignar capataz"}
+              </TooltipContent>
             </Tooltip>
           ) : null}
 

@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-query";
 import { obraApi } from "../api/obraApi";
 import type {
+  AsignarCapatazRequestDto,
   BajaObraRequestDto,
   CreateObraDto,
   ModifyObraRequestDto,
@@ -23,6 +24,8 @@ export const obrasKeys = {
   historial: (id: number) => [...obrasKeys.all, "historial", id] as const,
   qrConfig: (id: number) => [...obrasKeys.all, "qr-config", id] as const,
   qr: (id: number) => [...obrasKeys.all, "qr", id] as const,
+  capatacesDisponibles: (obraIdExcluir?: number) =>
+    [...obrasKeys.all, "capatacesDisponibles", obraIdExcluir ?? null] as const,
 };
 
 export function useObras(nomenclatura?: string) {
@@ -54,6 +57,13 @@ export function useHistorialEstadosObra(id: number | null | undefined) {
     queryKey: obrasKeys.historial(id ?? 0),
     queryFn: () => obraApi.getHistorialEstados(id!),
     enabled: Boolean(id),
+  });
+}
+
+export function useCapatacesDisponibles(obraIdExcluir?: number) {
+  return useQuery({
+    queryKey: obrasKeys.capatacesDisponibles(obraIdExcluir),
+    queryFn: () => obraApi.getCapatacesDisponibles(obraIdExcluir),
   });
 }
 
@@ -141,6 +151,20 @@ export function useCambiarEstadoObra() {
       id: number;
       payload: TransicionarEstadoObraDto;
     }) => obraApi.cambiarEstado(id, payload),
+    onSuccess: invalidate,
+  });
+}
+
+export function useAsignarCapataz() {
+  const invalidate = useInvalidateObras();
+  return useMutation({
+    mutationFn: ({
+      id,
+      payload,
+    }: {
+      id: number;
+      payload: AsignarCapatazRequestDto;
+    }) => obraApi.asignarCapataz(id, payload),
     onSuccess: invalidate,
   });
 }

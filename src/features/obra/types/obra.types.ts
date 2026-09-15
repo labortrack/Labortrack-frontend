@@ -1,3 +1,17 @@
+export interface CapatazResponseDto {
+  idEmpleadoGrupo: number;
+  idEmpleado: number;
+  nombre: string;
+  apellido: string;
+  email: string;
+  dni: string;
+  telefono: string;
+}
+
+export interface AsignarCapatazRequestDto {
+  idCapataz: number;
+}
+
 export interface ObraResponseDto {
   id: number;
   nombreObra: string;
@@ -7,6 +21,7 @@ export interface ObraResponseDto {
   localidad: string;
   estadoActual: string;
   fechaInicioEstadoActual?: string;
+  capataz?: CapatazResponseDto | null;
 }
 
 export interface CreateObraDto {
@@ -16,6 +31,7 @@ export interface CreateObraDto {
   provincia: string;
   localidad: string;
   motivoCambio: string;
+  idCapataz: number;
 }
 
 export interface ModifyObraRequestDto {
