@@ -21,6 +21,8 @@ export const obrasKeys = {
     [...obrasKeys.all, "byNomenclatura", valor.trim()] as const,
   detail: (id: number) => [...obrasKeys.all, "detail", id] as const,
   historial: (id: number) => [...obrasKeys.all, "historial", id] as const,
+  qrConfig: (id: number) => [...obrasKeys.all, "qr-config", id] as const,
+  qr: (id: number) => [...obrasKeys.all, "qr", id] as const,
 };
 
 export function useObras(nomenclatura?: string) {
@@ -52,6 +54,39 @@ export function useHistorialEstadosObra(id: number | null | undefined) {
     queryKey: obrasKeys.historial(id ?? 0),
     queryFn: () => obraApi.getHistorialEstados(id!),
     enabled: Boolean(id),
+  });
+}
+
+export function useAsegurarQrObra(id: number | null | undefined) {
+  return useQuery({
+    queryKey: obrasKeys.qrConfig(id ?? 0),
+    queryFn: async () => {
+      await obraApi.asegurarQr(id!);
+      return true;
+    },
+    enabled: Boolean(id),
+    staleTime: Number.POSITIVE_INFINITY,
+    retry: 1,
+  });
+}
+
+export function useQrObra(
+  id: number | null | undefined,
+  configuracionLista: boolean,
+) {
+  return useQuery({
+    queryKey: obrasKeys.qr(id ?? 0),
+    queryFn: () => obraApi.generarQr(id!),
+    enabled: Boolean(id) && configuracionLista,
+    refetchInterval: (query) => {
+      const venceEn = query.state.data?.venceEn;
+      if (!venceEn) return false;
+
+      const hastaRenovacion = Date.parse(venceEn) - Date.now() - 30_000;
+      return Math.max(hastaRenovacion, 1_000);
+    },
+    refetchIntervalInBackground: true,
+    retry: 2,
   });
 }
 
