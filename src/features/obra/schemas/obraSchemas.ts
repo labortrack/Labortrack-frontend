@@ -18,6 +18,9 @@ export const createObraSchema = z.object({
     .string()
     .trim()
     .min(1, "Debe especificar el motivo o justificación del alta de la obra."),
+  idCapataz: z
+    .number()
+    .min(1, "Debe seleccionar un Capataz responsable para la obra."),
 });
 
 export const modifyObraSchema = z.object({
@@ -46,9 +49,16 @@ export const transicionarEstadoObraSchema = z.object({
     .min(1, "Debe indicar el motivo del cambio de estado."),
 });
 
+export const asignarCapatazSchema = z.object({
+  idCapataz: z
+    .number()
+    .min(1, "Debe seleccionar un Capataz responsable."),
+});
+
 export type CreateObraForm = z.infer<typeof createObraSchema>;
 export type ModifyObraForm = z.infer<typeof modifyObraSchema>;
 export type BajaObraForm = z.infer<typeof bajaObraSchema>;
 export type TransicionarEstadoObraForm = z.infer<
   typeof transicionarEstadoObraSchema
 >;
+export type AsignarCapatazForm = z.infer<typeof asignarCapatazSchema>;

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { Plus, RotateCcw, Settings2 } from "lucide-react";
 import { ObraCard } from "../components/ObraCard";
 import {
+  AsignarCapatazDialog,
   CloseObraDialog,
   CreateObraDialog,
   EditObraDialog,
@@ -36,6 +37,8 @@ export default function ObrasPage() {
   const [editingObra, setEditingObra] = useState<ObraResponseDto | null>(null);
   const [closingObra, setClosingObra] = useState<ObraResponseDto | null>(null);
   const [transitioningObra, setTransitioningObra] =
+    useState<ObraResponseDto | null>(null);
+  const [assigningCapatazObra, setAssigningCapatazObra] =
     useState<ObraResponseDto | null>(null);
 
   const obrasQuery = useObras(busqueda);
@@ -176,6 +179,7 @@ export default function ObrasPage() {
               onEdit={setEditingObra}
               onClose={setClosingObra}
               onChangeEstado={setTransitioningObra}
+              onAsignarCapataz={setAssigningCapatazObra}
               onDetalle={(o) => navigate(`/obras/${o.id}`)}
             />
           ))}
@@ -206,6 +210,15 @@ export default function ObrasPage() {
         obra={transitioningObra}
         onOpenChange={(open) => {
           if (!open) setTransitioningObra(null);
+        }}
+      />
+
+      <AsignarCapatazDialog
+        key={assigningCapatazObra?.id ?? "capataz-obra"}
+        obra={assigningCapatazObra}
+        open={Boolean(assigningCapatazObra)}
+        onOpenChange={(open) => {
+          if (!open) setAssigningCapatazObra(null);
         }}
       />
     </div>
