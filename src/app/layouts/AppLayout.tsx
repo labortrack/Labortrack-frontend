@@ -12,6 +12,7 @@ import {
   LogOut,
   Menu,
   Receipt,
+  ShieldCheck,
   User,
   UserCheck,
   UserCog,
@@ -62,12 +63,17 @@ export function AppLayout() {
       ? [{ to: "/ausencias/solicitudes", label: "Solicitudes de ausencia", icon: ClipboardList }]
       : []),
     ...(isOperario
-      ? [{ to: "/mis-datos", label: "Mis Datos", icon: User }, { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList }]
+      ? [
+        { to: "/mis-datos", label: "Mis Datos", icon: User },
+        { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList },
+        { to: "/mis-epps", label: "Mis EPPs", icon: HardHat },
+      ]
       : []),
     ...(canManageUsers
       ? [
         { to: "/legajos", label: "Legajos", icon: UserCheck },
         { to: "/obras", label: "Obras", icon: HardHat },
+        { to: "/higiene-seguridad", label: "Higiene y Seguridad", icon: ShieldCheck },
         { to: "/usuarios", label: "Usuarios", icon: UserCog },
       ]
       : []),
@@ -136,7 +142,10 @@ export function AppLayout() {
             location.pathname.startsWith(`${to}/`) ||
             (to === "/obras" &&
               (location.pathname.startsWith("/obras") ||
-                location.pathname.startsWith("/configuracion-obras")));
+                location.pathname.startsWith("/configuracion-obras"))) ||
+            (to === "/higiene-seguridad" &&
+              (location.pathname.startsWith("/higiene-seguridad") ||
+                location.pathname.startsWith("/epp")));
 
           return (
             <Tooltip key={to}>

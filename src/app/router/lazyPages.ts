@@ -76,4 +76,13 @@ export const MiEmpresaPage = lazy(
 export const RecibosPage = lazy(
   () => import("@/features/recibos/pages/RecibosPage"),
 );
+export const EppInventoryPage = lazy(
+  () => import("@/features/epp/pages/EppInventoryPage"),
+);
+export const EppDeliveriesHistoryPage = lazy(
+  () => import("@/features/epp/pages/EppDeliveriesHistoryPage"),
+);
+export const MisEppsPage = lazy(
+  () => import("@/features/epp/pages/MisEppsPage"),
+);
 

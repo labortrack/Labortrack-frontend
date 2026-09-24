@@ -7,6 +7,9 @@ import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from "./guards";
 import { AsistenciaCapabilityRoute } from "@/features/asistencia/components/AsistenciaCapabilityRoute";
 import { EmpresaInicializacionGate } from "@/features/empresa/components/EmpresaInicializacionGate";
 import { LoadingState } from "@/shared/components";
+import { EppInventoryPage } from "@/features/epp/pages/EppInventoryPage";
+import { EppDeliveriesHistoryPage } from "@/features/epp/pages/EppDeliveriesHistoryPage";
+import { MisEppsPage } from "@/features/epp/pages/MisEppsPage";
 import {
   MisSolicitudesAusenciaPage,
   MiSolicitudAusenciaDetailPage,
@@ -77,6 +80,7 @@ export const router = createBrowserRouter([
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
                   { path: "/mis-ausencias", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisSolicitudesAusenciaPage />)}</RoleRoute> },
                   { path: "/mis-ausencias/:solicitudId", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MiSolicitudAusenciaDetailPage />)}</RoleRoute> },
+                  { path: "/mis-epps", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisEppsPage />)}</RoleRoute> },
                   { path: "/ausencias/solicitudes", element: <RoleRoute allowed={["ROLE_RRHH"]}>{suspense(<SolicitudesAusenciaPage />)}</RoleRoute> },
                   { path: "/ausencias/solicitudes/:solicitudId", element: <RoleRoute allowed={["ROLE_RRHH"]}>{suspense(<SolicitudAusenciaAdministrativaDetailPage />)}</RoleRoute> },
                   { path: "/mis-datos", element: suspense(<MisDatosPage />) },
@@ -119,6 +123,30 @@ export const router = createBrowserRouter([
                         {suspense(<LegajosPage />)}
                       </RoleRoute>
                     ),
+                  },
+                  {
+                    path: "/higiene-seguridad",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<EppInventoryPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/higiene-seguridad/historial",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<EppDeliveriesHistoryPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/epp",
+                    element: <Navigate to="/higiene-seguridad" replace />,
+                  },
+                  {
+                    path: "/epp/historial",
+                    element: <Navigate to="/higiene-seguridad/historial" replace />,
                   },
                   {
                     path: "/estructura-laboral",
