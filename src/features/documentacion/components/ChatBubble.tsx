@@ -7,7 +7,6 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
-import { Skeleton } from "@/shared/ui/skeleton";
 import { Typewriter } from "./Typewriter";
 import { renderMarkdownText } from "./MarkdownText";
 import type { ChatMessage } from "../types/ragChat.types";
@@ -176,35 +175,42 @@ export const ChatBubble = forwardRef<HTMLDivElement, ChatBubbleProps>(
 );
 
 /**
- * ChatSkeleton: Esqueleto de carga visual para cuando la IA está procesando la respuesta.
+ * ChatSkeleton: Indicador dinámico de carga para cuando la IA está procesando la respuesta.
+ * Muestra una burbuja elegante con animación de tres puntos suspensivos ("...").
  */
 export function ChatSkeleton() {
   return (
     <div className="flex w-full justify-start gap-3">
-      <div className="flex max-w-[85%] flex-col items-start sm:max-w-[75%]">
-        {/* Encabezado esqueleto */}
-        <div className="flex items-center gap-2 pb-1.5">
-          <Skeleton className="size-6 rounded-full" />
-          <Skeleton className="h-4 w-28" />
+      <div className="flex max-w-[95%] flex-col items-start sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%]">
+        {/* Encabezado Bot */}
+        <div className="flex items-center gap-2 pb-1.5 text-xs font-semibold text-primary">
+          <div className="flex size-6 items-center justify-center rounded-full bg-primary-soft text-primary">
+            <Bot className="size-3.5" />
+          </div>
+          <div className="flex items-center gap-1.5">
+            <span>Tracky</span>
+            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.2 text-[10px] font-bold text-primary">
+              <Sparkles className="size-2.5" />
+              RAG IA
+            </span>
+          </div>
         </div>
 
-        {/* Cuerpo esqueleto */}
-        <div className="w-full space-y-2.5 rounded-card rounded-tl-sm border border-border bg-subtle p-4 shadow-soft">
-          <div className="flex items-center gap-2 text-xs font-medium text-foreground-muted">
-            <Sparkles className="size-3.5 animate-spin text-primary" />
-            <span>Consultando fuentes documentales y generando respuesta...</span>
-          </div>
-          <Skeleton className="h-4 w-full" />
-          <Skeleton className="h-4 w-[92%]" />
-          <Skeleton className="h-4 w-[65%]" />
-
-          {/* Esqueleto de chip de fuente citada */}
-          <div className="mt-3 border-t border-border pt-3">
-            <Skeleton className="mb-2 h-3 w-24" />
-            <div className="flex gap-2">
-              <Skeleton className="h-6 w-36 rounded-full" />
-              <Skeleton className="h-6 w-28 rounded-full" />
-            </div>
+        {/* Burbuja con indicador de escritura dinámico */}
+        <div className="rounded-card rounded-tl-sm border border-border bg-subtle px-4 py-3 shadow-soft">
+          <div className="flex items-center gap-1.5 py-1" aria-label="Tracky está respondiendo...">
+            <span
+              className="size-2 rounded-full bg-primary/70 animate-bounce"
+              style={{ animationDelay: "-0.32s", animationDuration: "1s" }}
+            />
+            <span
+              className="size-2 rounded-full bg-primary/70 animate-bounce"
+              style={{ animationDelay: "-0.16s", animationDuration: "1s" }}
+            />
+            <span
+              className="size-2 rounded-full bg-primary/70 animate-bounce"
+              style={{ animationDelay: "0s", animationDuration: "1s" }}
+            />
           </div>
         </div>
       </div>

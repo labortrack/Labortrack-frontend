@@ -5,17 +5,20 @@ import {
   type FormEvent,
   type KeyboardEvent,
 } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   SendHorizontal,
   Bot,
   RotateCcw,
-  BookOpen,
-  AlertCircle,
   Sparkles,
+  Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { setAccessToken } from "@/shared/lib/http/tokenManager";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { ChatBubble, ChatSkeleton } from "./ChatBubble";
@@ -31,14 +34,7 @@ interface ChatRagProps {
   placeholder?: string;
   botName?: string;
   className?: string;
-  sugerencias?: string[];
 }
-
-const SUGERENCIAS_DEFECTO = [
-  "¿Cuántos días de licencia por examen me corresponden?",
-  "¿Qué establece el Convenio Colectivo sobre horas extras?",
-  "¿Cómo solicito un día por mudanza o trámite personal?",
-];
 
 export function ChatRag({
   messages: externalMessages,
@@ -49,15 +45,17 @@ export function ChatRag({
   placeholder = "Preguntale a Tracky sobre convenios, normativas o documentación...",
   botName = "Tracky",
   className,
-  sugerencias = SUGERENCIAS_DEFECTO,
 }: ChatRagProps) {
+  const navigate = useNavigate();
+  const clearSession = useSessionStore((state) => state.clearSession);
+
   // Estado local para mensajería
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([
     {
       id: "welcome-msg",
       sender: "bot",
       content:
-        "¡Hola! Soy Tracky, tu asistente de Recursos Humanos con Inteligencia Artificial. Podés hacerme consultas sobre normativas de trabajo, convenios colectivos, políticas internas o procedimientos de la empresa indexados en el sistema.",
+        "¡Hola! Soy Tracky. Podés hacerme consultas sobre normativas, convenios colectivos o procedimientos internos de LaborTrack. ¿En qué te ayudo hoy?",
       timestamp: new Date(),
     },
   ]);
@@ -128,6 +126,36 @@ export function ChatRag({
         error,
         "No fue posible comunicarse con el asistente virtual Tracky.",
       );
+
+      const isAuthError =
+        apiErr.status === 401 ||
+        apiErr.status === 403 ||
+        (axios.isAxiosError(error) &&
+          (error.response?.status === 401 || error.response?.status === 403));
+
+      if (isAuthError) {
+        const sessionExpiredMsg =
+          "Tu sesión ha expirado por seguridad. Por favor, vuelve a iniciar sesión para continuar usando Tracky.";
+        toast.error(sessionExpiredMsg);
+
+        const errorMsg: ChatMessage = {
+          id: `err-${Date.now()}`,
+          sender: "bot",
+          content: sessionExpiredMsg,
+          timestamp: new Date(),
+          isError: true,
+        };
+        setInternalMessages((prev) => [...prev, errorMsg]);
+
+        // Limpiar estado de autenticación y redirigir al login
+        setAccessToken(null);
+        clearSession();
+        setTimeout(() => {
+          navigate("/login", { replace: true });
+        }, 1500);
+        return;
+      }
+
       toast.error(apiErr.message);
 
       const errorMsg: ChatMessage = {
@@ -153,11 +181,6 @@ export function ChatRag({
     // Auto-ajuste de altura hasta un máximo
     e.target.style.height = "auto";
     e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
-  };
-
-  const handleSelectSugerencia = (sug: string) => {
-    setInputVal(sug);
-    textareaRef.current?.focus();
   };
 
   return (
@@ -203,19 +226,6 @@ export function ChatRag({
 
       {/* ── Contenedor de Mensajes (Scrollable) ── */}
       <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
-        {/* Banner informativo y descargo de responsabilidad */}
-        <div className="flex items-start gap-2.5 rounded-control border border-border bg-subtle/80 p-3 text-xs text-foreground-muted">
-          <AlertCircle className="size-4 shrink-0 text-primary mt-0.5" />
-          <div className="space-y-1">
-            <p className="font-semibold text-foreground">
-              Aviso sobre el uso de Inteligencia Artificial:
-            </p>
-            <p>
-              Tracky genera respuestas automatizadas mediante un motor de Inteligencia Artificial (RAG) basado en los documentos institucionales y convenios cargados. Esta herramienta es de caracter orientativo y no reemplaza el criterio legal o administrativo. Por favor, <strong>verificá siempre las respuestas</strong> y consultá con el área de Recursos Humanos ante trámites formales.
-            </p>
-          </div>
-        </div>
-
         {/* Mensajes */}
         {messages.map((msg) => (
           <ChatBubble
@@ -233,28 +243,6 @@ export function ChatRag({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* ── Sugerencias Rápidas ── */}
-      {messages.length <= 2 && sugerencias.length > 0 && (
-        <div className="border-t border-border bg-subtle/50 px-4 py-2">
-          <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-foreground-muted">
-            <BookOpen className="size-3 text-primary" />
-            Preguntas sugeridas
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {sugerencias.map((sug, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => handleSelectSugerencia(sug)}
-                className="rounded-control border border-border-strong bg-card px-2.5 py-1 text-left text-xs text-foreground transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary"
-              >
-                {sug}
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* ── Input y Barra de Envío Fijada al Fondo ── */}
       <div className="border-t border-border bg-card p-3 sm:p-4">
         <form onSubmit={handleSubmit} className="flex items-end gap-2">
@@ -267,7 +255,7 @@ export function ChatRag({
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={isLoading}
-              className="w-full resize-none rounded-control border border-border-strong bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-foreground-muted/75 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-subtle"
+              className="w-full resize-none rounded-control border border-border-strong bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-foreground-muted/75 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-subtle disabled:opacity-60"
             />
           </div>
 
@@ -278,7 +266,11 @@ export function ChatRag({
             className="h-10 px-4"
             aria-label="Enviar mensaje"
           >
-            <SendHorizontal className="size-4" />
+            {isLoading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <SendHorizontal className="size-4" />
+            )}
             <span className="hidden sm:inline">Enviar</span>
           </Button>
         </form>
