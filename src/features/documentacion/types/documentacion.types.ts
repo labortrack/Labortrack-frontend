@@ -73,6 +73,8 @@ export interface DocumentoRespuestaDto {
   contentType: string;
   visibilidad: string;
   esIndexadoRag: boolean;
+  indexadoEnRag?: "PENDIENTE" | "COMPLETADO" | "FALLIDO" | "NO_APLICA" | string;
+  estadoRag?: "PENDIENTE" | "COMPLETADO" | "FALLIDO" | "NO_APLICA" | string;
   tipoDocumentoNombre: string;
   usuarioSubidaId: number;
   /** Presente únicamente cuando el documento está asociado a un empleado. */

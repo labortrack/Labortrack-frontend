@@ -23,7 +23,7 @@ import {
   useActualizarFotoPerfil,
   useLegajoDetail,
 } from "../hooks/useLegajos";
-import { GENERO_LABELS } from "../types/legajo.types";
+import { GENERO_LABELS, NACIONALIDAD_OPTIONS } from "../types/legajo.types";
 import type { Genero, EmpleadoUpdateDto } from "../types/legajo.types";
 import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
 import { useZonasActivas } from "@/features/cuadroTarifario/hooks/useZonas";
@@ -54,6 +54,15 @@ const ROL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "ROLE_RRHH", label: "Recursos Humanos" },
   { value: "ROLE_ADMIN", label: "Administrador" },
 ];
+
+function normalizarNacionalidad(nac?: string): string {
+  if (!nac) return "";
+  const upper = nac.toUpperCase().trim();
+  const match = NACIONALIDAD_OPTIONS.find(
+    (opt) => opt.value === upper || opt.label.toUpperCase() === upper,
+  );
+  return match ? match.value : nac;
+}
 
 export interface EmpleadoFormProps {
   empleadoId?: number;
@@ -126,7 +135,7 @@ export function EmpleadoForm({
         cuil: empleadoData.cuil || "",
         fechaNacimiento: empleadoData.fechaNacimiento || "",
         fechaIngreso: empleadoData.fechaIngreso || "",
-        nacionalidad: empleadoData.nacionalidad || "",
+        nacionalidad: normalizarNacionalidad(empleadoData.nacionalidad),
         grupoSanguineo: empleadoData.grupoSanguineo || "",
         domicilio: empleadoData.domicilio || "",
         numeroCelular: empleadoData.numeroCelular || "",
@@ -493,11 +502,29 @@ export function EmpleadoForm({
             error={errors.nacionalidad?.message}
             required
           >
-            <Input
-              id="empleado-nacionalidad"
-              placeholder="Ej: Argentina"
-              aria-invalid={Boolean(errors.nacionalidad)}
-              {...register("nacionalidad")}
+            <Controller
+              name="nacionalidad"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    id="empleado-nacionalidad"
+                    aria-invalid={Boolean(errors.nacionalidad)}
+                  >
+                    <SelectValue placeholder="Seleccioná nacionalidad" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {NACIONALIDAD_OPTIONS.map((opt) => (
+                      <SelectItem key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
             />
           </FormField>
 
