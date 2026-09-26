@@ -162,7 +162,7 @@ export function EppFormModal({
               placeholder="Ej: 50"
               disabled={isPending}
               aria-invalid={Boolean(errors.stockEPP)}
-              {...register("stockEPP")}
+              {...register("stockEPP", { valueAsNumber: true })}
             />
           </FormField>
 

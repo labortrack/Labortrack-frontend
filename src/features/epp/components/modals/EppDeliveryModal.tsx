@@ -176,7 +176,7 @@ export function EppDeliveryModal({
               disabled={isPending || isLoadingEmpleados}
               aria-invalid={Boolean(errors.empleadoId)}
               className="h-10 w-full rounded-control border border-border-strong bg-card px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-subtle disabled:text-foreground-muted aria-invalid:border-error aria-invalid:ring-2 aria-invalid:ring-error/15"
-              {...register("empleadoId")}
+              {...register("empleadoId", { valueAsNumber: true })}
             >
               <option value="0">-- Seleccioná un empleado --</option>
               {empleados.map((emp) => (
@@ -209,7 +209,7 @@ export function EppDeliveryModal({
               disabled={isPending || isLoadingEpps}
               aria-invalid={Boolean(errors.eppId)}
               className="h-10 w-full rounded-control border border-border-strong bg-card px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-subtle disabled:text-foreground-muted aria-invalid:border-error aria-invalid:ring-2 aria-invalid:ring-error/15"
-              {...register("eppId")}
+              {...register("eppId", { valueAsNumber: true })}
             >
               <option value="0">-- Seleccioná un EPP activo --</option>
               {activeEpps.map((item) => (
@@ -237,7 +237,7 @@ export function EppDeliveryModal({
                 placeholder="Ej: 1"
                 disabled={isPending}
                 aria-invalid={Boolean(errors.cantidadEntregada)}
-                {...register("cantidadEntregada")}
+                {...register("cantidadEntregada", { valueAsNumber: true })}
               />
             </FormField>
 

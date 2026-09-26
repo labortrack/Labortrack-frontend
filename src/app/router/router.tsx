@@ -7,9 +7,6 @@ import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from "./guards";
 import { AsistenciaCapabilityRoute } from "@/features/asistencia/components/AsistenciaCapabilityRoute";
 import { EmpresaInicializacionGate } from "@/features/empresa/components/EmpresaInicializacionGate";
 import { LoadingState } from "@/shared/components";
-import { EppInventoryPage } from "@/features/epp/pages/EppInventoryPage";
-import { EppDeliveriesHistoryPage } from "@/features/epp/pages/EppDeliveriesHistoryPage";
-import { MisEppsPage } from "@/features/epp/pages/MisEppsPage";
 import {
   MisSolicitudesAusenciaPage,
   MiSolicitudAusenciaDetailPage,
@@ -39,6 +36,9 @@ import {
   RecibosPage,
   TiposSolicitudAusenciaPage,
   TipoSolicitudAusenciaDetailPage,
+  EppInventoryPage,
+  EppDeliveriesHistoryPage,
+  MisEppsPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (

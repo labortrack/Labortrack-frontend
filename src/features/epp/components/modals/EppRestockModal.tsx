@@ -141,7 +141,7 @@ export function EppRestockModal({
               placeholder="Ej: 25"
               disabled={isPending}
               aria-invalid={Boolean(errors.cantidadReponer)}
-              {...register("cantidadReponer")}
+              {...register("cantidadReponer", { valueAsNumber: true })}
             />
           </FormField>
 

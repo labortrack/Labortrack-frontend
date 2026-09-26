@@ -6,8 +6,8 @@ export const altaEppSchema = z.object({
     .trim()
     .min(1, "El nombre del EPP es obligatorio.")
     .max(150, "El nombre no puede superar los 150 caracteres."),
-  stockEPP: z.coerce
-    .number({ message: "El stock es obligatorio." })
+  stockEPP: z
+    .number({ error: "El stock es obligatorio." })
     .int("El stock debe ser un número entero.")
     .positive("El stock debe ser un número entero positivo."),
 });
@@ -18,31 +18,31 @@ export const modificarEppSchema = z.object({
     .trim()
     .min(1, "El nombre del EPP es obligatorio.")
     .max(150, "El nombre no puede superar los 150 caracteres."),
-  stockEPP: z.coerce
-    .number()
+  stockEPP: z
+    .number({ error: "El stock debe ser un número válido." })
     .int("El stock debe ser un número entero.")
     .positive("El stock debe ser un número entero positivo.")
     .optional(),
 });
 
 export const reponerEppSchema = z.object({
-  cantidadReponer: z.coerce
-    .number({ message: "La cantidad a reponer es obligatoria." })
+  cantidadReponer: z
+    .number({ error: "La cantidad a reponer es obligatoria." })
     .int("La cantidad a reponer debe ser un número entero.")
     .positive("La cantidad a reponer debe ser un número entero positivo."),
 });
 
 export const nuevaEntregaSchema = z.object({
-  empleadoId: z.coerce
-    .number({ message: "Debe seleccionar un empleado." })
+  empleadoId: z
+    .number({ error: "Debe seleccionar un empleado." })
     .int("El ID de empleado debe ser un entero.")
     .positive("Debe seleccionar un empleado válido."),
-  eppId: z.coerce
-    .number({ message: "Debe seleccionar un EPP." })
+  eppId: z
+    .number({ error: "Debe seleccionar un EPP." })
     .int("El ID de EPP debe ser un entero.")
     .positive("Debe seleccionar un EPP válido."),
-  cantidadEntregada: z.coerce
-    .number({ message: "La cantidad entregada es obligatoria." })
+  cantidadEntregada: z
+    .number({ error: "La cantidad entregada es obligatoria." })
     .int("La cantidad debe ser un número entero.")
     .positive("La cantidad entregada debe ser un número entero positivo."),
   fechaEntrega: z
