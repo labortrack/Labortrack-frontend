@@ -216,7 +216,7 @@ export function AppLayout() {
                 </p>
               </div>
               <button
-                className="rounded-control p-2 text-foreground-muted hover:bg-error-soft hover:text-error"
+                className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
                 onClick={handleLogout}
                 disabled={logout.isPending}
                 aria-label="Cerrar sesión"

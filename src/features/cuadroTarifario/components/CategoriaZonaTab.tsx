@@ -27,6 +27,7 @@ import {
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
+import { esLiquidacionMensual } from "../utils/tipoLiquidacionLabels";
 
 const TABS: TabFiltroCategoriaZona[] = ["Todos", "Activos", "Inactivos"];
 
@@ -131,7 +132,12 @@ export function CategoriaZonaTab() {
                     !celda.activo && "text-foreground-muted line-through",
                   )}
                 >
-                  {celda.nombreCategoria}
+                  <div className="flex items-center gap-2">
+                    <span>{celda.nombreCategoria}</span>
+                    {esLiquidacionMensual(celda.tipoLiquidacion) ? (
+                      <Badge variant="primary">Mensual</Badge>
+                    ) : null}
+                  </div>
                 </TableCell>
                 <TableCell>{celda.nombreZona}</TableCell>
                 <TableCell>{formatCurrency(celda.valorHoraAdicional)}</TableCell>

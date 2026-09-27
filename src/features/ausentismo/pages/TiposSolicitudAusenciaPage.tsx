@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { ChevronRight, Plus, RotateCcw } from "lucide-react";
-import { EmptyState, ErrorState, LoadingState, PageHeader, Pagination, SearchInput } from "@/shared/components";
+import { BackLink, EmptyState, ErrorState, LoadingState, PageHeader, Pagination, SearchInput } from "@/shared/components";
 import { Button, Card, CardContent, Label, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useTiposSolicitudAusencia } from "../hooks/useTiposSolicitudAusencia";
@@ -53,8 +53,11 @@ export default function TiposSolicitudAusenciaPage() {
   }, [datos, page, nombreConsulta, nombre, query.isPlaceholderData, query.isFetching, setParams]);
 
   return <div className="space-y-6">
-    <PageHeader title="Tipos de solicitud de ausencia" description="Administrá los tipos disponibles para registrar solicitudes de ausencia y sus reglas aplicables."
-      actions={<Button className="w-full sm:w-auto" onClick={() => setCrear(true)}><Plus />Crear tipo de solicitud</Button>} />
+    <div>
+      <BackLink to="/ausencias/solicitudes" />
+      <PageHeader title="Tipos de solicitud de ausencia" description="Administrá los tipos disponibles para registrar solicitudes de ausencia y sus reglas aplicables."
+        actions={<Button className="w-full sm:w-auto" onClick={() => setCrear(true)}><Plus />Crear tipo de solicitud</Button>} />
+    </div>
     <Card><CardContent className="p-4 sm:p-5">
       <div className="grid items-end gap-3 sm:grid-cols-2 xl:grid-cols-[minmax(200px,1.4fr)_1fr_1fr_1fr_auto]">
         <div><Label htmlFor="tipos-ausencia-busqueda" className="mb-1.5 block">Búsqueda</Label>

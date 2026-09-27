@@ -1,7 +1,8 @@
 import { useState, useMemo } from "react";
-import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, HardHat } from "lucide-react";
+import { useParams } from "react-router-dom";
+import { Plus, HardHat } from "lucide-react";
 import {
+  BackLink,
   PageHeader,
   LoadingState,
   ErrorState,
@@ -30,7 +31,6 @@ import type {
 
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
-  const navigate = useNavigate();
   const obraId = Number(paramObraId);
 
   // Queries
@@ -98,14 +98,7 @@ export default function CuadrillasPage() {
   if (obraQuery.isPending) {
     return (
       <div className="space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate(`/obras/${obraId}`)}
-          className="group inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver a la Obra</span>
-        </button>
+        <BackLink to={`/obras/${obraId}`} />
         <Card className="p-12">
           <LoadingState label="Cargando información de la obra..." />
         </Card>
@@ -116,14 +109,7 @@ export default function CuadrillasPage() {
   if (obraQuery.isError || !obra) {
     return (
       <div className="space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate("/obras")}
-          className="group inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver a Obras</span>
-        </button>
+        <BackLink to="/obras" />
         <Card className="p-8">
           <ErrorState
             message="No se pudo cargar la información de la obra solicitada."
@@ -138,14 +124,7 @@ export default function CuadrillasPage() {
     <div className="space-y-6">
       {/* ── Breadcrumb / Header ───────────────────────────────── */}
       <div>
-        <button
-          type="button"
-          onClick={() => navigate(`/obras/${obraId}`)}
-          className="group mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver al Proyecto ({obra.nombreObra})</span>
-        </button>
+        <BackLink to={`/obras/${obraId}`} />
 
         <PageHeader
           title="Gestión de Cuadrillas"

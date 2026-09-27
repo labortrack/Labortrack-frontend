@@ -14,6 +14,7 @@ import {
   useModificarCategoriaUocra,
 } from "../hooks/useCategoriasUocra";
 import type { CategoriaUocraResponseDto } from "../types/categoriaUocra.types";
+import { TIPO_LIQUIDACION_OPTIONS } from "../utils/tipoLiquidacionLabels";
 import { ConfirmDialog, FormField } from "@/shared/components";
 import {
   Alert,
@@ -33,11 +34,6 @@ import {
   Spinner,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
-
-const TIPO_LIQUIDACION_OPTIONS = [
-  { value: "POR_HORA", label: "Por Hora" },
-  { value: "MENSUAL", label: "Mensual" },
-] as const;
 
 // ─── Modal: Crear / Modificar Categoría UOCRA ───────────────────────────────
 

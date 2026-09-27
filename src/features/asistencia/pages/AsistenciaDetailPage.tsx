@@ -2,11 +2,9 @@ import { useState } from "react";
 import {
   Navigate,
   useLocation,
-  useNavigate,
   useParams,
 } from "react-router-dom";
 import {
-  ArrowLeft,
   Building2,
   CalendarDays,
   CircleX,
@@ -42,6 +40,7 @@ import {
   TIPO_JORNADA_LABELS,
 } from "../utils/asistenciaFormatters";
 import {
+  BackLink,
   EmptyState,
   ErrorState,
   LoadingState,
@@ -62,7 +61,6 @@ const ACCION_LABELS = {
 export default function AsistenciaDetailPage() {
   const { asistenciaId } = useParams();
   const location = useLocation();
-  const navigate = useNavigate();
   const volverAAsistencias = `/asistencias${location.search}`;
   const id = Number(asistenciaId);
   const idValido = Number.isInteger(id) && id > 0;
@@ -90,10 +88,7 @@ export default function AsistenciaDetailPage() {
   if (detalleQuery.isError || !detalleQuery.data) {
     return (
       <div className="space-y-4">
-        <Button variant="ghost" onClick={() => navigate(volverAAsistencias)}>
-          <ArrowLeft />
-          Volver a Asistencias
-        </Button>
+        <BackLink to={volverAAsistencias} />
         <Card>
           <ErrorState
             message={
@@ -114,14 +109,7 @@ export default function AsistenciaDetailPage() {
   return (
     <div className="space-y-6">
       <div>
-        <Button
-          variant="ghost"
-          className="mb-3 -ml-3"
-          onClick={() => navigate(volverAAsistencias)}
-        >
-          <ArrowLeft />
-          Volver a Asistencias
-        </Button>
+        <BackLink to={volverAAsistencias} />
         <PageHeader
           title="Detalle de asistencia"
           description={`Información operativa correspondiente al ${formatFecha(asistencia.fecha)}.`}

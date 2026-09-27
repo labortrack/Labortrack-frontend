@@ -11,7 +11,7 @@ import { AltaEmpleadoForm } from "../components/AltaEmpleadoForm";
 import { EmpleadoFilters } from "../components/EmpleadoFilters";
 import { EmpleadoTable } from "../components/EmpleadoTable";
 import { EmpleadoDetail360 } from "../components/EmpleadoDetail360";
-import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
+import { BackLink, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { Button } from "@/shared/ui";
 
 const DEFAULT_FILTERS: EmpleadoFilterParams = {
@@ -110,14 +110,16 @@ export default function LegajosPage() {
 
     return (
       <div className="space-y-6">
-        <PageHeader
-          title={`Ficha 360° · ${detailData.apellido}, ${detailData.nombre}`}
-          description={`CUIL ${detailData.cuil} — DNI ${detailData.dni}`}
-        />
+        <div>
+          <BackLink onClick={handleBackToList} />
+          <PageHeader
+            title={`Ficha 360° · ${detailData.apellido}, ${detailData.nombre}`}
+            description={`CUIL ${detailData.cuil} — DNI ${detailData.dni}`}
+          />
+        </div>
         <EmpleadoDetail360
           legajo={detailData}
           historialEstados={historialEstadosData || []}
-          onBack={handleBackToList}
         />
       </div>
     );
@@ -127,10 +129,13 @@ export default function LegajosPage() {
   if (mostrarAlta) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="Nuevo Legajo"
-          description="Completá los datos del empleado para dar de alta un nuevo legajo digital."
-        />
+        <div>
+          <BackLink onClick={() => setMostrarAlta(false)} />
+          <PageHeader
+            title="Nuevo Legajo"
+            description="Completá los datos del empleado para dar de alta un nuevo legajo digital."
+          />
+        </div>
         <AltaEmpleadoForm
           onSuccess={() => setMostrarAlta(false)}
           onCancel={() => setMostrarAlta(false)}

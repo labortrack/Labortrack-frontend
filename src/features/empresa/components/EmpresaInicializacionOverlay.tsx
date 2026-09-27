@@ -20,6 +20,7 @@ import {
 } from "../schemas/empresaSchemas";
 import type { Rubro } from "../types/empresa.types";
 import { RUBRO_OPTIONS } from "../utils/rubroLabels";
+import { formatCuit } from "@/shared/utils/cuit";
 import { FormField } from "@/shared/components";
 import { Alert, Button, Checkbox, Input, Spinner } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
@@ -158,15 +159,26 @@ export function EmpresaInicializacionOverlay() {
               id="wizard-cuit"
               label="CUIT"
               error={errors.cuit?.message}
-              hint="Solo números, 11 dígitos."
+              hint="Los guiones se agregan automáticamente."
               required
             >
-              <Input
-                id="wizard-cuit"
-                inputMode="numeric"
-                maxLength={11}
-                aria-invalid={Boolean(errors.cuit)}
-                {...register("cuit")}
+              <Controller
+                control={control}
+                name="cuit"
+                render={({ field }) => (
+                  <Input
+                    id="wizard-cuit"
+                    inputMode="numeric"
+                    maxLength={13}
+                    aria-invalid={Boolean(errors.cuit)}
+                    name={field.name}
+                    value={formatCuit(field.value)}
+                    onBlur={field.onBlur}
+                    onChange={(event) =>
+                      field.onChange(event.target.value.replace(/\D/g, "").slice(0, 11))
+                    }
+                  />
+                )}
               />
             </FormField>
 
