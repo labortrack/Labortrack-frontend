@@ -1,7 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   Pencil,
   Plus,
   Trash2,
@@ -17,6 +15,7 @@ import type {
   TabFiltroEstadoObra,
 } from "../types/estadoObra.types";
 import {
+  BackLink,
   EmptyState,
   ErrorState,
   LoadingState,
@@ -42,7 +41,6 @@ import { cn } from "@/shared/utils/cn";
 const TABS: TabFiltroEstadoObra[] = ["Todos", "Activos", "Inactivos"];
 
 export default function ConfiguracionObrasPage() {
-  const navigate = useNavigate();
   const [filtro, setFiltro] = useState<TabFiltroEstadoObra>("Activos");
 
   // Modals state
@@ -60,14 +58,7 @@ export default function ConfiguracionObrasPage() {
     <div className="space-y-6">
       {/* ── Breadcrumb / Back ──────────────────────────────────── */}
       <div>
-        <button
-          type="button"
-          onClick={() => navigate("/obras")}
-          className="group mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver a Obras</span>
-        </button>
+        <BackLink to="/obras" />
 
         {/* ── Page Header ─────────────────────────────────────── */}
         <PageHeader

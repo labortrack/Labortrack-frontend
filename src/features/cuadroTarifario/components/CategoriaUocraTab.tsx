@@ -27,13 +27,9 @@ import {
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
+import { getTipoLiquidacionLabel } from "../utils/tipoLiquidacionLabels";
 
 const TABS: TabFiltroCategoriaUocra[] = ["Todos", "Activos", "Inactivos"];
-
-const TIPO_LIQUIDACION_LABELS: Record<string, string> = {
-  POR_HORA: "Por Hora",
-  MENSUAL: "Mensual",
-};
 
 export function CategoriaUocraTab() {
   const [filtro, setFiltro] = useState<TabFiltroCategoriaUocra>("Activos");
@@ -154,8 +150,7 @@ export function CategoriaUocraTab() {
                 </TableCell>
 
                 <TableCell>
-                  {TIPO_LIQUIDACION_LABELS[categoria.tipoLiquidacion] ??
-                    categoria.tipoLiquidacion}
+                  {getTipoLiquidacionLabel(categoria.tipoLiquidacion)}
                 </TableCell>
 
                 <TableCell>{formatCurrency(categoria.valorHoraBasico)}</TableCell>

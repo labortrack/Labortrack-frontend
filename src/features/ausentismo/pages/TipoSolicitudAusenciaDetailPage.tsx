@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useLocation, useParams } from "react-router-dom";
-import { ArrowLeft, ChevronDown, FileClock, Pencil, Power, CalendarDays } from "lucide-react";
-import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/shared/components";
+import { useLocation, useParams } from "react-router-dom";
+import { ChevronDown, FileClock, Pencil, Power, CalendarDays } from "lucide-react";
+import { BackLink, EmptyState, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { Alert, Button, Card, CardContent, CardHeader } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useTipoSolicitudAusenciaDetalle } from "../hooks/useTiposSolicitudAusencia";
@@ -17,7 +17,7 @@ export default function TipoSolicitudAusenciaDetailPage() {
   const query = useTipoSolicitudAusenciaDetalle(idValido ? id : null);
   const [dialogo, setDialogo] = useState<"modificar" | "desactivar">();
   const volver = `/ausencias/tipos-solicitud${location.search}`;
-  const back = <Button variant="ghost" asChild><Link to={volver}><ArrowLeft />Volver a tipos de solicitud</Link></Button>;
+  const back = <BackLink to={volver} />;
 
   if (!idValido) return <div className="space-y-4">{back}<Card><EmptyState title="El tipo de solicitud indicado no es válido." /></Card></div>;
   if (query.isPending) return <div className="space-y-4">{back}<Card><LoadingState label="Cargando el tipo de solicitud…" /></Card></div>;
@@ -28,8 +28,8 @@ export default function TipoSolicitudAusenciaDetailPage() {
   const puedeDesactivar = tipo.estado === "ACTIVO" && tipo.accionesDisponibles.includes("DESACTIVAR");
 
   return <div className="space-y-6">
-    <div>{back}<div className="mt-3"><PageHeader title={tipo.nombre} description="Consultá las reglas vigentes y las versiones anteriores de este tipo de solicitud."
-      actions={<TipoSolicitudAusenciaBadge estado={tipo.estado} />} /></div></div>
+    <div>{back}<PageHeader title={tipo.nombre} description="Consultá las reglas vigentes y las versiones anteriores de este tipo de solicitud."
+      actions={<TipoSolicitudAusenciaBadge estado={tipo.estado} />} /></div>
     <Card className="overflow-hidden">
       <div className="h-1.5 bg-primary" />
       <CardHeader><h2 className="text-base font-semibold">Datos vigentes</h2></CardHeader>

@@ -1,3 +1,5 @@
+import type { TipoLiquidacion } from "./categoriaUocra.types";
+
 export interface CategoriaZonaResponseDto {
   id: number;
   sumaNoRemunerativa: number;
@@ -6,6 +8,7 @@ export interface CategoriaZonaResponseDto {
   nombreZona: string;
   categoriaUOCRAId: number;
   nombreCategoria: string;
+  tipoLiquidacion: TipoLiquidacion;
   activo: boolean;
 }
 

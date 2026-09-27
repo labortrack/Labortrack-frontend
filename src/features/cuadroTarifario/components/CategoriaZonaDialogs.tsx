@@ -16,6 +16,7 @@ import {
 import { useCategoriasUocraActivas } from "../hooks/useCategoriasUocra";
 import { useZonasActivas } from "../hooks/useZonas";
 import type { CategoriaZonaResponseDto } from "../types/categoriaZona.types";
+import { esLiquidacionMensual } from "../utils/tipoLiquidacionLabels";
 import { ConfirmDialog, FormField } from "@/shared/components";
 import {
   Alert,
@@ -61,6 +62,7 @@ export function CategoriaZonaFormDialog({
     control,
     reset,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<CategoriaZonaFormValues>({
     resolver: zodResolver(categoriaZonaSchema),
@@ -71,6 +73,14 @@ export function CategoriaZonaFormDialog({
       sumaNoRemunerativa: celda?.sumaNoRemunerativa ?? 0,
     },
   });
+
+  const idCategoriaSeleccionada = watch("idCategoriaUOCRA");
+  const categoriaSeleccionada = categoriasQuery.data?.find(
+    (categoria) => categoria.id === idCategoriaSeleccionada,
+  );
+  const esMensual = categoriaSeleccionada
+    ? esLiquidacionMensual(categoriaSeleccionada.tipoLiquidacion)
+    : false;
 
   const handleOpenChange = (nextOpen: boolean) => {
     if (!nextOpen) {
@@ -192,7 +202,7 @@ export function CategoriaZonaFormDialog({
 
           <FormField
             id="categoria-zona-adicional"
-            label="Valor Hora Adicional"
+            label={esMensual ? "Valor Adicional (Mensual)" : "Valor Hora Adicional"}
             error={errors.valorHoraAdicional?.message}
             required
           >

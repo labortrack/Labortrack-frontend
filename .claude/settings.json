@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"d:/ROBER/LaborTrack\" && docker ps --format '{{.Names}}\\\\t{{.Status}}\\\\t{{.Ports}}' 2>&1 | head -30)",
+      "Read(//d/ROBER/LaborTrack/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8080/actuator/health)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8081/actuator/health)",
+      "Bash(npm ls *)",
+      "Bash(npx eslint *)",
+      "Bash(xargs sed -i -E 's/ label=\"Volver[^\"]*\"//g')"
+    ]
+  }
+}
