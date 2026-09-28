@@ -61,10 +61,19 @@ const ROL_OPTIONS: Array<{ value: string; label: string }> = [
 function normalizarNacionalidad(nac?: string): string {
   if (!nac) return "";
   const upper = nac.toUpperCase().trim();
+  const allPaises = [...PAISES_FRECUENTES, ...PAISES_RESTO];
+  const matchPais = allPaises.find((p) => p.toUpperCase() === upper);
+  if (matchPais) return matchPais;
   const match = NACIONALIDAD_OPTIONS.find(
     (opt) => opt.value === upper || opt.label.toUpperCase() === upper,
   );
-  return match ? match.value : nac;
+  if (match) {
+    const matchByLabel = allPaises.find(
+      (p) => p.toUpperCase() === match.label.toUpperCase(),
+    );
+    return matchByLabel ?? match.label;
+  }
+  return nac;
 }
 
 export interface EmpleadoFormProps {
@@ -529,14 +538,6 @@ export function EmpleadoForm({
                     id="empleado-nacionalidad"
                     aria-invalid={Boolean(errors.nacionalidad)}
                   >
-                    <SelectValue placeholder="Seleccioná nacionalidad" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {NACIONALIDAD_OPTIONS.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                  <SelectTrigger id="empleado-nacionalidad">
                     <SelectValue placeholder="Seleccioná país" />
                   </SelectTrigger>
                   <SelectContent>
