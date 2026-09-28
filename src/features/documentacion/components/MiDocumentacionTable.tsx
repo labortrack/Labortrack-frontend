@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Brain, Eye, RotateCcw, Trash2 } from "lucide-react";
+import { Eye, Loader2, RefreshCw, Trash2 } from "lucide-react";
 import {
   EmptyState,
   ErrorState,
@@ -21,6 +21,7 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
+import { cn } from "@/shared/utils/cn";
 import { useMiDocumentacion } from "../hooks/useDocumentacion";
 import type { DocumentoRespuestaDto } from "../types/documentacion.types";
 
@@ -52,6 +53,7 @@ export function MiDocumentacionTable({
   onBaja,
 }: MiDocumentacionTableProps) {
   const [page, setPage] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const PAGE_SIZE = 10;
 
   // ── RBAC ───────────────────────────────────────────────────────────────────
@@ -60,6 +62,15 @@ export function MiDocumentacionTable({
     user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
 
   const query = useMiDocumentacion();
+
+  const handleActualizarEstado = async () => {
+    setIsRefreshing(true);
+    try {
+      await query.refetch();
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Filtrado local por término de búsqueda (en memoria)
   const filteredDocs = useMemo(() => {
@@ -96,7 +107,7 @@ export function MiDocumentacionTable({
             "No se pudieron obtener tus documentos.",
           ).message
         }
-        onRetry={() => void query.refetch()}
+        onRetry={handleActualizarEstado}
       />
     );
   }
@@ -111,9 +122,20 @@ export function MiDocumentacionTable({
             : "No tenés documentos personales registrados actualmente."
         }
         action={
-          <Button variant="outline" size="sm" onClick={() => void query.refetch()}>
-            <RotateCcw />
-            Reintentar
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleActualizarEstado}
+            disabled={query.isFetching || isRefreshing}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw
+              className={cn(
+                "size-3.5",
+                (query.isFetching || isRefreshing) && "animate-spin",
+              )}
+            />
+            Actualizar Estado
           </Button>
         }
       />
@@ -123,9 +145,40 @@ export function MiDocumentacionTable({
   // ── Tabla ──────────────────────────────────────────────────────────────────
   return (
     <>
-      {query.isFetching && !query.isPending ? (
-        <p className="px-5 py-2 text-xs text-foreground-muted">Actualizando...</p>
-      ) : null}
+      {/* ── Barra de Sincronización Manual ── */}
+      <div className="flex items-center justify-between border-b border-border bg-muted/20 px-5 py-2.5">
+        <span className="text-xs text-foreground-muted">
+          {query.isFetching || isRefreshing ? (
+            <span className="inline-flex items-center gap-1.5 text-primary">
+              <Loader2 className="size-3.5 animate-spin" />
+              Sincronizando estado con el servidor...
+            </span>
+          ) : (
+            <span>
+              {filteredDocs.length
+                ? `${filteredDocs.length} documento(s) personal(es)`
+                : "Estado sincronizado"}
+            </span>
+          )}
+        </span>
+
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleActualizarEstado}
+          disabled={query.isFetching || isRefreshing}
+          className="h-8 gap-1.5 text-xs font-medium"
+        >
+          <RefreshCw
+            className={cn(
+              "size-3.5",
+              (query.isFetching || isRefreshing) && "animate-spin",
+            )}
+          />
+          Actualizar Estado
+        </Button>
+      </div>
 
       <Table>
         <TableHeader>
@@ -133,55 +186,50 @@ export function MiDocumentacionTable({
             <TableHead>Nombre del documento</TableHead>
             <TableHead className="hidden md:table-cell">Tipo</TableHead>
             <TableHead className="hidden lg:table-cell">Fecha de subida</TableHead>
-            <TableHead className="text-center">RAG</TableHead>
             <TableHead className="text-right">Acciones</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {paginatedDocs.map((doc) => (
-            <TableRow
-              key={doc.idDocumento}
-              className="cursor-pointer transition-colors hover:bg-muted/60"
-              onClick={() => onPrevisualizar(doc)}
-            >
-              {/* Nombre del documento */}
-              <TableCell>
-                <p className="font-medium leading-tight">{doc.nombreDocumento}</p>
-                <p className="text-xs text-foreground-muted">
-                  {doc.nombreArchivoOriginal}
-                </p>
-              </TableCell>
+          {paginatedDocs.map((doc) => {
+            const esProcesableIa =
+              doc.esIndexadoRag ||
+              (doc.indexadoEnRag && doc.indexadoEnRag !== "NO_APLICA");
 
-              {/* Tipo */}
-              <TableCell className="hidden md:table-cell">
-                <Badge variant="neutral">{doc.tipoDocumentoNombre}</Badge>
-              </TableCell>
+            return (
+              <TableRow
+                key={doc.idDocumento}
+                className="cursor-pointer transition-colors hover:bg-muted/60"
+                onClick={() => onPrevisualizar(doc)}
+              >
+                {/* Nombre del documento */}
+                <TableCell>
+                  <p className="font-medium leading-tight">{doc.nombreDocumento}</p>
+                  <p className="text-xs text-foreground-muted">
+                    {doc.nombreArchivoOriginal}
+                  </p>
+                </TableCell>
 
-              {/* Fecha de subida */}
-              <TableCell className="hidden lg:table-cell">
-                <span className="text-sm text-foreground-muted">
-                  {formatFecha(doc.fechaSubida)}
-                </span>
-              </TableCell>
-
-              {/* Indicador RAG */}
-              <TableCell className="text-center">
-                {doc.esIndexadoRag ? (
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">
-                        <Brain className="size-3" />
+                {/* Tipo con badge sutil para documentos indexables con IA */}
+                <TableCell className="hidden md:table-cell">
+                  <div className="inline-flex items-center gap-1.5 flex-wrap">
+                    <Badge variant="neutral">{doc.tipoDocumentoNombre}</Badge>
+                    {esProcesableIa ? (
+                      <span
+                        className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20"
+                        title="Documento procesable con Inteligencia Artificial (RAG)"
+                      >
                         IA
                       </span>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      Indexado en el motor de búsqueda IA (RAG).
-                    </TooltipContent>
-                  </Tooltip>
-                ) : (
-                  <span className="text-xs text-foreground-muted">—</span>
-                )}
-              </TableCell>
+                    ) : null}
+                  </div>
+                </TableCell>
+
+                {/* Fecha de subida */}
+                <TableCell className="hidden lg:table-cell">
+                  <span className="text-sm text-foreground-muted">
+                    {formatFecha(doc.fechaSubida)}
+                  </span>
+                </TableCell>
 
               {/* Acciones */}
               <TableCell onClick={(e) => e.stopPropagation()}>
@@ -228,7 +276,8 @@ export function MiDocumentacionTable({
                 </div>
               </TableCell>
             </TableRow>
-          ))}
+            );
+          })}
         </TableBody>
       </Table>
 

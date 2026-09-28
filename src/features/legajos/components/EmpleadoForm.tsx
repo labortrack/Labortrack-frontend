@@ -23,7 +23,7 @@ import {
   useActualizarFotoPerfil,
   useLegajoDetail,
 } from "../hooks/useLegajos";
-import { GENERO_LABELS } from "../types/legajo.types";
+import { GENERO_LABELS, NACIONALIDAD_OPTIONS } from "../types/legajo.types";
 import type { Genero, EmpleadoUpdateDto } from "../types/legajo.types";
 import { formatCuit } from "@/shared/utils/cuit";
 import { PAISES_FRECUENTES, PAISES_RESTO } from "@/shared/constants/paises";
@@ -57,6 +57,24 @@ const ROL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "ROLE_RRHH", label: "Recursos Humanos" },
   { value: "ROLE_ADMIN", label: "Administrador" },
 ];
+
+function normalizarNacionalidad(nac?: string): string {
+  if (!nac) return "";
+  const upper = nac.toUpperCase().trim();
+  const allPaises = [...PAISES_FRECUENTES, ...PAISES_RESTO];
+  const matchPais = allPaises.find((p) => p.toUpperCase() === upper);
+  if (matchPais) return matchPais;
+  const match = NACIONALIDAD_OPTIONS.find(
+    (opt) => opt.value === upper || opt.label.toUpperCase() === upper,
+  );
+  if (match) {
+    const matchByLabel = allPaises.find(
+      (p) => p.toUpperCase() === match.label.toUpperCase(),
+    );
+    return matchByLabel ?? match.label;
+  }
+  return nac;
+}
 
 export interface EmpleadoFormProps {
   empleadoId?: number;
@@ -129,7 +147,7 @@ export function EmpleadoForm({
         cuil: empleadoData.cuil || "",
         fechaNacimiento: empleadoData.fechaNacimiento || "",
         fechaIngreso: empleadoData.fechaIngreso || "",
-        nacionalidad: empleadoData.nacionalidad || "",
+        nacionalidad: normalizarNacionalidad(empleadoData.nacionalidad),
         grupoSanguineo: empleadoData.grupoSanguineo || "",
         domicilio: empleadoData.domicilio || "",
         numeroCelular: empleadoData.numeroCelular || "",
@@ -512,8 +530,14 @@ export function EmpleadoForm({
               name="nacionalidad"
               control={control}
               render={({ field }) => (
-                <Select value={field.value ?? ""} onValueChange={field.onChange}>
-                  <SelectTrigger id="empleado-nacionalidad">
+                <Select
+                  value={field.value ?? ""}
+                  onValueChange={field.onChange}
+                >
+                  <SelectTrigger
+                    id="empleado-nacionalidad"
+                    aria-invalid={Boolean(errors.nacionalidad)}
+                  >
                     <SelectValue placeholder="Seleccioná país" />
                   </SelectTrigger>
                   <SelectContent>

@@ -1,5 +1,14 @@
 export type Genero = "MASCULINO" | "FEMENINO" | "OTRO";
 
+export type Nacionalidad =
+  | "ARGENTINA"
+  | "CHILENA"
+  | "BOLIVIANA"
+  | "PARAGUAYA"
+  | "BRASILEÑA"
+  | "URUGUAYA"
+  | "OTRA";
+
 // ─── Request DTOs ────────────────────────────────────────────────────────────
 
 export interface CreateUsuarioRequestDto {
@@ -136,3 +145,23 @@ export const GENERO_LABELS: Record<Genero, string> = {
   FEMENINO: "Femenino",
   OTRO: "Otro",
 };
+
+export const NACIONALIDAD_LABELS: Record<Nacionalidad, string> = {
+  ARGENTINA: "Argentina",
+  CHILENA: "Chilena",
+  BOLIVIANA: "Boliviana",
+  PARAGUAYA: "Paraguaya",
+  BRASILEÑA: "Brasileña",
+  URUGUAYA: "Uruguaya",
+  OTRA: "Otra",
+};
+
+export const NACIONALIDAD_OPTIONS: Array<{ value: Nacionalidad; label: string }> = [
+  { value: "ARGENTINA", label: "Argentina" },
+  { value: "CHILENA", label: "Chilena" },
+  { value: "BOLIVIANA", label: "Boliviana" },
+  { value: "PARAGUAYA", label: "Paraguaya" },
+  { value: "BRASILEÑA", label: "Brasileña" },
+  { value: "URUGUAYA", label: "Uruguaya" },
+  { value: "OTRA", label: "Otra" },
+];

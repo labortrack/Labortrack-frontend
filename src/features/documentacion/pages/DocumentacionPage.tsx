@@ -1,3 +1,4 @@
+// Página del Módulo de Documentación y Gestión RAG
 import { useState } from "react";
 import {
   FileUp,
@@ -32,6 +33,7 @@ import {
   useBajaTipoDocumento,
   useReactivarTipoDocumento,
 } from "../hooks/useDocumentacion";
+import { useRagIndexingPolling } from "../hooks/useRagIndexingPolling";
 import { DocumentosTable } from "../components/DocumentosTable";
 import { MiDocumentacionTable } from "../components/MiDocumentacionTable";
 import { UploadDocumentoForm } from "../components/UploadDocumentoForm";
@@ -57,6 +59,20 @@ export default function DocumentacionPage() {
   const [bajaDoc, setBajaDoc] = useState<DocumentoRespuestaDto | null>(null);
   const [nombreFiltro, setNombreFiltro] = useState("");
   const [filters, setFilters] = useState<DocumentoFilterDto>({});
+
+  // ── Polling inteligente de vectorización RAG ──────────────────────────────
+  const { iniciarPolling } = useRagIndexingPolling();
+
+  const handleDocumentoSubido = (
+    doc: DocumentoRespuestaDto,
+    esIndexable: boolean,
+  ) => {
+    if (esIndexable) {
+      iniciarPolling(doc);
+    } else {
+      toast.success("Archivo guardado exitosamente.");
+    }
+  };
 
   const bajaMutation = useBajaDocumento();
 
@@ -348,7 +364,10 @@ export default function DocumentacionPage() {
               </div>
             </div>
           </DialogHeader>
-          <UploadDocumentoForm onSuccess={() => setUploadOpen(false)} />
+          <UploadDocumentoForm
+            onSuccess={() => setUploadOpen(false)}
+            onDocumentoSubido={handleDocumentoSubido}
+          />
         </DialogContent>
       </Dialog>
 

@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { z } from "zod";
 import { uploadDocumentoSchema } from "../schemas/documentacionSchemas";
+import type { DocumentoRespuestaDto } from "../types/documentacion.types";
 import {
   useBuscarEmpleados,
   useTiposDocumentoCompleto,
@@ -45,8 +46,10 @@ type UploadDocumentoForm = z.infer<typeof uploadDocumentoSchema>;
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface UploadDocumentoFormProps {
-  /** Callback ejecutado luego de una subida exitosa. */
+  /** Callback ejecutado luego de una subida exitosa para cerrar el modal. */
   onSuccess?: () => void;
+  /** Callback para delegar la notificación y polling del ciclo de vida RAG. */
+  onDocumentoSubido?: (doc: DocumentoRespuestaDto, esIndexable: boolean) => void;
 }
 
 // ─── Subcomponente: EmpleadoCombobox ─────────────────────────────────────────
@@ -188,7 +191,10 @@ function EmpleadoCombobox({ value, onChange, error }: EmpleadoComboboxProps) {
 
 // ─── Componente Principal ─────────────────────────────────────────────────────
 
-export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
+export function UploadDocumentoForm({
+  onSuccess,
+  onDocumentoSubido,
+}: UploadDocumentoFormProps) {
   // ── RBAC ───────────────────────────────────────────────────────────────────
   const user = useSessionStore((state) => state.user);
   const esOperario = user?.rol === "ROLE_OPERARIO";
@@ -298,18 +304,36 @@ export function UploadDocumentoForm({ onSuccess }: UploadDocumentoFormProps) {
     }
 
     try {
-      await uploadMutation.mutateAsync({
+      const response = await uploadMutation.mutateAsync({
         file: values.file,
         idTipoDocumento: values.idTipoDocumento,
         nombrePersonalizado: values.nombrePersonalizado,
         empleadoId: empleadoIdFinal,
       });
-      toast.success("Documento subido correctamente.");
+
+      // 1. Cerrar el modal o ventana de carga inmediatamente y resetear el formulario
+      onSuccess?.();
       reset({
         nombrePersonalizado: "",
         empleadoId: esOperario ? user?.empleadoId : undefined,
       });
-      onSuccess?.();
+
+      // 2. Determinar si el documento es indexable (IA RAG)
+      const esIndexable =
+        response?.indexadoEnRag === "PENDIENTE" ||
+        response?.estadoRag === "PENDIENTE" ||
+        Boolean(tipoActual?.procesarEnRag);
+
+      if (onDocumentoSubido) {
+        onDocumentoSubido(response, esIndexable);
+      } else if (esIndexable) {
+        toast.info(
+          "Vectorizando documento con Inteligencia Artificial...",
+          { duration: Infinity },
+        );
+      } else {
+        toast.success("Archivo guardado exitosamente.");
+      }
     } catch (error) {
       toast.error(
         normalizeApiError(error, "No se pudo subir el documento.").message,
