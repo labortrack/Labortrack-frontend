@@ -48,6 +48,8 @@ export function BajaCuadrillaDialog({
 
   if (!cuadrilla) return null;
 
+  const esActiva = cuadrilla.estadoActual === "ACTIVA";
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[460px]">
@@ -92,9 +94,15 @@ export function BajaCuadrillaDialog({
               <li>
                 Se anularán las jornadas programadas y se cancelarán los planes futuros.
               </li>
-              <li className="text-amber-600 dark:text-amber-400 font-medium">
-                Si existen operarios con asistencia abierta (Presentes hoy), el sistema rechazará la baja hasta que registren su egreso.
-              </li>
+              {esActiva ? (
+                <li className="text-amber-600 dark:text-amber-400 font-medium">
+                  Si hay operarios con asistencia abierta (Presentes hoy), la baja se realizará igual: podrán seguir registrando su egreso con normalidad.
+                </li>
+              ) : (
+                <li className="text-amber-600 dark:text-amber-400 font-medium">
+                  Si existen operarios con asistencia abierta (Presentes hoy), el sistema rechazará la baja hasta que registren su egreso.
+                </li>
+              )}
             </ul>
           </div>
         </div>
