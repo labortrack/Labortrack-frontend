@@ -1,11 +1,10 @@
 import { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/shared/ui";
+import { BackLink } from "@/shared/components";
 import {
   Layers,
   Link2,
   Plus,
-  ArrowLeft,
   UserCheck,
   UserX,
   History,
@@ -37,7 +36,6 @@ import type {
 } from "../types/estructuraLaboral.types";
 
 export default function EstructuraLaboralPage() {
-  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<MainTab>("grupos");
 
   // ── Queries & Mutations (Direct Backend Data) ──
@@ -139,13 +137,7 @@ export default function EstructuraLaboralPage() {
     <div className="space-y-5">
       {/* ── Header ── */}
       <div>
-        <button
-          onClick={() => navigate("/legajos")}
-          className="flex items-center gap-1.5 text-foreground-muted hover:text-primary transition-colors group mb-3 cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span className="text-[13px] font-medium">Atrás</span>
-        </button>
+        <BackLink to="/legajos" />
 
         <div className="flex items-center gap-3">
           <div className="size-10 bg-[#e8f0ff] rounded-[0.5rem] flex items-center justify-center shrink-0">

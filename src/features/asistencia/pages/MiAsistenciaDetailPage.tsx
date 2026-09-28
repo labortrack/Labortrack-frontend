@@ -1,6 +1,5 @@
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft,
   Building2,
   CalendarDays,
   Clock3,
@@ -21,6 +20,7 @@ import {
   TIPO_JORNADA_LABELS,
 } from "../utils/asistenciaFormatters";
 import {
+  BackLink,
   EmptyState,
   ErrorState,
   LoadingState,
@@ -31,7 +31,6 @@ import { normalizeApiError } from "@/shared/lib/http/apiError";
 
 export default function MiAsistenciaDetailPage() {
   const { asistenciaId } = useParams();
-  const navigate = useNavigate();
   const id = Number(asistenciaId);
   const idValido = Number.isInteger(id) && id > 0;
   const detalleQuery = useDetalleAsistenciaPropia(idValido ? id : null);
@@ -51,14 +50,7 @@ export default function MiAsistenciaDetailPage() {
   if (detalleQuery.isError || !detalleQuery.data) {
     return (
       <div className="space-y-4">
-        <button
-          type="button"
-          onClick={() => navigate("/mis-asistencias")}
-          className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          Volver a Mis asistencias
-        </button>
+        <BackLink to="/mis-asistencias" />
         <Card>
           <ErrorState
             message={
@@ -79,14 +71,7 @@ export default function MiAsistenciaDetailPage() {
   return (
     <div className="space-y-6">
       <div>
-        <button
-          type="button"
-          onClick={() => navigate("/mis-asistencias")}
-          className="group mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          Volver a Mis asistencias
-        </button>
+        <BackLink to="/mis-asistencias" />
         <PageHeader
           title="Detalle de asistencia"
           description={`Asistencia correspondiente al ${formatFecha(asistencia.fecha)}.`}

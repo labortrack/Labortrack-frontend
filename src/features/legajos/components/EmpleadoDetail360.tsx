@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import {
-  ArrowLeft,
   Briefcase,
   Calendar,
   Camera,
@@ -38,14 +37,12 @@ import { Badge, Button, Spinner } from "@/shared/ui";
 interface EmpleadoDetail360Props {
   legajo: EmpleadoResponseDto;
   historialEstados: EmpleadoEstadoResponseDto[];
-  onBack?: () => void;
   onEdit?: () => void;
 }
 
 export function EmpleadoDetail360({
   legajo,
   historialEstados,
-  onBack,
   onEdit,
 }: EmpleadoDetail360Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -75,46 +72,35 @@ export function EmpleadoDetail360({
 
   return (
     <div className="space-y-6">
-      {/* Botón de Retorno y Header Top */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {onBack ? (
-          <Button variant="outline" onClick={onBack} className="w-fit gap-2">
-            <ArrowLeft className="size-4" />
-            Volver al Listado
+      {/* Acciones */}
+      <div className="flex items-center justify-end gap-2">
+        {onEdit ? (
+          <Button variant="outline" onClick={onEdit} className="gap-2">
+            <Pencil className="size-4" />
+            Editar Mis Datos
           </Button>
-        ) : (
-          <div />
-        )}
+        ) : null}
 
-        <div className="flex items-center gap-2">
-          {onEdit ? (
-            <Button variant="outline" onClick={onEdit} className="gap-2">
-              <Pencil className="size-4" />
-              Editar Mis Datos
-            </Button>
-          ) : null}
-
-          <Button
-            variant="outline"
-            onClick={() => fileInputRef.current?.click()}
-            disabled={actualizarFotoMutation.isPending}
-            className="gap-2"
-          >
-            {actualizarFotoMutation.isPending ? (
-              <Spinner className="size-4" />
-            ) : (
-              <Camera className="size-4" />
-            )}
-            {actualizarFotoMutation.isPending ? "Subiendo..." : "Cambiar Foto"}
-          </Button>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/jpeg, image/png"
-            className="hidden"
-            onChange={handleFotoChange}
-          />
-        </div>
+        <Button
+          variant="outline"
+          onClick={() => fileInputRef.current?.click()}
+          disabled={actualizarFotoMutation.isPending}
+          className="gap-2"
+        >
+          {actualizarFotoMutation.isPending ? (
+            <Spinner className="size-4" />
+          ) : (
+            <Camera className="size-4" />
+          )}
+          {actualizarFotoMutation.isPending ? "Subiendo..." : "Cambiar Foto"}
+        </Button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/jpeg, image/png"
+          className="hidden"
+          onChange={handleFotoChange}
+        />
       </div>
 
       {/* Header Profile Card */}

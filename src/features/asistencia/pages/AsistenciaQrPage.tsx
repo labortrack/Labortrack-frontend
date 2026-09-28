@@ -5,7 +5,7 @@ import { QrAttendanceFlow } from "../components/QrAttendanceFlow";
 import { useAsistenciaHoy } from "../hooks/useAsistencias";
 import type { TipoOperacionQr } from "../types/asistencia.types";
 import { extraerTokenQr } from "../utils/qrToken";
-import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
+import { BackLink, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { Alert, Button, Card, CardContent } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
@@ -61,10 +61,13 @@ export default function AsistenciaQrPage() {
   if (!asistenciaQuery.data || !tipo) {
     return (
       <div className="space-y-6">
-        <PageHeader
-          title="Registrar asistencia con QR"
-          description="Validación del código QR de la obra."
-        />
+        <div>
+          <BackLink to="/mis-asistencias" />
+          <PageHeader
+            title="Registrar asistencia con QR"
+            description="Validación del código QR de la obra."
+          />
+        </div>
         <Card>
           <CardContent className="space-y-5 p-6">
             <Alert variant="warning">
@@ -85,10 +88,13 @@ export default function AsistenciaQrPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Registrar asistencia con QR"
-        description="Revisá y confirmá la operación correspondiente a tu jornada de hoy."
-      />
+      <div>
+        <BackLink to="/mis-asistencias" />
+        <PageHeader
+          title="Registrar asistencia con QR"
+          description="Revisá y confirmá la operación correspondiente a tu jornada de hoy."
+        />
+      </div>
       <Card>
         <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
           <span className="flex size-14 items-center justify-center rounded-full bg-primary-soft text-primary">

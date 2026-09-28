@@ -25,6 +25,8 @@ import {
 } from "../hooks/useLegajos";
 import { GENERO_LABELS, NACIONALIDAD_OPTIONS } from "../types/legajo.types";
 import type { Genero, EmpleadoUpdateDto } from "../types/legajo.types";
+import { formatCuit } from "@/shared/utils/cuit";
+import { PAISES_FRECUENTES, PAISES_RESTO } from "@/shared/constants/paises";
 import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
 import { useZonasActivas } from "@/features/cuadroTarifario/hooks/useZonas";
 import { FormField, LoadingState } from "@/shared/components";
@@ -37,6 +39,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Separator,
   Spinner,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
@@ -437,15 +440,27 @@ export function EmpleadoForm({
             id="empleado-cuil"
             label="CUIL / CUIT"
             error={errors.cuil?.message}
+            hint="Los guiones se agregan automáticamente."
             required
           >
-            <Input
-              id="empleado-cuil"
-              placeholder="20-12345678-9"
-              maxLength={13}
-              disabled={isEdit}
-              aria-invalid={Boolean(errors.cuil)}
-              {...register("cuil")}
+            <Controller
+              control={control}
+              name="cuil"
+              render={({ field }) => (
+                <Input
+                  id="empleado-cuil"
+                  inputMode="numeric"
+                  maxLength={13}
+                  disabled={isEdit}
+                  aria-invalid={Boolean(errors.cuil)}
+                  name={field.name}
+                  value={field.value ?? ""}
+                  onBlur={field.onBlur}
+                  onChange={(event) =>
+                    field.onChange(formatCuit(event.target.value))
+                  }
+                />
+              )}
             />
           </FormField>
 
@@ -520,6 +535,26 @@ export function EmpleadoForm({
                     {NACIONALIDAD_OPTIONS.map((opt) => (
                       <SelectItem key={opt.value} value={opt.value}>
                         {opt.label}
+                <Select value={field.value ?? ""} onValueChange={field.onChange}>
+                  <SelectTrigger id="empleado-nacionalidad">
+                    <SelectValue placeholder="Seleccioná país" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="px-2.5 py-1.5 text-xs font-medium text-foreground-muted">
+                      Frecuentes
+                    </div>
+                    {PAISES_FRECUENTES.map((pais) => (
+                      <SelectItem key={pais} value={pais}>
+                        {pais}
+                      </SelectItem>
+                    ))}
+                    <Separator className="my-1" />
+                    <div className="px-2.5 py-1.5 text-xs font-medium text-foreground-muted">
+                      Todos los países
+                    </div>
+                    {PAISES_RESTO.map((pais) => (
+                      <SelectItem key={pais} value={pais}>
+                        {pais}
                       </SelectItem>
                     ))}
                   </SelectContent>

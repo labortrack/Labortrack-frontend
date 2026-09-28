@@ -11,7 +11,7 @@ export const categoriaZonaSchema = z.object({
     .positive("Seleccioná una categoría."),
   valorHoraAdicional: z
     .number({ error: "El valor hora adicional es obligatorio." })
-    .positive("El valor hora adicional debe ser mayor a 0."),
+    .min(0, "El valor hora adicional no puede ser negativo."),
   sumaNoRemunerativa: z
     .number({ error: "La suma no remunerativa es obligatoria." })
     .min(0, "La suma no remunerativa no puede ser negativa."),

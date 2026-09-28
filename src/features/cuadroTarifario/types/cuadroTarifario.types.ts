@@ -1,3 +1,4 @@
+import type { TipoLiquidacion } from "./categoriaUocra.types";
 import type { ZonaResponseDto } from "./zona.types";
 
 export interface CeldaCuadroDto {
@@ -11,6 +12,7 @@ export interface FilaCuadroDto {
   idCategoria: number;
   nombreCategoria: string;
   valorHoraBasico: number;
+  tipoLiquidacion: TipoLiquidacion;
   celdas: CeldaCuadroDto[];
 }
 

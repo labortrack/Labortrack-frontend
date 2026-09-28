@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Check, UserRound, X, Undo2 } from "lucide-react";
-import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
+import { useParams, useSearchParams } from "react-router-dom";
+import { Check, UserRound, X, Undo2 } from "lucide-react";
+import { BackLink, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { Button, Card, CardContent } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useSolicitudAusenciaAdministrativaDetalle } from "../hooks/useSolicitudesAusenciaAdministrativas";
@@ -18,8 +18,10 @@ export default function SolicitudAusenciaAdministrativaDetailPage() {
   const [accion, setAccion] = useState<AccionAdministrativaAusencia>();
   const solicitud = query.data;
   return <div className="space-y-6">
-    <Button variant="ghost" size="sm" asChild><Link to={`/ausencias/solicitudes${params.size ? `?${params}` : ""}`}><ArrowLeft />Volver a solicitudes</Link></Button>
-    <PageHeader title="Detalle de solicitud de ausencia" description="Revisá la información del empleado antes de registrar una decisión." />
+    <div>
+      <BackLink to={`/ausencias/solicitudes${params.size ? `?${params}` : ""}`} />
+      <PageHeader title="Detalle de solicitud de ausencia" description="Revisá la información del empleado antes de registrar una decisión." />
+    </div>
     {id === null ? <ErrorState message="La solicitud indicada no es válida." /> : query.isPending ? <LoadingState label="Cargando solicitud…" />
       : query.isError ? <ErrorState message={normalizeApiError(query.error).message} onRetry={() => void query.refetch()} />
       : solicitud && <>

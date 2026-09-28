@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  ArrowLeft,
   ArrowRightLeft,
   Building2,
   Globe,
@@ -29,6 +28,7 @@ import { EstadoBadge } from "../estado/components/EstadoBadge";
 import { getEstadoStyle } from "../estado/utils/estadoStyles";
 import { useHistorialEstadosObra, useObra } from "../hooks/useObras";
 import {
+  BackLink,
   ErrorState,
   LoadingState,
   PageHeader,
@@ -64,14 +64,7 @@ export default function ObraDetailPage() {
   if (obraQuery.isPending) {
     return (
       <div className="space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate("/obras")}
-          className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver a Obras</span>
-        </button>
+        <BackLink to="/obras" />
         <Card className="p-12">
           <LoadingState label="Cargando información del frente de obra..." />
         </Card>
@@ -82,14 +75,7 @@ export default function ObraDetailPage() {
   if (obraQuery.isError || !obra) {
     return (
       <div className="space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate("/obras")}
-          className="group inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver a Obras</span>
-        </button>
+        <BackLink to="/obras" />
         <Card className="p-8">
           <ErrorState
             message={
@@ -116,14 +102,7 @@ export default function ObraDetailPage() {
     <div className="space-y-6">
       {/* ── Breadcrumb / Back ──────────────────────────────────── */}
       <div>
-        <button
-          type="button"
-          onClick={() => navigate("/obras")}
-          className="group mb-3 inline-flex items-center gap-1.5 text-sm font-medium text-foreground-muted transition-colors hover:text-primary cursor-pointer"
-        >
-          <ArrowLeft className="size-4 transition-transform group-hover:-translate-x-0.5" />
-          <span>Volver a Obras</span>
-        </button>
+        <BackLink to="/obras" />
 
         {/* ── Header ────────────────────────────────────────────── */}
         <PageHeader

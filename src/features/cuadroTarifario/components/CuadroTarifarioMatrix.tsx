@@ -1,7 +1,9 @@
 import { Pencil } from "lucide-react";
 import { useCuadroTarifario } from "../hooks/useCuadroTarifario";
+import { esLiquidacionMensual } from "../utils/tipoLiquidacionLabels";
 import { EmptyState, ErrorState, LoadingState } from "@/shared/components";
 import {
+  Badge,
   Button,
   Card,
   CardHeader,
@@ -101,7 +103,12 @@ export function CuadroTarifarioMatrix({
                           rowSpan={zonas.length}
                           className="align-top font-semibold text-foreground"
                         >
-                          {fila.nombreCategoria}
+                          <div className="flex items-center gap-2">
+                            <span>{fila.nombreCategoria}</span>
+                            {esLiquidacionMensual(fila.tipoLiquidacion) ? (
+                              <Badge variant="primary">Mensual</Badge>
+                            ) : null}
+                          </div>
                         </TableCell>
                         <TableCell rowSpan={zonas.length} className="align-top">
                           {formatCurrency(fila.valorHoraBasico)}
