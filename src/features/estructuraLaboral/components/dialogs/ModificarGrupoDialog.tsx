@@ -152,7 +152,7 @@ function ModificarGrupoDialogContent({
         </div>
 
         {/* Footer: mismo estilo siempre, solo cambian las acciones */}
-        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-[#f7f7f7]">
+        <div className="flex flex-wrap items-center justify-end gap-3 px-6 py-4 border-t border-border bg-[#f7f7f7]">
           {showWarning ? (
             <>
               <Button
@@ -168,7 +168,7 @@ function ModificarGrupoDialogContent({
                 className="h-9 px-5 rounded-[0.25rem] bg-accent-deep hover:bg-accent-deep/90 text-white"
               >
                 <CheckCircle2 className="size-4 mr-2" />
-                {isPending ? "Actualizando..." : "Confirmar Modificación"}
+                {isPending ? "Actualizando..." : "Confirmar"}
               </Button>
             </>
           ) : (
