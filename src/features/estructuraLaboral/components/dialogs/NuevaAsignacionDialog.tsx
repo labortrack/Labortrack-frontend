@@ -12,8 +12,9 @@ import {
   SelectContent,
   SelectItem,
 } from "@/shared/ui";
-import { Link2, XCircle, X } from "lucide-react";
+import { Link2, XCircle } from "lucide-react";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { EmpleadoCombobox } from "../EmpleadoCombobox";
 import type { GrupoResponseDto } from "../../types/estructuraLaboral.types";
 import type { EmpleadoResumenResponseDto } from "@/features/legajos/types/legajo.types";
 
@@ -71,21 +72,13 @@ export function NuevaAsignacionDialog({
     <Dialog open={open} onOpenChange={(o) => (!o ? handleClose() : null)}>
       <DialogContent className="max-w-lg rounded-[0.5rem] p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-5 border-b border-border bg-card">
-          <div>
-            <DialogTitle className="text-[20px] font-medium leading-6 text-foreground p-0 m-0">
-              Nueva Asignación de Especialidad
-            </DialogTitle>
-            <DialogDescription className="text-[13px] leading-5 text-foreground-muted mt-1">
-              Vincule un empleado activo a un grupo de especialidad operativa.
-            </DialogDescription>
-          </div>
-          <button
-            onClick={handleClose}
-            className="size-8 flex items-center justify-center rounded-[0.25rem] text-foreground-muted hover:bg-[#f0f0f0] ml-4 shrink-0 cursor-pointer"
-          >
-            <X className="size-4" />
-          </button>
+        <div className="px-6 py-5 pr-14 border-b border-border bg-card">
+          <DialogTitle className="text-[20px] font-medium leading-6 text-foreground p-0 m-0">
+            Nueva Asignación de Especialidad
+          </DialogTitle>
+          <DialogDescription className="text-[13px] leading-5 text-foreground-muted mt-1">
+            Vincule un empleado activo a un grupo de especialidad operativa.
+          </DialogDescription>
         </div>
 
         {/* Body */}
@@ -96,35 +89,14 @@ export function NuevaAsignacionDialog({
               Empleado / Operario{" "}
               <span className="text-accent-deep text-[12px] font-bold">*</span>
             </label>
-            <Select
+            <EmpleadoCombobox
+              empleados={empleados}
               value={empleadoId}
-              onValueChange={(v) => {
+              onChange={(v) => {
                 setEmpleadoId(v);
                 setErrorMessage(null);
               }}
-            >
-              <SelectTrigger className="h-9 rounded-[0.25rem] text-[14px] border-border bg-card">
-                <SelectValue placeholder="Buscar y seleccionar empleado..." />
-              </SelectTrigger>
-              <SelectContent>
-                {empleados.map((emp) => {
-                  const isInactivo = emp.estadoActual !== "ACTIVO";
-                  return (
-                    <SelectItem
-                      key={emp.id}
-                      value={String(emp.id)}
-                      disabled={isInactivo}
-                      className={`text-[13px] ${
-                        isInactivo ? "text-[#aaaaaa]" : ""
-                      }`}
-                    >
-                      {emp.apellido}, {emp.nombre} — DNI {emp.dni}
-                      {isInactivo ? " (INACTIVO)" : ""}
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
+            />
           </div>
 
           {/* Grupo */}

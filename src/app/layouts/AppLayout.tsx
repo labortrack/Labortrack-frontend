@@ -145,7 +145,9 @@ export function AppLayout() {
                 location.pathname.startsWith("/configuracion-obras"))) ||
             (to === "/higiene-seguridad" &&
               (location.pathname.startsWith("/higiene-seguridad") ||
-                location.pathname.startsWith("/epp")));
+                location.pathname.startsWith("/epp"))) ||
+            (to === "/legajos" &&
+              location.pathname.startsWith("/estructura-laboral"));
 
           return (
             <Tooltip key={to}>
