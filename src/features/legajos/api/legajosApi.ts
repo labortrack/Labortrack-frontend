@@ -33,7 +33,7 @@ export const legajosApi = {
 
     if (params.buscar?.trim()) queryParams.buscar = params.buscar.trim();
     if (params.estado) queryParams.estado = params.estado;
-    if (params.categoria) queryParams.categoria = params.categoria;
+    if (params.idCategoria) queryParams.idCategoria = params.idCategoria;
 
     const response = await httpClient.get<SpringPage<EmpleadoResumenResponseDto>>(
       "/legajos/EmpleadosPaginados",

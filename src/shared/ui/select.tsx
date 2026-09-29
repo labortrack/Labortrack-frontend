@@ -3,8 +3,27 @@ import * as SelectPrimitive from "@radix-ui/react-select";
 import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 
-export function Select(props: ComponentProps<typeof SelectPrimitive.Root>) {
-  return <SelectPrimitive.Root {...props} />;
+// Dentro de un <form>, Radix sincroniza un <select> nativo oculto y, si el valor
+// cambia antes de que estén registradas sus opciones (p. ej. al hacer reset() del
+// formulario con los datos cargados), dispara onValueChange("") y borra el campo.
+// Radix no admite SelectItem con value "", así que ese valor nunca es una
+// selección real del usuario y se ignora.
+export function Select({
+  onValueChange,
+  ...props
+}: ComponentProps<typeof SelectPrimitive.Root>) {
+  return (
+    <SelectPrimitive.Root
+      {...props}
+      onValueChange={
+        onValueChange
+          ? (value) => {
+              if (value !== "") onValueChange(value);
+            }
+          : undefined
+      }
+    />
+  );
 }
 export function SelectValue(
   props: ComponentProps<typeof SelectPrimitive.Value>,

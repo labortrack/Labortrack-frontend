@@ -39,7 +39,6 @@ const estadoVariantMap: Record<
   ACTIVO: "success",
   EN_OBRA: "primary",
   LICENCIA: "warning",
-  SUSPENDIDO: "warning",
   INACTIVO: "neutral",
 };
 

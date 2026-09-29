@@ -20,12 +20,8 @@ import type {
   EmpleadoEstadoResponseDto,
   EmpleadoResponseDto,
 } from "../types/legajo.types";
-import {
-  ESTADO_LABELS,
-  GENERO_LABELS,
-  NACIONALIDAD_LABELS,
-  type Nacionalidad,
-} from "../types/legajo.types";
+import { ESTADO_LABELS, GENERO_LABELS } from "../types/legajo.types";
+import { normalizarPais } from "@/shared/constants/paises";
 import { formatDate } from "./EmpleadoTable";
 import { EmpleadoTimeline } from "./EmpleadoTimeline";
 import { EmpleadoCategoriaTimeline } from "./EmpleadoCategoriaTimeline";
@@ -203,8 +199,7 @@ export function EmpleadoDetail360({
               </span>
               <span className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
                 <Globe className="size-3.5 text-foreground-muted" />
-                {NACIONALIDAD_LABELS[legajo.nacionalidad as Nacionalidad] ||
-                  legajo.nacionalidad}
+                {normalizarPais(legajo.nacionalidad)}
               </span>
             </div>
 
