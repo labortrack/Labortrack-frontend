@@ -5,6 +5,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { legajosApi } from "../api/legajosApi";
+import { estructuraLaboralKeys } from "@/features/estructuraLaboral/hooks/useEstructuraLaboral";
 import type {
   EmpleadoBajaDto,
   EmpleadoDto,
@@ -79,7 +80,13 @@ export function useFotoPresignedUrl(
 
 function useInvalidateLegajos() {
   const queryClient = useQueryClient();
-  return () => queryClient.invalidateQueries({ queryKey: legajosKeys.all });
+  return () => {
+    queryClient.invalidateQueries({ queryKey: legajosKeys.all });
+    // El listado de "empleados activos" de Estructura Laboral (usado para
+    // asignar grupos) se cachea aparte: sin esto, un alta/baja/reactivacion
+    // reciente no aparece ahi hasta que el cache de 30s expira solo.
+    queryClient.invalidateQueries({ queryKey: estructuraLaboralKeys.all });
+  };
 }
 
 export function useAltaEmpleado() {
@@ -108,6 +115,7 @@ export function useModificarEmpleado() {
       queryClient.invalidateQueries({
         queryKey: legajosKeys.detail(variables.id),
       });
+      queryClient.invalidateQueries({ queryKey: estructuraLaboralKeys.all });
     },
   });
 }
@@ -136,6 +144,7 @@ export function useBajaEmpleado() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: legajosKeys.lists() });
       queryClient.invalidateQueries({ queryKey: legajosKeys.all });
+      queryClient.invalidateQueries({ queryKey: estructuraLaboralKeys.all });
     },
   });
 }
