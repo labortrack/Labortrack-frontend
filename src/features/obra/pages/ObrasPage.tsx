@@ -27,9 +27,11 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 
 export default function ObrasPage() {
   const navigate = useNavigate();
+  const esAdmin = useSessionStore((state) => state.user?.rol === "ROLE_ADMIN");
   const [busqueda, setBusqueda] = useState("");
 
   // Modals state
@@ -61,23 +63,25 @@ export default function ObrasPage() {
         title="Obras y Frentes de Trabajo"
         description="Control logístico, frentes de obra y centros de costos de los proyectos."
         actions={
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-            <Button
-              variant="outline"
-              onClick={() => navigate("/obras/configuracion")}
-              className="w-full sm:w-auto justify-center"
-            >
-              <Settings2 className="mr-1.5 size-4" />
-              Configuración de Estados
-            </Button>
-            <Button
-              onClick={() => setCreateOpen(true)}
-              className="w-full sm:w-auto justify-center"
-            >
-              <Plus className="mr-1.5 size-4" />
-              Nueva Obra
-            </Button>
-          </div>
+          esAdmin ? (
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <Button
+                variant="outline"
+                onClick={() => navigate("/obras/configuracion")}
+                className="w-full sm:w-auto justify-center"
+              >
+                <Settings2 className="mr-1.5 size-4" />
+                Configuración de Estados
+              </Button>
+              <Button
+                onClick={() => setCreateOpen(true)}
+                className="w-full sm:w-auto justify-center"
+              >
+                <Plus className="mr-1.5 size-4" />
+                Nueva Obra
+              </Button>
+            </div>
+          ) : undefined
         }
       />
 
@@ -163,10 +167,12 @@ export default function ObrasPage() {
                 : "No hay obras registradas en el sistema."
             }
             action={
-              <Button onClick={() => setCreateOpen(true)}>
-                <Plus className="mr-1.5 size-4" />
-                Registrar primer frente de obra
-              </Button>
+              esAdmin ? (
+                <Button onClick={() => setCreateOpen(true)}>
+                  <Plus className="mr-1.5 size-4" />
+                  Registrar primer frente de obra
+                </Button>
+              ) : undefined
             }
           />
         </Card>
@@ -176,10 +182,10 @@ export default function ObrasPage() {
             <ObraCard
               key={obra.id}
               obra={obra}
-              onEdit={setEditingObra}
-              onClose={setClosingObra}
-              onChangeEstado={setTransitioningObra}
-              onAsignarCapataz={setAssigningCapatazObra}
+              onEdit={esAdmin ? setEditingObra : undefined}
+              onClose={esAdmin ? setClosingObra : undefined}
+              onChangeEstado={esAdmin ? setTransitioningObra : undefined}
+              onAsignarCapataz={esAdmin ? setAssigningCapatazObra : undefined}
               onDetalle={(o) => navigate(`/obras/${o.id}`)}
             />
           ))}
