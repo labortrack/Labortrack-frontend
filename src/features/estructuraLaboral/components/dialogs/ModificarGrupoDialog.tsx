@@ -89,52 +89,10 @@ function ModificarGrupoDialogContent({
           </DialogDescription>
         </div>
 
-        {/* Body */}
-        <div
-          className={`px-6 py-6 transition-all ${
-            showWarning ? "opacity-30 pointer-events-none select-none" : ""
-          }`}
-        >
-          <label className="block text-[11px] font-bold uppercase tracking-wider text-foreground mb-1.5">
-            Denominación de la Especialidad{" "}
-            <span className="text-accent-deep text-[12px] font-bold">*</span>
-          </label>
-          <Input
-            value={denominacion}
-            onChange={(e) => {
-              setDenominacion(e.target.value);
-              if (error) setError(undefined);
-            }}
-            className={`h-9 rounded-[0.25rem] text-[14px] ${
-              error ? "border-error" : "border-border"
-            }`}
-          />
-          {error && (
-            <div className="flex items-center gap-1.5 mt-1.5">
-              <AlertCircle className="size-3.5 text-error shrink-0" />
-              <span className="text-[11px] leading-[14px] text-error">
-                {error}
-              </span>
-            </div>
-          )}
-
-          {empleadosVinculados > 0 && !showWarning && (
-            <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-[#fff8f0] border border-accent-deep/30 rounded-[0.25rem]">
-              <AlertTriangle className="size-3.5 text-accent-deep shrink-0" />
-              <span className="text-[13px] text-foreground-muted">
-                Este grupo tiene{" "}
-                <span className="font-bold text-accent-deep">
-                  {empleadosVinculados} empleados
-                </span>{" "}
-                vinculados. Al guardar se solicitará confirmación.
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Bottom overlay warning if linked workers */}
-        {showWarning && (
-          <div className="bg-card border-t-2 border-accent-deep p-6 space-y-4">
+        {/* Body: el formulario y la confirmación son mutuamente excluyentes,
+            nunca se apilan uno sobre otro. */}
+        <div className="px-6 py-6">
+          {showWarning ? (
             <div className="flex items-start gap-3">
               <div className="size-9 bg-[#fff3e0] rounded-[0.5rem] flex items-center justify-center shrink-0">
                 <AlertTriangle className="size-5 text-accent-deep" />
@@ -152,7 +110,51 @@ function ModificarGrupoDialogContent({
                 </span>
               </div>
             </div>
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
+          ) : (
+            <>
+              <label className="block text-[11px] font-bold uppercase tracking-wider text-foreground mb-1.5">
+                Denominación de la Especialidad{" "}
+                <span className="text-accent-deep text-[12px] font-bold">*</span>
+              </label>
+              <Input
+                value={denominacion}
+                onChange={(e) => {
+                  setDenominacion(e.target.value);
+                  if (error) setError(undefined);
+                }}
+                className={`h-9 rounded-[0.25rem] text-[14px] ${
+                  error ? "border-error" : "border-border"
+                }`}
+              />
+              {error && (
+                <div className="flex items-center gap-1.5 mt-1.5">
+                  <AlertCircle className="size-3.5 text-error shrink-0" />
+                  <span className="text-[11px] leading-[14px] text-error">
+                    {error}
+                  </span>
+                </div>
+              )}
+
+              {empleadosVinculados > 0 && (
+                <div className="flex items-center gap-2 mt-3 px-3 py-2 bg-[#fff8f0] border border-accent-deep/30 rounded-[0.25rem]">
+                  <AlertTriangle className="size-3.5 text-accent-deep shrink-0" />
+                  <span className="text-[13px] text-foreground-muted">
+                    Este grupo tiene{" "}
+                    <span className="font-bold text-accent-deep">
+                      {empleadosVinculados} empleados
+                    </span>{" "}
+                    vinculados. Al guardar se solicitará confirmación.
+                  </span>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {/* Footer: mismo estilo siempre, solo cambian las acciones */}
+        <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-[#f7f7f7]">
+          {showWarning ? (
+            <>
               <Button
                 variant="outline"
                 onClick={() => setShowWarning(false)}
@@ -168,30 +170,27 @@ function ModificarGrupoDialogContent({
                 <CheckCircle2 className="size-4 mr-2" />
                 {isPending ? "Actualizando..." : "Confirmar Modificación"}
               </Button>
-            </div>
-          </div>
-        )}
-
-        {/* Normal footer */}
-        {!showWarning && (
-          <div className="flex items-center justify-end gap-3 px-6 py-4 border-t border-border bg-[#f7f7f7]">
-            <Button
-              variant="outline"
-              onClick={handleClose}
-              className="h-9 px-5 rounded-[0.25rem] border-border text-foreground hover:bg-[#f0f0f0]"
-            >
-              Cancelar
-            </Button>
-            <Button
-              onClick={handleClickActualizar}
-              disabled={isPending}
-              className="h-9 px-5 rounded-[0.25rem] bg-primary hover:bg-primary-hover text-white"
-            >
-              <CheckCircle2 className="size-4 mr-2" />
-              {isPending ? "Actualizando..." : "Actualizar"}
-            </Button>
-          </div>
-        )}
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                className="h-9 px-5 rounded-[0.25rem] border-border text-foreground hover:bg-[#f0f0f0]"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleClickActualizar}
+                disabled={isPending}
+                className="h-9 px-5 rounded-[0.25rem] bg-primary hover:bg-primary-hover text-white"
+              >
+                <CheckCircle2 className="size-4 mr-2" />
+                {isPending ? "Actualizando..." : "Actualizar"}
+              </Button>
+            </>
+          )}
+        </div>
       </DialogContent>
     </Dialog>
   );
