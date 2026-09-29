@@ -7,7 +7,7 @@ import {
   Button,
   Input,
 } from "@/shared/ui";
-import { CheckCircle2, AlertTriangle, AlertCircle, X } from "lucide-react";
+import { CheckCircle2, AlertTriangle, AlertCircle } from "lucide-react";
 import type { GrupoResponseDto } from "../../types/estructuraLaboral.types";
 
 interface ModificarGrupoDialogProps {
@@ -80,21 +80,13 @@ function ModificarGrupoDialogContent({
     <Dialog open={open} onOpenChange={(o) => (!o ? handleClose() : null)}>
       <DialogContent className="max-w-md rounded-[0.5rem] p-0 gap-0 overflow-hidden">
         {/* Header */}
-        <div className="flex items-start justify-between px-6 py-5 border-b border-border bg-card">
-          <div>
-            <DialogTitle className="text-[20px] font-medium leading-6 text-foreground p-0 m-0">
-              Modificar Grupo de Empleados
-            </DialogTitle>
-            <DialogDescription className="text-[13px] leading-5 text-foreground-muted mt-1">
-              Actualice la denominación de la especialidad o rama operativa.
-            </DialogDescription>
-          </div>
-          <button
-            onClick={handleClose}
-            className="size-8 flex items-center justify-center rounded-[0.25rem] text-foreground-muted hover:bg-[#f0f0f0] ml-4 shrink-0 cursor-pointer"
-          >
-            <X className="size-4" />
-          </button>
+        <div className="px-6 py-5 pr-14 border-b border-border bg-card">
+          <DialogTitle className="text-[20px] font-medium leading-6 text-foreground p-0 m-0">
+            Modificar Grupo de Empleados
+          </DialogTitle>
+          <DialogDescription className="text-[13px] leading-5 text-foreground-muted mt-1">
+            Actualice la denominación de la especialidad o rama operativa.
+          </DialogDescription>
         </div>
 
         {/* Body */}

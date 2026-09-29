@@ -5,7 +5,7 @@ import {
   DialogDescription,
   Button,
 } from "@/shared/ui";
-import { Link2, X } from "lucide-react";
+import { Link2 } from "lucide-react";
 import type { EmpleadoResumenResponseDto } from "@/features/legajos/types/legajo.types";
 
 interface EmpleadosSinGrupoDialogProps {
@@ -24,21 +24,13 @@ export function EmpleadosSinGrupoDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg rounded-[0.5rem] p-0 gap-0 overflow-hidden">
-        <div className="flex items-start justify-between px-6 py-5 border-b border-border bg-card">
-          <div>
-            <DialogTitle className="text-[20px] font-medium leading-6 text-foreground p-0 m-0">
-              Empleados sin grupo asignado
-            </DialogTitle>
-            <DialogDescription className="text-[13px] leading-5 text-foreground-muted mt-1">
-              Todavía no tienen ninguna especialidad operativa vigente.
-            </DialogDescription>
-          </div>
-          <button
-            onClick={() => onOpenChange(false)}
-            className="size-8 flex items-center justify-center rounded-[0.25rem] text-foreground-muted hover:bg-[#f0f0f0] ml-4 shrink-0 cursor-pointer"
-          >
-            <X className="size-4" />
-          </button>
+        <div className="px-6 py-5 pr-14 border-b border-border bg-card">
+          <DialogTitle className="text-[20px] font-medium leading-6 text-foreground p-0 m-0">
+            Empleados sin grupo asignado
+          </DialogTitle>
+          <DialogDescription className="text-[13px] leading-5 text-foreground-muted mt-1">
+            Todavía no tienen ninguna especialidad operativa vigente.
+          </DialogDescription>
         </div>
 
         <div className="max-h-96 overflow-y-auto">
