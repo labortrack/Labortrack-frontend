@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowRightLeft,
   Building2,
+  EllipsisVertical,
   Globe,
   HardHat,
   History,
@@ -38,6 +39,10 @@ import {
   Card,
   CardContent,
   CardHeader,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Separator,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
@@ -128,42 +133,45 @@ export default function ObraDetailPage() {
                 <Users className="size-4" />
                 Gestionar Cuadrillas
               </Button>
-              <Button
-                variant="outline"
-                onClick={() => setTransicionOpen(true)}
-                className="w-full sm:w-auto justify-center"
-              >
-                <ArrowRightLeft className="mr-1.5 size-4" />
-                Cambiar Estado
-              </Button>
-              {esAdmin ? (
-                <Button
-                  variant="outline"
-                  onClick={() => setAsignarCapatazOpen(true)}
-                  disabled={isFinalizada}
-                  className="w-full sm:w-auto justify-center"
-                >
-                  <HardHat className="mr-1.5 size-4" />
-                  {obra.capataz ? "Cambiar Capataz" : "Asignar Capataz"}
-                </Button>
-              ) : null}
-              <Button
-                variant="outline"
-                onClick={() => setEditOpen(true)}
-                className="w-full sm:w-auto justify-center"
-              >
-                <Pencil className="mr-1.5 size-4" />
-                Editar Datos
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={() => setCloseOpen(true)}
-                disabled={isFinalizada}
-                className="w-full sm:w-auto justify-center"
-              >
-                <Trash2 className="mr-1.5 size-4" />
-                Dar de Baja
-              </Button>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="w-full sm:w-auto justify-center"
+                  >
+                    <EllipsisVertical className="mr-1.5 size-4" />
+                    Más Acciones
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onSelect={() => setTransicionOpen(true)}>
+                    <ArrowRightLeft className="size-4 text-foreground-muted" />
+                    Cambiar Estado
+                  </DropdownMenuItem>
+                  {esAdmin ? (
+                    <DropdownMenuItem
+                      disabled={isFinalizada}
+                      onSelect={() => setAsignarCapatazOpen(true)}
+                    >
+                      <HardHat className="size-4 text-foreground-muted" />
+                      {obra.capataz ? "Cambiar Capataz" : "Asignar Capataz"}
+                    </DropdownMenuItem>
+                  ) : null}
+                  <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+                    <Pencil className="size-4 text-foreground-muted" />
+                    Editar Datos
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    disabled={isFinalizada}
+                    onSelect={() => setCloseOpen(true)}
+                    className="text-error data-[highlighted]:text-error"
+                  >
+                    <Trash2 className="size-4" />
+                    Dar de Baja
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           }
         />
