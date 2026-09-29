@@ -1,20 +1,22 @@
-import { Cell, Legend, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { ConteoEstadoCuadrillaDto } from "../types/dashboard.types";
 
 const ESTADO_LABELS: Record<string, string> = {
   ACTIVA: "Activa",
-  EN_ESPERA: "En Espera",
+  EN_ESPERA: "En espera",
   PLANIFICADA: "Planificada",
   SUSPENDIDA: "Suspendida",
   FINALIZADA: "Finalizada",
 };
 
+// Mismo orden que el ciclo de vida de la cuadrilla, no alfabetico.
+const ORDEN_ESTADOS = ["PLANIFICADA", "EN_ESPERA", "ACTIVA", "SUSPENDIDA", "FINALIZADA"];
+
 const ESTADO_COLORS: Record<string, string> = {
-  ACTIVA: "#10b981",
-  EN_ESPERA: "#f59e0b",
-  PLANIFICADA: "#0ea5e9",
-  SUSPENDIDA: "#f43f5e",
-  FINALIZADA: "#71717a",
+  PLANIFICADA: "var(--color-primary)",
+  EN_ESPERA: "var(--color-accent-deep)",
+  ACTIVA: "var(--color-success)",
+  SUSPENDIDA: "var(--color-error)",
+  FINALIZADA: "var(--lt-neutral-300)",
 };
 
 interface CuadrillasPorEstadoChartProps {
@@ -22,39 +24,48 @@ interface CuadrillasPorEstadoChartProps {
 }
 
 export function CuadrillasPorEstadoChart({ data }: CuadrillasPorEstadoChartProps) {
-  if (data.length === 0) {
+  const total = data.reduce((acc, d) => acc + d.cantidad, 0);
+
+  if (total === 0) {
     return (
-      <div className="flex h-full min-h-48 items-center justify-center text-sm text-muted-foreground">
-        Sin cuadrillas para mostrar.
-      </div>
+      <p className="py-6 text-sm text-foreground-muted">
+        No hay cuadrillas para mostrar en tu alcance.
+      </p>
     );
   }
 
-  const chartData = data.map((d) => ({
-    ...d,
-    label: ESTADO_LABELS[d.estado] ?? d.estado,
-  }));
+  const filas = [...data]
+    .filter((d) => d.cantidad > 0)
+    .sort((a, b) => ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado));
 
   return (
-    <ResponsiveContainer width="100%" height={240}>
-      <PieChart>
-        <Pie
-          data={chartData}
-          dataKey="cantidad"
-          nameKey="label"
-          cx="50%"
-          cy="45%"
-          innerRadius={52}
-          outerRadius={80}
-          paddingAngle={3}
-        >
-          {chartData.map((entry) => (
-            <Cell key={entry.estado} fill={ESTADO_COLORS[entry.estado] ?? "#94a3b8"} />
-          ))}
-        </Pie>
-        <Tooltip formatter={(value) => [`${value} cuadrillas`, ""]} />
-        <Legend verticalAlign="bottom" height={40} iconSize={10} wrapperStyle={{ fontSize: 12 }} />
-      </PieChart>
-    </ResponsiveContainer>
+    <div>
+      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-subtle">
+        {filas.map((fila) => (
+          <div
+            key={fila.estado}
+            style={{
+              width: `${(fila.cantidad / total) * 100}%`,
+              backgroundColor: ESTADO_COLORS[fila.estado] ?? "var(--lt-neutral-300)",
+            }}
+          />
+        ))}
+      </div>
+
+      <ul className="mt-4 space-y-2.5">
+        {filas.map((fila) => (
+          <li key={fila.estado} className="flex items-center justify-between text-sm">
+            <span className="flex items-center gap-2 text-foreground">
+              <span
+                className="size-2 rounded-full"
+                style={{ backgroundColor: ESTADO_COLORS[fila.estado] ?? "var(--lt-neutral-300)" }}
+              />
+              {ESTADO_LABELS[fila.estado] ?? fila.estado}
+            </span>
+            <span className="tabular-nums font-semibold text-foreground">{fila.cantidad}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }

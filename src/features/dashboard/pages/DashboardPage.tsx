@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Building2, CalendarCheck, UserX, Users } from "lucide-react";
-import { Card, CardContent, Input, Label } from "@/shared/ui";
+import { Card, CardContent } from "@/shared/ui";
 import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { cn } from "@/shared/utils/cn";
 import { useDashboardResumen, useTendenciaAsistencia } from "../hooks/useDashboard";
-import { KpiCard } from "../components/KpiCard";
+import { ResumenHeroPanel } from "../components/ResumenHeroPanel";
 import { CuadrillasPorEstadoChart } from "../components/CuadrillasPorEstadoChart";
 import { PersonalPorObraChart } from "../components/PersonalPorObraChart";
 import { TendenciaAsistenciaChart } from "../components/TendenciaAsistenciaChart";
@@ -19,12 +19,17 @@ function haceDiasIso(dias: number) {
   return fecha.toISOString().slice(0, 10);
 }
 
+const RANGOS_TENDENCIA = [
+  { dias: 6, label: "7 días" },
+  { dias: 13, label: "14 días" },
+  { dias: 29, label: "30 días" },
+];
+
 export default function DashboardPage() {
-  const [fechaDesde, setFechaDesde] = useState(haceDiasIso(13));
-  const [fechaHasta, setFechaHasta] = useState(hoyIso());
+  const [rangoDias, setRangoDias] = useState(13);
 
   const resumenQuery = useDashboardResumen();
-  const tendenciaQuery = useTendenciaAsistencia(fechaDesde, fechaHasta);
+  const tendenciaQuery = useTendenciaAsistencia(haceDiasIso(rangoDias), hoyIso());
 
   return (
     <div className="space-y-6">
@@ -51,118 +56,89 @@ export default function DashboardPage() {
         </Card>
       ) : (
         <>
-          {/* Fila superior: scorecards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <KpiCard
-              title="Empleados Activos"
-              value={String(resumenQuery.data.totalEmpleadosActivos)}
-              icon={Users}
-              iconColor="text-blue-500"
-              bgGradient="from-blue-500/10 via-blue-500/5 to-transparent"
-              borderColor="border-blue-500/20"
-            />
-            <KpiCard
-              title="Obras Activas"
-              value={String(resumenQuery.data.totalObrasActivas)}
-              icon={Building2}
-              iconColor="text-emerald-500"
-              bgGradient="from-emerald-500/10 via-emerald-500/5 to-transparent"
-              borderColor="border-emerald-500/20"
-            />
-            <KpiCard
-              title="Asistencia Hoy"
-              value={`${resumenQuery.data.asistenciaHoyPorcentaje.toFixed(1)}%`}
-              icon={CalendarCheck}
-              iconColor="text-amber-500"
-              bgGradient="from-amber-500/10 via-amber-500/5 to-transparent"
-              borderColor="border-amber-500/20"
-            />
-            <KpiCard
-              title="Ausencias Hoy"
-              value={String(resumenQuery.data.ausenciasHoy)}
-              icon={UserX}
-              iconColor="text-rose-500"
-              bgGradient="from-rose-500/10 via-rose-500/5 to-transparent"
-              borderColor="border-rose-500/20"
-            />
-          </div>
+          <ResumenHeroPanel
+            asistenciaPorcentaje={resumenQuery.data.asistenciaHoyPorcentaje}
+            empleadosActivos={resumenQuery.data.totalEmpleadosActivos}
+            obrasActivas={resumenQuery.data.totalObrasActivas}
+            ausenciasHoy={resumenQuery.data.ausenciasHoy}
+          />
 
-          {/* Fila media: datos operativos críticos */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm font-semibold text-foreground mb-2">
-                  Cuadrillas por Estado
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold text-foreground">
+                  Cuadrillas por frente
                 </h3>
-                <CuadrillasPorEstadoChart data={resumenQuery.data.cuadrillasPorEstado} />
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  Distribución vigente según tu alcance.
+                </p>
+                <div className="mt-4">
+                  <CuadrillasPorEstadoChart data={resumenQuery.data.cuadrillasPorEstado} />
+                </div>
               </CardContent>
             </Card>
             <Card>
-              <CardContent className="p-4">
-                <h3 className="text-sm font-semibold text-foreground mb-2">
-                  Personal por Obra
-                </h3>
-                <PersonalPorObraChart data={resumenQuery.data.personalPorObra} />
+              <CardContent className="p-5">
+                <h3 className="text-sm font-semibold text-foreground">Personal por obra</h3>
+                <p className="mt-0.5 text-xs text-foreground-muted">
+                  Operarios vigentes en cada frente de trabajo.
+                </p>
+                <div className="mt-4">
+                  <PersonalPorObraChart data={resumenQuery.data.personalPorObra} />
+                </div>
               </CardContent>
             </Card>
           </div>
         </>
       )}
 
-      {/* Fila inferior: tendencias analíticas */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
-            <h3 className="text-sm font-semibold text-foreground">
-              Tendencia de Asistencia
-            </h3>
-            <div className="flex items-center gap-2">
-              <div>
-                <Label htmlFor="tendencia-desde" className="sr-only">
-                  Desde
-                </Label>
-                <Input
-                  id="tendencia-desde"
-                  type="date"
-                  value={fechaDesde}
-                  max={fechaHasta}
-                  onChange={(e) => setFechaDesde(e.target.value)}
-                  className="h-8 text-xs"
-                />
-              </div>
-              <span className="text-xs text-muted-foreground">—</span>
-              <div>
-                <Label htmlFor="tendencia-hasta" className="sr-only">
-                  Hasta
-                </Label>
-                <Input
-                  id="tendencia-hasta"
-                  type="date"
-                  value={fechaHasta}
-                  min={fechaDesde}
-                  max={hoyIso()}
-                  onChange={(e) => setFechaHasta(e.target.value)}
-                  className="h-8 text-xs"
-                />
-              </div>
+        <CardContent className="p-5">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">
+                Tendencia de asistencia
+              </h3>
+              <p className="mt-0.5 text-xs text-foreground-muted">
+                Operarios presentes y ausentes por día.
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1 self-start rounded-control bg-subtle p-1">
+              {RANGOS_TENDENCIA.map((rango) => (
+                <button
+                  key={rango.dias}
+                  type="button"
+                  onClick={() => setRangoDias(rango.dias)}
+                  className={cn(
+                    "rounded-control px-2.5 py-1 text-xs font-medium transition-colors",
+                    rango.dias === rangoDias
+                      ? "bg-card text-foreground shadow-soft"
+                      : "text-foreground-muted hover:text-foreground"
+                  )}
+                >
+                  {rango.label}
+                </button>
+              ))}
             </div>
           </div>
 
-          {tendenciaQuery.isPending ? (
-            <LoadingState label="Cargando tendencia..." />
-          ) : tendenciaQuery.isError ? (
-            <ErrorState
-              message={
-                normalizeApiError(
-                  tendenciaQuery.error,
-                  "No se pudo cargar la tendencia de asistencia."
-                ).message
-              }
-              onRetry={() => void tendenciaQuery.refetch()}
-            />
-          ) : (
-            <TendenciaAsistenciaChart data={tendenciaQuery.data} />
-          )}
+          <div className="mt-4">
+            {tendenciaQuery.isPending ? (
+              <LoadingState label="Cargando tendencia..." />
+            ) : tendenciaQuery.isError ? (
+              <ErrorState
+                message={
+                  normalizeApiError(
+                    tendenciaQuery.error,
+                    "No se pudo cargar la tendencia de asistencia."
+                  ).message
+                }
+                onRetry={() => void tendenciaQuery.refetch()}
+              />
+            ) : (
+              <TendenciaAsistenciaChart data={tendenciaQuery.data} />
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

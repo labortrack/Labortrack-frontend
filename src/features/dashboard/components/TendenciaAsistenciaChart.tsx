@@ -1,8 +1,9 @@
 import {
+  Area,
   CartesianGrid,
+  ComposedChart,
   Legend,
   Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -22,39 +23,57 @@ function formatFechaCorta(fecha: string) {
 export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps) {
   if (data.length === 0) {
     return (
-      <div className="flex h-full min-h-48 items-center justify-center text-sm text-muted-foreground">
-        Sin datos para el rango seleccionado.
-      </div>
+      <p className="py-6 text-sm text-foreground-muted">
+        No hay datos para el rango seleccionado.
+      </p>
     );
   }
 
   const chartData = data.map((d) => ({ ...d, fechaCorta: formatFechaCorta(d.fecha) }));
 
   return (
-    <ResponsiveContainer width="100%" height={260}>
-      <LineChart data={chartData} margin={{ top: 4, right: 16, left: 0, bottom: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
-        <XAxis dataKey="fechaCorta" tick={{ fontSize: 11 }} />
-        <YAxis allowDecimals={false} tick={{ fontSize: 11 }} width={32} />
+    <ResponsiveContainer width="100%" height={220}>
+      <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+        <defs>
+          <linearGradient id="presentesFill" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.18} />
+            <stop offset="100%" stopColor="var(--color-primary)" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid vertical={false} stroke="var(--color-border)" />
+        <XAxis
+          dataKey="fechaCorta"
+          axisLine={false}
+          tickLine={false}
+          tick={{ fontSize: 11, fill: "var(--color-foreground-muted)" }}
+        />
+        <YAxis
+          allowDecimals={false}
+          axisLine={false}
+          tickLine={false}
+          width={28}
+          tick={{ fontSize: 11, fill: "var(--color-foreground-muted)" }}
+        />
         <Tooltip />
-        <Legend verticalAlign="bottom" height={32} iconSize={10} wrapperStyle={{ fontSize: 12 }} />
-        <Line
+        <Legend verticalAlign="top" align="right" height={28} iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+        <Area
           type="monotone"
           dataKey="presentes"
           name="Presentes"
-          stroke="#10b981"
+          stroke="var(--color-primary)"
           strokeWidth={2}
-          dot={{ r: 2 }}
+          fill="url(#presentesFill)"
+          dot={false}
         />
         <Line
           type="monotone"
           dataKey="ausentes"
           name="Ausentes"
-          stroke="#f43f5e"
+          stroke="var(--color-error)"
           strokeWidth={2}
-          dot={{ r: 2 }}
+          dot={false}
         />
-      </LineChart>
+      </ComposedChart>
     </ResponsiveContainer>
   );
 }
