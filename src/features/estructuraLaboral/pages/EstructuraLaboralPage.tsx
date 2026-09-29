@@ -8,6 +8,7 @@ import {
   UserCheck,
   UserX,
   History,
+  UserRoundX,
 } from "lucide-react";
 import { toast } from "sonner";
 import { KpiSummaryCard } from "../components/KpiSummaryCard";
@@ -18,6 +19,8 @@ import { ModificarGrupoDialog } from "../components/dialogs/ModificarGrupoDialog
 import { BajaGrupoDialog } from "../components/dialogs/BajaGrupoDialog";
 import { NuevaAsignacionDialog } from "../components/dialogs/NuevaAsignacionDialog";
 import { FinalizarAsignacionDialog } from "../components/dialogs/FinalizarAsignacionDialog";
+import { EmpleadosSinGrupoDialog } from "../components/dialogs/EmpleadosSinGrupoDialog";
+import type { EmpleadoResumenResponseDto } from "@/features/legajos/types/legajo.types";
 import {
   useGruposList,
   useCreateGrupo,
@@ -73,6 +76,16 @@ export default function EstructuraLaboralPage() {
     return map;
   }, [asignaciones]);
 
+  // Empleados activos sin ningún grupo vigente asignado
+  const empleadosSinGrupo = useMemo(() => {
+    const idsConGrupoVigente = new Set(
+      asignaciones
+        .filter((a) => !a.fechaHastaEmpleadoGrupo)
+        .map((a) => a.empleadoId)
+    );
+    return empleadosActivos.filter((emp) => !idsConGrupoVigente.has(emp.id));
+  }, [asignaciones, empleadosActivos]);
+
   // ── Grupos State ──
   const [filtroGrupo, setFiltroGrupo] = useState<TabFiltroGrupo>("Activos");
   const [modalNuevoGrupoOpen, setModalNuevoGrupoOpen] = useState(false);
@@ -86,6 +99,9 @@ export default function EstructuraLaboralPage() {
   const [filtroGrupoAsig, setFiltroGrupoAsig] = useState("all");
   const [filtroEstadoAsig, setFiltroEstadoAsig] = useState("vigentes");
   const [modalNuevaAsigOpen, setModalNuevaAsigOpen] = useState(false);
+  const [empleadoPreseleccionado, setEmpleadoPreseleccionado] =
+    useState<EmpleadoResumenResponseDto | null>(null);
+  const [modalSinGrupoOpen, setModalSinGrupoOpen] = useState(false);
   const [finalizarTargetAsig, setFinalizarTargetAsig] =
     useState<EmpleadoGrupoResponseDto | null>(null);
 
@@ -113,6 +129,17 @@ export default function EstructuraLaboralPage() {
   const handleConfirmarBajaGrupo = async (id: number) => {
     await deleteGrupoMutation.mutateAsync(id);
     toast.success("Grupo dado de baja.");
+  };
+
+  const handleAsignarDesdeSinGrupo = (empleado: EmpleadoResumenResponseDto) => {
+    setModalSinGrupoOpen(false);
+    setEmpleadoPreseleccionado(empleado);
+    setModalNuevaAsigOpen(true);
+  };
+
+  const handleCerrarNuevaAsignacion = (open: boolean) => {
+    setModalNuevaAsigOpen(open);
+    if (!open) setEmpleadoPreseleccionado(null);
   };
 
   const handleGuardarAsignacion = async (
@@ -206,7 +233,10 @@ export default function EstructuraLaboralPage() {
           </Button>
         ) : (
           <Button
-            onClick={() => setModalNuevaAsigOpen(true)}
+            onClick={() => {
+              setEmpleadoPreseleccionado(null);
+              setModalNuevaAsigOpen(true);
+            }}
             className="flex items-center gap-2 bg-primary hover:bg-primary-hover text-white rounded-[0.25rem] h-9 px-4 shadow-soft mb-2"
           >
             <Plus className="size-4" />
@@ -261,7 +291,7 @@ export default function EstructuraLaboralPage() {
       {/* ── Tab 2: Asignaciones ── */}
       {activeTab === "asignaciones" && (
         <div className="space-y-5">
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-4 gap-4">
             <KpiSummaryCard
               icon={<Link2 className="size-5" />}
               iconBg="bg-[#e8f0ff]"
@@ -284,6 +314,15 @@ export default function EstructuraLaboralPage() {
               label="HISTÓRICAS"
               value={totalHist}
               valueColor="#7c3aed"
+            />
+            <KpiSummaryCard
+              icon={<UserRoundX className="size-5" />}
+              iconBg="bg-[#fdf0eb]"
+              iconColor="text-accent-deep"
+              label="SIN GRUPO ASIGNADO"
+              value={empleadosSinGrupo.length}
+              valueColor="#e0672a"
+              onClick={() => setModalSinGrupoOpen(true)}
             />
           </div>
 
@@ -335,12 +374,25 @@ export default function EstructuraLaboralPage() {
       />
 
       <NuevaAsignacionDialog
+        key={
+          modalNuevaAsigOpen
+            ? `nueva-asig-${empleadoPreseleccionado?.id ?? "libre"}`
+            : "nueva-asig-cerrado"
+        }
         open={modalNuevaAsigOpen}
-        onOpenChange={setModalNuevaAsigOpen}
+        onOpenChange={handleCerrarNuevaAsignacion}
         onAsignar={handleGuardarAsignacion}
         grupos={grupos}
         empleados={empleadosActivos}
         isPending={createEmpleadoGrupoMutation.isPending}
+        empleadoIdInicial={empleadoPreseleccionado?.id}
+      />
+
+      <EmpleadosSinGrupoDialog
+        open={modalSinGrupoOpen}
+        onOpenChange={setModalSinGrupoOpen}
+        empleados={empleadosSinGrupo}
+        onAsignar={handleAsignarDesdeSinGrupo}
       />
 
       <FinalizarAsignacionDialog

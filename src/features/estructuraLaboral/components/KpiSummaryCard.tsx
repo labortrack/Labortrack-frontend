@@ -8,6 +8,7 @@ interface KpiSummaryCardProps {
   label: string;
   value: number;
   valueColor?: string;
+  onClick?: () => void;
 }
 
 export function KpiSummaryCard({
@@ -17,9 +18,15 @@ export function KpiSummaryCard({
   label,
   value,
   valueColor = "#1c1b1b",
+  onClick,
 }: KpiSummaryCardProps) {
   return (
-    <Card className="rounded-[0.5rem] border border-border shadow-soft bg-card">
+    <Card
+      onClick={onClick}
+      className={`rounded-[0.5rem] border border-border shadow-soft bg-card ${
+        onClick ? "cursor-pointer transition-shadow hover:shadow-floating" : ""
+      }`}
+    >
       <CardContent className="flex items-center gap-4 p-4">
         <div
           className={`size-10 ${iconBg} rounded-[0.5rem] flex items-center justify-center shrink-0`}

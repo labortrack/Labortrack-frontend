@@ -24,6 +24,8 @@ interface NuevaAsignacionDialogProps {
   grupos: GrupoResponseDto[];
   empleados: EmpleadoResumenResponseDto[];
   isPending?: boolean;
+  /** Precarga el empleado (p. ej. desde el listado de "sin grupo asignado"). */
+  empleadoIdInicial?: number;
 }
 
 export function NuevaAsignacionDialog({
@@ -33,8 +35,11 @@ export function NuevaAsignacionDialog({
   grupos,
   empleados,
   isPending,
+  empleadoIdInicial,
 }: NuevaAsignacionDialogProps) {
-  const [empleadoId, setEmpleadoId] = useState("");
+  const [empleadoId, setEmpleadoId] = useState(
+    empleadoIdInicial ? String(empleadoIdInicial) : ""
+  );
   const [grupoId, setGrupoId] = useState("");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const fechaInicio = new Date().toISOString().split("T")[0];
