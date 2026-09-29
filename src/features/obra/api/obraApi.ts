@@ -17,7 +17,7 @@ export const obraApi = {
   // Lista todas las obras o filtra por nomenclatura que coincida parcialmente
   getAll: async (nomenclatura?: string) =>
     (
-      await httpClient.get<ObraResponseDto[]>(`${BASE_URL}/all`, {
+      await httpClient.get<ObraResponseDto[]>(BASE_URL, {
         params: nomenclatura?.trim()
           ? { nomenclatura: nomenclatura.trim() }
           : undefined,
