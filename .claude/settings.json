@@ -8,7 +8,24 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:8081/actuator/health)",
       "Bash(npm ls *)",
       "Bash(npx eslint *)",
-      "Bash(xargs sed -i -E 's/ label=\"Volver[^\"]*\"//g')"
+      "Bash(xargs sed -i -E 's/ label=\"Volver[^\"]*\"//g')",
+      "Bash(./gradlew compileJava compileTestJava -q)",
+      "Bash(./gradlew test *)",
+      "Bash(echo \"tsc exit $?\")",
+      "Bash(git stash *)",
+      "Bash(cd /d/ROBER/LaborTrack && ls docs; grep -rinl \"genero\\\\|género\" docs 2>/dev/null; cat Labortrack-backend/src/main/java/com/labortrack/backend/legajo/model/entity/Genero.java; grep -rn \"Genero\\\\.\\\\|NO_DECIRLO\" Labortrack-backend/src --include=*.java | grep -v \"^.*import\"; grep -rn \"NO_DECIRLO\\\\|\\\\\"OTRO\\\\\"\\\\|Genero\" Labortrack-frontend/src --include=*.ts* | head -20)",
+      "PowerShell(npx tsc --noEmit -p tsconfig.app.json 2>&1)",
+      "PowerShell(npx tsc --noEmit -p tsconfig.app.json; \"tsc exit: $LASTEXITCODE\")"
+    ],
+    "additionalDirectories": [
+      "d:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\model\\entity",
+      "d:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\model\\dto\\request",
+      "d:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\test\\java\\com\\labortrack\\backend\\legajo\\model\\dto\\request",
+      "D:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\repository",
+      "D:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\service\\implementation",
+      "D:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\service\\api",
+      "D:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\controller",
+      "D:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\test\\java\\com\\labortrack\\backend\\legajo\\controller"
     ]
   }
 }

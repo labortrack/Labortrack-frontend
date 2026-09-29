@@ -23,10 +23,14 @@ import {
   useActualizarFotoPerfil,
   useLegajoDetail,
 } from "../hooks/useLegajos";
-import { GENERO_LABELS, NACIONALIDAD_OPTIONS } from "../types/legajo.types";
+import { GENERO_LABELS } from "../types/legajo.types";
 import type { Genero, EmpleadoUpdateDto } from "../types/legajo.types";
 import { formatCuit } from "@/shared/utils/cuit";
-import { PAISES_FRECUENTES, PAISES_RESTO } from "@/shared/constants/paises";
+import {
+  PAISES_FRECUENTES,
+  PAISES_RESTO,
+  normalizarPais,
+} from "@/shared/constants/paises";
 import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
 import { useZonasActivas } from "@/features/cuadroTarifario/hooks/useZonas";
 import { FormField, LoadingState } from "@/shared/components";
@@ -57,24 +61,6 @@ const ROL_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "ROLE_RRHH", label: "Recursos Humanos" },
   { value: "ROLE_ADMIN", label: "Administrador" },
 ];
-
-function normalizarNacionalidad(nac?: string): string {
-  if (!nac) return "";
-  const upper = nac.toUpperCase().trim();
-  const allPaises = [...PAISES_FRECUENTES, ...PAISES_RESTO];
-  const matchPais = allPaises.find((p) => p.toUpperCase() === upper);
-  if (matchPais) return matchPais;
-  const match = NACIONALIDAD_OPTIONS.find(
-    (opt) => opt.value === upper || opt.label.toUpperCase() === upper,
-  );
-  if (match) {
-    const matchByLabel = allPaises.find(
-      (p) => p.toUpperCase() === match.label.toUpperCase(),
-    );
-    return matchByLabel ?? match.label;
-  }
-  return nac;
-}
 
 export interface EmpleadoFormProps {
   empleadoId?: number;
@@ -147,7 +133,7 @@ export function EmpleadoForm({
         cuil: empleadoData.cuil || "",
         fechaNacimiento: empleadoData.fechaNacimiento || "",
         fechaIngreso: empleadoData.fechaIngreso || "",
-        nacionalidad: normalizarNacionalidad(empleadoData.nacionalidad),
+        nacionalidad: normalizarPais(empleadoData.nacionalidad),
         grupoSanguineo: empleadoData.grupoSanguineo || "",
         domicilio: empleadoData.domicilio || "",
         numeroCelular: empleadoData.numeroCelular || "",

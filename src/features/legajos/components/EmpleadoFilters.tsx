@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { FilterX, Search } from "lucide-react";
 import type { EmpleadoFilterParams } from "../types/legajo.types";
-import { CATEGORIA_LABELS, ESTADO_LABELS } from "../types/legajo.types";
+import { ESTADO_LABELS } from "../types/legajo.types";
+import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
 import {
   Button,
   Input,
@@ -25,9 +26,10 @@ export function EmpleadoFilters({
   onResetFilters,
   isPending,
 }: EmpleadoFiltersProps) {
+  const categoriasQuery = useCategoriasUocraActivas();
   const [buscar, setBuscar] = useState(initialFilters.buscar || "");
   const [categoria, setCategoria] = useState<string>(
-    initialFilters.categoria || "ALL",
+    initialFilters.idCategoria || "ALL",
   );
   const [estado, setEstado] = useState<string>(
     initialFilters.estado || "ALL",
@@ -37,7 +39,7 @@ export function EmpleadoFilters({
     e.preventDefault();
     onApplyFilters({
       buscar: buscar.trim(),
-      categoria: categoria === "ALL" ? "" : categoria,
+      idCategoria: categoria === "ALL" ? "" : categoria,
       estado: estado === "ALL" ? "" : estado,
     });
   };
@@ -69,7 +71,7 @@ export function EmpleadoFilters({
           <Input
             id="search-employee-input"
             type="text"
-            placeholder="DNI, Nombre, Apellido, CUIL o IERIC..."
+            placeholder="DNI, Nombre, Apellido o CUIL"
             value={buscar}
             onChange={(e) => setBuscar(e.target.value)}
             className="pl-9"
@@ -93,9 +95,9 @@ export function EmpleadoFilters({
           </SelectTrigger>
           <SelectContent side="bottom" align="start">
             <SelectItem value="ALL">Todas las categorías</SelectItem>
-            {Object.keys(CATEGORIA_LABELS).map((cat) => (
-              <SelectItem key={cat} value={cat}>
-                {CATEGORIA_LABELS[cat]}
+            {(categoriasQuery.data ?? []).map((cat) => (
+              <SelectItem key={cat.id} value={String(cat.id)}>
+                {cat.nombreCategoria}
               </SelectItem>
             ))}
           </SelectContent>
@@ -117,7 +119,7 @@ export function EmpleadoFilters({
             <SelectValue placeholder="Todos los estados" />
           </SelectTrigger>
           <SelectContent side="bottom" align="start">
-            <SelectItem value="ALL">Activos / En Obra (Por Defecto)</SelectItem>
+            <SelectItem value="ALL">Todos los estados</SelectItem>
             {Object.keys(ESTADO_LABELS).map((est) => (
               <SelectItem key={est} value={est}>
                 {ESTADO_LABELS[est]}

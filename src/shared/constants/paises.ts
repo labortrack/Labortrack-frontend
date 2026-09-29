@@ -192,3 +192,16 @@ export const PAISES_RESTO = [
   "Zambia",
   "Zimbabue",
 ] as const;
+
+// La nacionalidad se guarda como el nombre del país. Los legajos cargados
+// cuando era un enum tienen el valor en mayúsculas ("ARGENTINA"), así que se
+// busca el país sin distinguir mayúsculas para mostrarlo con su nombre.
+export function normalizarPais(valor?: string): string {
+  if (!valor) return "";
+  const upper = valor.toUpperCase().trim();
+  return (
+    [...PAISES_FRECUENTES, ...PAISES_RESTO].find(
+      (p) => p.toUpperCase() === upper,
+    ) ?? valor
+  );
+}

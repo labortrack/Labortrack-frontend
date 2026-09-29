@@ -16,7 +16,7 @@ import { Button } from "@/shared/ui";
 
 const DEFAULT_FILTERS: EmpleadoFilterParams = {
   buscar: "",
-  categoria: "",
+  idCategoria: "",
   estado: "",
 };
 
