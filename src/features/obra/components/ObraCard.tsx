@@ -30,10 +30,26 @@ export function ObraCard({
 
   const estadoStyle = getEstadoStyle(obra.estadoActual);
 
+  const handleDetalle = () => onDetalle?.(obra);
+
   return (
     <div
+      role={onDetalle ? "button" : undefined}
+      tabIndex={onDetalle ? 0 : undefined}
+      onClick={onDetalle ? handleDetalle : undefined}
+      onKeyDown={
+        onDetalle
+          ? (e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                handleDetalle();
+              }
+            }
+          : undefined
+      }
       className={cn(
         "flex flex-col justify-between rounded-lg border border-border bg-card shadow-soft transition-all hover:shadow-floating",
+        onDetalle && "cursor-pointer",
         isFinalizada && "opacity-80",
       )}
     >
@@ -48,13 +64,9 @@ export function ObraCard({
           {/* Título + nomenclatura */}
           <div>
             <div className="flex items-start justify-between gap-2">
-              <button
-                type="button"
-                className="text-left line-clamp-2 text-sm font-bold text-foreground hover:text-primary transition-colors cursor-pointer"
-                onClick={() => onDetalle?.(obra)}
-              >
+              <span className="text-left line-clamp-2 text-sm font-bold text-foreground">
                 {obra.nombreObra}
-              </button>
+              </span>
             </div>
             <p className="mt-1 text-xs font-mono text-foreground-muted">
               {obra.nomenclatura}
@@ -103,7 +115,10 @@ export function ObraCard({
       </div>
 
       {/* Card footer: actions */}
-      <div className="flex items-center justify-between border-t border-border px-4 py-2 bg-subtle/30">
+      <div
+        className="flex items-center justify-between border-t border-border px-4 py-2 bg-subtle/30"
+        onClick={(e) => e.stopPropagation()}
+      >
         <span className="text-[11px] font-mono text-foreground-muted">
           ID #{obra.id}
         </span>
