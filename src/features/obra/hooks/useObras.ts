@@ -28,11 +28,12 @@ export const obrasKeys = {
     [...obrasKeys.all, "capatacesDisponibles", obraIdExcluir ?? null] as const,
 };
 
-export function useObras(nomenclatura?: string) {
+export function useObras(nomenclatura?: string, enabled = true) {
   return useQuery({
     queryKey: obrasKeys.list(nomenclatura),
     queryFn: () => obraApi.getAll(nomenclatura),
     placeholderData: keepPreviousData,
+    enabled,
   });
 }
 

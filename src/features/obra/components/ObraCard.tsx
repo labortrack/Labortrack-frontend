@@ -8,8 +8,8 @@ import { cn } from "@/shared/utils/cn";
 
 interface ObraCardProps {
   obra: ObraResponseDto;
-  onEdit: (o: ObraResponseDto) => void;
-  onClose: (o: ObraResponseDto) => void;
+  onEdit?: (o: ObraResponseDto) => void;
+  onClose?: (o: ObraResponseDto) => void;
   onChangeEstado?: (o: ObraResponseDto) => void;
   onDetalle?: (o: ObraResponseDto) => void;
   onAsignarCapataz?: (o: ObraResponseDto) => void;
@@ -147,40 +147,44 @@ export function ObraCard({
             </Tooltip>
           ) : null}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onEdit(obra)}
-                className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary"
-                aria-label="Editar"
-              >
-                <Pencil className="size-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Editar datos de obra</TooltipContent>
-          </Tooltip>
+          {onEdit ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onEdit(obra)}
+                  className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary"
+                  aria-label="Editar"
+                >
+                  <Pencil className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Editar datos de obra</TooltipContent>
+            </Tooltip>
+          ) : null}
 
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => onClose(obra)}
-                disabled={isFinalizada}
-                className="size-8 text-foreground-muted hover:bg-error-soft hover:text-error disabled:opacity-30"
-                aria-label="Dar de baja / suspender"
-              >
-                <Trash2 className="size-3.5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              {isFinalizada ? "Obra ya suspendida/finalizada" : "Dar de baja obra"}
-            </TooltipContent>
-          </Tooltip>
+          {onClose ? (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onClose(obra)}
+                  disabled={isFinalizada}
+                  className="size-8 text-foreground-muted hover:bg-error-soft hover:text-error disabled:opacity-30"
+                  aria-label="Dar de baja / suspender"
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isFinalizada ? "Obra ya suspendida/finalizada" : "Dar de baja obra"}
+              </TooltipContent>
+            </Tooltip>
+          ) : null}
         </div>
       </div>
     </div>

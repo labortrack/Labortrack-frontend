@@ -111,7 +111,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/obras",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
                         {suspense(<ObrasPage />)}
                       </RoleRoute>
                     ),
@@ -159,7 +159,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/obras/:id",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
                         {suspense(<ObraDetailPage />)}
                       </RoleRoute>
                     ),
@@ -167,7 +167,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/obras/:obraId/cuadrillas",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
                         {suspense(<CuadrillasPage />)}
                       </RoleRoute>
                     ),

@@ -23,6 +23,7 @@ import { useLogout } from "@/features/auth/hooks/useAuthActions";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import type { RolNombre } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
+import { useObras } from "@/features/obra/hooks/useObras";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import {
@@ -54,6 +55,8 @@ export function AppLayout() {
     `${user.nombre.at(0) ?? ""}${user.apellido.at(0) ?? ""}`.toUpperCase();
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
   const isOperario = user?.rol === "ROLE_OPERARIO";
+  const obrasQuery = useObras(undefined, isOperario);
+  const esCapatazDeAlgunaObra = isOperario && (obrasQuery.data?.length ?? 0) > 0;
   const capacidades = capacidadesQuery.isError
     ? undefined
     : capacidadesQuery.data;
@@ -68,6 +71,9 @@ export function AppLayout() {
         { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList },
         { to: "/mis-epps", label: "Mis EPPs", icon: HardHat },
       ]
+      : []),
+    ...(esCapatazDeAlgunaObra
+      ? [{ to: "/obras", label: "Obras", icon: HardHat }]
       : []),
     ...(canManageUsers
       ? [

@@ -134,22 +134,22 @@ export default function ObraDetailPage() {
                 Gestionar Cuadrillas
               </Button>
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className="w-full sm:w-auto justify-center"
-                  >
-                    <EllipsisVertical className="mr-1.5 size-4" />
-                    Más Acciones
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onSelect={() => setTransicionOpen(true)}>
-                    <ArrowRightLeft className="size-4 text-foreground-muted" />
-                    Cambiar Estado
-                  </DropdownMenuItem>
-                  {esAdmin ? (
+              {esAdmin ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full sm:w-auto justify-center"
+                    >
+                      <EllipsisVertical className="mr-1.5 size-4" />
+                      Más Acciones
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onSelect={() => setTransicionOpen(true)}>
+                      <ArrowRightLeft className="size-4 text-foreground-muted" />
+                      Cambiar Estado
+                    </DropdownMenuItem>
                     <DropdownMenuItem
                       disabled={isFinalizada}
                       onSelect={() => setAsignarCapatazOpen(true)}
@@ -157,21 +157,21 @@ export default function ObraDetailPage() {
                       <HardHat className="size-4 text-foreground-muted" />
                       {obra.capataz ? "Cambiar Capataz" : "Asignar Capataz"}
                     </DropdownMenuItem>
-                  ) : null}
-                  <DropdownMenuItem onSelect={() => setEditOpen(true)}>
-                    <Pencil className="size-4 text-foreground-muted" />
-                    Editar Datos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    disabled={isFinalizada}
-                    onSelect={() => setCloseOpen(true)}
-                    className="text-error data-[highlighted]:text-error"
-                  >
-                    <Trash2 className="size-4" />
-                    Dar de Baja
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                    <DropdownMenuItem onSelect={() => setEditOpen(true)}>
+                      <Pencil className="size-4 text-foreground-muted" />
+                      Editar Datos
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      disabled={isFinalizada}
+                      onSelect={() => setCloseOpen(true)}
+                      className="text-error data-[highlighted]:text-error"
+                    >
+                      <Trash2 className="size-4" />
+                      Dar de Baja
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
             </div>
           }
         />
