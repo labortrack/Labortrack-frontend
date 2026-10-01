@@ -13,6 +13,7 @@ import {
 import { Alert, Button, Spinner } from "@/shared/ui";
 import { FormField, PasswordField } from "@/shared/components";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { PASSWORD_HINT } from "@/shared/lib/validation/passwordSchema";
 
 export default function ResetPasswordPage() {
   const [params] = useSearchParams();
@@ -81,6 +82,7 @@ export default function ResetPasswordPage() {
             id="new-password"
             label="Nueva contraseña"
             error={errors.password?.message}
+            hint={PASSWORD_HINT}
             required
           >
             <PasswordField

@@ -18,6 +18,7 @@ import {
 } from "../hooks/useUsuarios";
 import type { RolNombre, UserResponseDto } from "../types/usuario.types";
 import { FormField, PasswordField } from "@/shared/components";
+import { PASSWORD_HINT } from "@/shared/lib/validation/passwordSchema";
 import {
   Alert,
   Button,
@@ -181,7 +182,7 @@ export function CreateUserDialog({
             id="create-password"
             label="Contraseña inicial"
             error={errors.password?.message}
-            hint="Mínimo 6 caracteres."
+            hint={PASSWORD_HINT}
             required
           >
             <PasswordField

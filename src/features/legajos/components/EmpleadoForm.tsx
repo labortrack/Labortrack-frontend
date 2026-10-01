@@ -51,6 +51,7 @@ import {
   Spinner,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { PASSWORD_HINT } from "@/shared/lib/validation/passwordSchema";
 
 const GRUPO_SANGUINEO_OPTIONS = [
   "A+",
@@ -331,12 +332,12 @@ export function EmpleadoForm({
               id="empleado-password"
               label="Contraseña Inicial"
               error={errors.usuario?.password?.message}
+              hint={PASSWORD_HINT}
               required
             >
               <Input
                 id="empleado-password"
                 type="password"
-                placeholder="Mínimo 6 caracteres"
                 aria-invalid={Boolean(errors.usuario?.password)}
                 {...register("usuario.password")}
               />
