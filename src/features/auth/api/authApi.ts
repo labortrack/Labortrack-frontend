@@ -2,6 +2,7 @@ import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   AuthResponse,
   CurrentUser,
+  ChangePasswordRequest,
   ForgotPasswordRequest,
   GoogleLoginRequest,
   LoginRequest,
@@ -19,4 +20,6 @@ export const authApi = {
     (await httpClient.post<string>("/api/auth/forgot-password", payload)).data,
   resetPassword: async (payload: ResetPasswordRequest) =>
     (await httpClient.post<string>("/api/auth/reset-password", payload)).data,
+  changePassword: async (payload: ChangePasswordRequest) =>
+    (await httpClient.put<string>("/api/auth/change-password", payload)).data,
 };

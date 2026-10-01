@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "@/shared/lib/validation/passwordSchema";
 
 // ─── Schema del objeto anidado: Usuario ──────────────────────────────────────
 
@@ -79,7 +80,7 @@ export const getEmpleadoFormSchema = (isEdit = false) =>
       email: z.email("Ingresá un correo electrónico válido."),
       password: isEdit
         ? z.string().optional()
-        : z.string().min(6, "La contraseña debe tener al menos 6 caracteres."),
+        : passwordSchema,
       rol: isEdit ? rolSchema.optional() : rolSchema,
     }),
   });

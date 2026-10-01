@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { passwordSchema } from "@/shared/lib/validation/passwordSchema";
 
 export const roleSchema = z.enum(["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]);
 
@@ -13,9 +14,7 @@ export const createUserSchema = z.object({
   nombre: z.string().trim().min(1, "Ingresá el nombre."),
   apellido: z.string().trim().min(1, "Ingresá el apellido."),
   email: z.email("Ingresá un correo electrónico válido."),
-  password: z
-    .string()
-    .min(6, "La contraseña debe tener al menos 6 caracteres."),
+  password: passwordSchema,
   rol: roleSchema,
 });
 
