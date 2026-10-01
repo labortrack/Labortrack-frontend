@@ -30,7 +30,9 @@ export function useRagIndexingPolling() {
   const queryClient = useQueryClient();
   const [jobs, setJobs] = useState<PollingJob[]>([]);
   const jobsRef = useRef<PollingJob[]>([]);
-  jobsRef.current = jobs;
+  useEffect(() => {
+    jobsRef.current = jobs;
+  }, [jobs]);
 
   const iniciarPolling = useCallback((doc: DocumentoRespuestaDto) => {
     // Fase A: Toast de Información (Color Azul primario de design.md con spinner animado)
@@ -103,8 +105,9 @@ export function useRagIndexingPolling() {
                 { page: 0, size: 30, sort: "fechaSubida,desc" },
               );
               docActual =
-                listado.content.find((d) => d.idDocumento === job.documentoId) ??
-                null;
+                listado.content.find(
+                  (d) => d.idDocumento === job.documentoId,
+                ) ?? null;
             } catch {
               // Error transitorio de red
             }
