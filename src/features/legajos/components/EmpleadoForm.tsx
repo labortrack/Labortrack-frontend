@@ -24,7 +24,11 @@ import {
   useLegajoDetail,
 } from "../hooks/useLegajos";
 import { GENERO_LABELS } from "../types/legajo.types";
-import type { Genero, EmpleadoUpdateDto } from "../types/legajo.types";
+import type {
+  Genero,
+  EmpleadoDto,
+  EmpleadoUpdateDto,
+} from "../types/legajo.types";
 import { formatCuit } from "@/shared/utils/cuit";
 import {
   PAISES_FRECUENTES,
@@ -49,7 +53,14 @@ import {
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
 const GRUPO_SANGUINEO_OPTIONS = [
-  "A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-",
+  "A+",
+  "A-",
+  "B+",
+  "B-",
+  "AB+",
+  "AB-",
+  "O+",
+  "O-",
 ];
 
 const GENERO_OPTIONS: Array<{ value: Genero; label: string }> = (
@@ -75,9 +86,8 @@ export function EmpleadoForm({
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
 
-  const { data: empleadoData, isLoading: isLoadingEmpleado } = useLegajoDetail(
-    empleadoId,
-  );
+  const { data: empleadoData, isLoading: isLoadingEmpleado } =
+    useLegajoDetail(empleadoId);
 
   const altaMutation = useAltaEmpleado();
   const modificarMutation = useModificarEmpleado();
@@ -203,10 +213,25 @@ export function EmpleadoForm({
         toast.success("Legajo modificado exitosamente.");
         onSuccess?.();
       } else {
+        if (
+          values.idCategoriaUocra === undefined ||
+          values.idZona === undefined
+        ) {
+          setSubmitError("La categoría UOCRA y la zona son obligatorias.");
+          return;
+        }
+
+        const createPayload: EmpleadoDto = {
+          ...values,
+          idCategoriaUocra: values.idCategoriaUocra,
+          idZona: values.idZona,
+        };
+
         await altaMutation.mutateAsync({
-          datos: values as any,
+          datos: createPayload,
           foto: fotoFile ?? undefined,
         });
+
         toast.success("Legajo dado de alta exitosamente.");
         reset();
         handleRemoveFoto();
@@ -332,7 +357,9 @@ export function EmpleadoForm({
                   <Select
                     value={field.value ?? ""}
                     onValueChange={(val) =>
-                      field.onChange(val as (typeof ROL_OPTIONS)[number]["value"])
+                      field.onChange(
+                        val as (typeof ROL_OPTIONS)[number]["value"],
+                      )
                     }
                   >
                     <SelectTrigger id="empleado-rol">
@@ -377,7 +404,8 @@ export function EmpleadoForm({
           </div>
           <div className="space-y-1">
             <label className="text-sm font-medium text-foreground block">
-              Foto de Perfil {isEdit ? "(Opcional para actualizar)" : "(Opcional)"}
+              Foto de Perfil{" "}
+              {isEdit ? "(Opcional para actualizar)" : "(Opcional)"}
             </label>
             <p className="text-xs text-foreground-muted">
               JPG o PNG. Se subirá automáticamente a MinIO.
