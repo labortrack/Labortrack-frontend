@@ -202,7 +202,7 @@ export function CuadrillaWorkspace({
                 <div
                   key={id}
                   className={cn(
-                    "min-w-0 shrink-0 overflow-hidden transition-[width] duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+                    "min-w-0 shrink-0 overflow-hidden transition-[width] duration-700 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
                     index > 0 && "border-l border-border",
                   )}
                   style={{
