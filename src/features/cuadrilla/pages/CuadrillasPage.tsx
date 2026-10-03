@@ -268,7 +268,7 @@ export default function CuadrillasPage() {
       {selectedCuadrilla && (
         <div className="pt-2">
           <CuadrillaWorkspace
-            key={`${selectedCuadrilla.id}-${initialSection}`}
+            key={selectedCuadrilla.id}
             cuadrilla={selectedCuadrilla}
             operarios={operarios}
             isLoadingOperarios={operariosQuery.isPending}
