@@ -159,10 +159,6 @@ export function CuadrillaWorkspace({
     );
   }
 
-  const desktopColumns = sections
-    .map(({ id }) => (id === active ? "minmax(0, 1fr)" : "3.5rem"))
-    .join(" ");
-
   return (
     <section aria-label={`Espacio de trabajo de ${cuadrilla.nombre}`}>
       <Card className="min-w-0 overflow-hidden border-border shadow-sm">
@@ -195,8 +191,7 @@ export function CuadrillaWorkspace({
           <div className="p-4 lg:hidden">{renderActiveHeader(true)}</div>
 
           <div
-            className="hidden min-h-[92px] w-full transition-[grid-template-columns] duration-500 ease-in-out lg:grid"
-            style={{ gridTemplateColumns: desktopColumns }}
+            className="hidden min-h-[92px] w-full overflow-hidden lg:flex"
             role="group"
             aria-label="Secciones de la cuadrilla"
           >
@@ -206,7 +201,13 @@ export function CuadrillaWorkspace({
               return (
                 <div
                   key={id}
-                  className={cn("min-w-0 overflow-hidden", index > 0 && "border-l border-border")}
+                  className={cn(
+                    "min-w-0 shrink-0 overflow-hidden transition-[width] duration-500 [transition-timing-function:cubic-bezier(0.22,1,0.36,1)]",
+                    index > 0 && "border-l border-border",
+                  )}
+                  style={{
+                    width: isActive ? "calc(100% - 7rem)" : "3.5rem",
+                  }}
                 >
                   {isActive ? (
                     <div
