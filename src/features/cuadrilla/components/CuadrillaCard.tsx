@@ -179,11 +179,11 @@ export function CuadrillaCard({
             {isSelected ? (
               <>
                 <CheckCircle2 className="size-3.5 text-primary-foreground" />
-                <span>Nómina Activa</span>
+                <span>Ver Cuadrilla</span>
               </>
             ) : (
               <>
-                <span>Ver Nómina</span>
+                <span>Ver Cuadrilla</span>
                 <ChevronRight className="size-3.5" />
               </>
             )}

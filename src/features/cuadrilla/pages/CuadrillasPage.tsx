@@ -252,7 +252,12 @@ export default function CuadrillasPage() {
                 isSelected={selectedCuadrilla?.id === c.id}
                 onSelect={(cuad) => {
                   setSelectedCuadrillaId(cuad.id);
-                  setSearchParams({ cuadrilla: String(cuad.id), seccion: "nomina" });
+                  setSearchParams((current) => {
+                    const next = new URLSearchParams(current);
+                    next.set("cuadrilla", String(cuad.id));
+                    if (!next.has("seccion")) next.set("seccion", "nomina");
+                    return next;
+                  });
                 }}
                 onEdit={(cuad) => setEditCuadrilla(cuad)}
                 onAsignarLider={(cuad) => setLiderCuadrilla(cuad)}
