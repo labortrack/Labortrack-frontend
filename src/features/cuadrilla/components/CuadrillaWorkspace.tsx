@@ -21,6 +21,7 @@ interface Props {
   onAsignarOperario: () => void;
   onDesvincularOperario: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
   readOnly?: boolean;
+  section?: CuadrillaWorkspaceSection;
   initialSection?: CuadrillaWorkspaceSection;
   onSectionChange?: (section: CuadrillaWorkspaceSection) => void;
   canViewPlans?: boolean;
@@ -45,19 +46,24 @@ export function CuadrillaWorkspace({
   onAsignarOperario,
   onDesvincularOperario,
   readOnly = false,
+  section,
   initialSection = "nomina",
   onSectionChange,
   canViewPlans = true,
 }: Props) {
-  const [active, setActive] = useState<CuadrillaWorkspaceSection>(
+  const [internalActive, setInternalActive] = useState<CuadrillaWorkspaceSection>(
     initialSection === "planes" && !canViewPlans ? "nomina" : initialSection,
   );
+  const active =
+    section === "planes" && !canViewPlans
+      ? "nomina"
+      : section ?? internalActive;
   const [nominaSearchTerm, setNominaSearchTerm] = useState("");
 
-  const selectSection = (section: CuadrillaWorkspaceSection) => {
-    if (section === "planes" && !canViewPlans) return;
-    setActive(section);
-    onSectionChange?.(section);
+  const selectSection = (nextSection: CuadrillaWorkspaceSection) => {
+    if (nextSection === "planes" && !canViewPlans) return;
+    setInternalActive(nextSection);
+    onSectionChange?.(nextSection);
   };
 
   const isSuspended = cuadrilla.estadoActual === "SUSPENDIDA";
