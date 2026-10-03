@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { Plus, HardHat } from "lucide-react";
 import {
   BackLink,
@@ -16,7 +16,11 @@ import {
 } from "../hooks/useCuadrillas";
 import { CuadrillaMetrics } from "../components/CuadrillaMetrics";
 import { CuadrillaCard } from "../components/CuadrillaCard";
-import { CuadrillaNominaTable } from "../components/CuadrillaNominaTable";
+import {
+  CuadrillaWorkspace,
+  type CuadrillaWorkspaceSection,
+} from "../components/CuadrillaWorkspace";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { CreateCuadrillaDialog } from "../components/dialogs/CreateCuadrillaDialog";
 import { EditCuadrillaDialog } from "../components/dialogs/EditCuadrillaDialog";
 import { BajaCuadrillaDialog } from "../components/dialogs/BajaCuadrillaDialog";
@@ -32,18 +36,29 @@ import type {
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
   const obraId = Number(paramObraId);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const user = useSessionStore((state) => state.user)!;
 
   // Queries
   const obraQuery = useObra(obraId);
   const cuadrillasQuery = useCuadrillasPorObra(obraId);
 
   const obra = obraQuery.data;
-  const cuadrillas = cuadrillasQuery.data?.content ?? [];
+  const cuadrillas = useMemo(
+    () => cuadrillasQuery.data?.content ?? [],
+    [cuadrillasQuery.data],
+  );
 
   // Selected Cuadrilla for viewing active workers
+  const selectedParam = Number(searchParams.get("cuadrilla"));
   const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(
-    null
+    Number.isFinite(selectedParam) && selectedParam > 0 ? selectedParam : null,
   );
+  const sectionParam = searchParams.get("seccion");
+  const initialSection: CuadrillaWorkspaceSection =
+    sectionParam === "planes" || sectionParam === "jornadas"
+      ? sectionParam
+      : "nomina";
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -235,7 +250,10 @@ export default function CuadrillasPage() {
                 key={c.id}
                 cuadrilla={c}
                 isSelected={selectedCuadrilla?.id === c.id}
-                onSelect={(cuad) => setSelectedCuadrillaId(cuad.id)}
+                onSelect={(cuad) => {
+                  setSelectedCuadrillaId(cuad.id);
+                  setSearchParams({ cuadrilla: String(cuad.id), seccion: "nomina" });
+                }}
                 onEdit={(cuad) => setEditCuadrilla(cuad)}
                 onAsignarLider={(cuad) => setLiderCuadrilla(cuad)}
                 onBaja={(cuad) => setBajaCuadrilla(cuad)}
@@ -249,14 +267,23 @@ export default function CuadrillasPage() {
       {/* ── Nómina Section for Selected Cuadrilla ──────────────── */}
       {selectedCuadrilla && (
         <div className="pt-2">
-          <CuadrillaNominaTable
+          <CuadrillaWorkspace
+            key={`${selectedCuadrilla.id}-${initialSection}`}
             cuadrilla={selectedCuadrilla}
             operarios={operarios}
-            isLoading={operariosQuery.isPending}
-            isError={operariosQuery.isError}
-            onRetry={() => void operariosQuery.refetch()}
+            isLoadingOperarios={operariosQuery.isPending}
+            isErrorOperarios={operariosQuery.isError}
+            onRetryOperarios={() => void operariosQuery.refetch()}
             onAsignarOperario={() => setAsignarOperarioOpen(true)}
             onDesvincularOperario={(op) => setDesvincularOperario(op)}
+            initialSection={initialSection}
+            canViewPlans={user.rol !== "ROLE_ADMIN"}
+            onSectionChange={(section) =>
+              setSearchParams({
+                cuadrilla: String(selectedCuadrilla.id),
+                seccion: section,
+              })
+            }
           />
         </div>
       )}

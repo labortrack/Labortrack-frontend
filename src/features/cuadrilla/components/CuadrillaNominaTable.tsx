@@ -37,6 +37,7 @@ interface CuadrillaNominaTableProps {
   onRetry: () => void;
   onAsignarOperario: () => void;
   onDesvincularOperario: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
+  readOnly?: boolean;
 }
 
 export function CuadrillaNominaTable({
@@ -47,6 +48,7 @@ export function CuadrillaNominaTable({
   onRetry,
   onAsignarOperario,
   onDesvincularOperario,
+  readOnly = false,
 }: CuadrillaNominaTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -95,15 +97,17 @@ export function CuadrillaNominaTable({
               />
             </div>
 
-            <Button
-              type="button"
-              onClick={onAsignarOperario}
-              disabled={isSuspended || isFinalizada}
-              className="gap-1.5 h-9 shrink-0 text-xs font-semibold"
-            >
-              <Plus className="size-4" />
-              <span>Incorporar Operario</span>
-            </Button>
+            {!readOnly ? (
+              <Button
+                type="button"
+                onClick={onAsignarOperario}
+                disabled={isSuspended || isFinalizada}
+                className="gap-1.5 h-9 shrink-0 text-xs font-semibold"
+              >
+                <Plus className="size-4" />
+                <span>Incorporar Operario</span>
+              </Button>
+            ) : null}
           </div>
         </div>
       </CardHeader>
@@ -137,7 +141,7 @@ export function CuadrillaNominaTable({
                   : "Incorpora trabajadores para conformar el equipo de trabajo de esta cuadrilla."}
               </p>
             </div>
-            {!searchTerm && !isSuspended && !isFinalizada && (
+            {!readOnly && !searchTerm && !isSuspended && !isFinalizada && (
               <Button
                 type="button"
                 variant="outline"
@@ -164,9 +168,11 @@ export function CuadrillaNominaTable({
                   <TableHead className="w-[25%] text-xs font-semibold uppercase tracking-wider">
                     Vigencia de Asignación
                   </TableHead>
-                  <TableHead className="w-[15%] text-right text-xs font-semibold uppercase tracking-wider">
-                    Acciones
-                  </TableHead>
+                  {!readOnly ? (
+                    <TableHead className="w-[15%] text-right text-xs font-semibold uppercase tracking-wider">
+                      Acciones
+                    </TableHead>
+                  ) : null}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -218,19 +224,21 @@ export function CuadrillaNominaTable({
                     </TableCell>
 
                     {/* Acciones */}
-                    <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="size-8 p-0 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-                        title="Desvincular de la cuadrilla"
-                        onClick={() => onDesvincularOperario(op)}
-                        disabled={isSuspended || isFinalizada}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </TableCell>
+                    {!readOnly ? (
+                      <TableCell className="text-right">
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="size-8 p-0 text-error hover:bg-error-soft hover:text-error-strong"
+                          title="Desvincular de la cuadrilla"
+                          onClick={() => onDesvincularOperario(op)}
+                          disabled={isSuspended || isFinalizada}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </TableCell>
+                    ) : null}
                   </TableRow>
                 ))}
               </TableBody>
