@@ -12,6 +12,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -171,7 +172,17 @@ export function PlanesTrabajoPanel({
   );
 
   const panelContent = (
-    <CardContent className="p-0">
+    <CardContent className="p-0" aria-busy={query.isFetching}>
+      {query.isFetching && !query.isPending ? (
+        <div
+          className="flex items-center gap-2 border-b border-border bg-muted px-5 py-2.5 text-xs text-foreground-muted"
+          role="status"
+          aria-live="polite"
+        >
+          <Spinner className="size-4" label="Actualizando planes de trabajo" />
+          Actualizando resultados…
+        </div>
+      ) : null}
       {query.isPending ? (
         <LoadingState label="Cargando planes de trabajo..." />
       ) : query.isError ? (
@@ -229,11 +240,14 @@ export function PlanesTrabajoPanel({
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() =>
-                          navigate(`/cuadrillas/${cuadrillaId}/planes-trabajo/${plan.id}`, {
-                            state: { from: `${location.pathname}${location.search}` },
-                          })
-                        }
+                        onClick={() => {
+                          const from = `${location.pathname}${location.search}`;
+                          const detailParams = new URLSearchParams({ volver: from });
+                          navigate(
+                            `/cuadrillas/${cuadrillaId}/planes-trabajo/${plan.id}?${detailParams.toString()}`,
+                            { state: { from } },
+                          );
+                        }}
                       >
                         <ListChecks className="size-4" />
                         Ver plan

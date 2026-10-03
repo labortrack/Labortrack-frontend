@@ -11,6 +11,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -94,8 +95,18 @@ export default function PlanTrabajoDetailPage() {
   const query = usePlanTrabajoDetalle(cuadrillaId, planId, filtros);
   const plan = query.data;
   const hasFilters = Boolean(fechaDesde || fechaHasta) || tipo !== ALL || estado !== ALL;
-  const backTo =
-    (location.state as { from?: string } | null)?.from ?? "/dashboard";
+  const stateBackTo = (location.state as { from?: string } | null)?.from;
+  const urlBackTo = searchParams.get("volver");
+  const isSafeBackTarget = (value: string | null | undefined) =>
+    Boolean(
+      value &&
+        (value.startsWith("/obras/") || value.startsWith("/mi-cuadrilla")),
+    );
+  const backTo = isSafeBackTarget(stateBackTo)
+    ? stateBackTo!
+    : isSafeBackTarget(urlBackTo)
+      ? urlBackTo!
+      : "/dashboard";
 
   const clearFilters = () => {
     setSearchParams((current) => {
@@ -183,7 +194,7 @@ export default function PlanTrabajoDetailPage() {
         </div>
       </Card>
 
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden" aria-busy={query.isFetching}>
         <div className="border-b border-border bg-muted/20 p-4 sm:p-6">
           <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
             <div className="flex items-center gap-3">
@@ -214,6 +225,17 @@ export default function PlanTrabajoDetailPage() {
             </div>
           </div>
         </div>
+
+        {query.isFetching && !query.isPending ? (
+          <div
+            className="flex items-center gap-2 border-b border-border bg-muted px-5 py-2.5 text-xs text-foreground-muted"
+            role="status"
+            aria-live="polite"
+          >
+            <Spinner className="size-4" label="Actualizando jornadas" />
+            Actualizando resultados…
+          </div>
+        ) : null}
 
         {plan.jornadas.content.length === 0 ? (
           <EmptyState
