@@ -8,10 +8,11 @@ export const dashboardKeys = {
     [...dashboardKeys.all, "tendencia-asistencia", { fechaDesde, fechaHasta }] as const,
 };
 
-export function useDashboardResumen() {
+export function useDashboardResumen(enabled = true) {
   return useQuery({
     queryKey: dashboardKeys.resumen(),
     queryFn: () => dashboardApi.getResumen(),
+    enabled,
   });
 }
 

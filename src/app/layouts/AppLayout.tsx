@@ -17,6 +17,7 @@ import {
   User,
   UserCheck,
   UserCog,
+  UsersRound,
   X,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
@@ -27,6 +28,7 @@ import type { RolNombre } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
 import { useObras } from "@/features/obra/hooks/useObras";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
+import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import {
   Avatar,
@@ -59,7 +61,12 @@ export function AppLayout() {
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
   const isOperario = user?.rol === "ROLE_OPERARIO";
   const obrasQuery = useObras(undefined, isOperario);
+  const dashboardQuery = useDashboardResumen(isOperario);
   const esCapatazDeAlgunaObra = isOperario && (obrasQuery.data?.length ?? 0) > 0;
+  const esLiderDeCuadrilla =
+    isOperario &&
+    dashboardQuery.data?.tipoAlcance === "CUADRILLA" &&
+    (dashboardQuery.data.cuadrilla?.misCuadrillas.length ?? 0) > 0;
   const capacidades = capacidadesQuery.isError
     ? undefined
     : capacidadesQuery.data;
@@ -77,6 +84,9 @@ export function AppLayout() {
       : []),
     ...(esCapatazDeAlgunaObra
       ? [{ to: "/obras", label: "Obras", icon: HardHat }]
+      : []),
+    ...(esLiderDeCuadrilla
+      ? [{ to: "/mi-cuadrilla", label: "Mi cuadrilla", icon: UsersRound }]
       : []),
     ...(canManageUsers
       ? [
