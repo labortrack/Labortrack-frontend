@@ -47,12 +47,17 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaMenuItem,
+} from "@/features/auditoria";
 
 export default function ObraDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const esAdmin = useSessionStore((state) => state.user?.rol === "ROLE_ADMIN");
   const obraId = Number(id);
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   // Modals state
   const [editOpen, setEditOpen] = useState(false);
@@ -169,6 +174,10 @@ export default function ObraDetailPage() {
                       <Trash2 className="size-4" />
                       Dar de Baja
                     </DropdownMenuItem>
+                    <HistorialAuditoriaMenuItem
+                      onAbrir={() => abrirHistorial("obra", obra.id, obra.nombreObra)}
+                      conSeparador={true}
+                    />
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : null}
@@ -437,6 +446,8 @@ export default function ObraDetailPage() {
         open={asignarCapatazOpen}
         onOpenChange={setAsignarCapatazOpen}
       />
+
+      {renderDialog()}
     </div>
   );
 }

@@ -19,6 +19,10 @@ import {
   PageHeader,
 } from "@/shared/components";
 import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaButton,
+} from "@/features/auditoria";
+import {
   Alert,
   Button,
   Card,
@@ -45,6 +49,7 @@ function toFormValues(empresa: Empresa): ModificarEmpresaForm {
 }
 
 export default function MiEmpresaPage() {
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
   const empresaQuery = useEmpresa();
   const mutation = useModificarEmpresa();
   const empresa = empresaQuery.data;
@@ -151,6 +156,17 @@ export default function MiEmpresaPage() {
       <PageHeader
         title="Mi Empresa"
         description="Consultá y editá los datos institucionales de la empresa."
+        actions={
+          <HistorialAuditoriaButton
+            onAbrir={() =>
+              abrirHistorial(
+                "empresa",
+                empresa.id,
+                empresa.nombreEmpresa || empresa.razonSocial,
+              )
+            }
+          />
+        }
       />
 
       <form onSubmit={onSubmit} noValidate>
@@ -348,6 +364,8 @@ export default function MiEmpresaPage() {
           </CardContent>
         </Card>
       </form>
+
+      {renderDialog()}
     </div>
   );
 }

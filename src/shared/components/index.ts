@@ -7,3 +7,5 @@ export * from "./PageHeader";
 export * from "./Pagination";
 export * from "./PasswordField";
 export * from "./SearchInput";
+export { HistorialAuditoria } from "@/features/auditoria";
+export type { HistorialAuditoriaProps } from "@/features/auditoria";

@@ -1,10 +1,22 @@
-import { ArrowRightLeft, HardHat, MapPin, Pencil, Trash2 } from "lucide-react";
+import { ArrowRightLeft, EllipsisVertical, HardHat, MapPin, Pencil, Trash2 } from "lucide-react";
 import { EstadoBadge } from "../estado/components/EstadoBadge";
 import { getEstadoStyle } from "../estado/utils/estadoStyles";
 import type { ObraResponseDto } from "../types/obra.types";
 import { CapatazAvatar } from "./CapatazAvatar";
-import { Button, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
+import {
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaMenuItem,
+} from "@/features/auditoria";
 
 interface ObraCardProps {
   obra: ObraResponseDto;
@@ -23,6 +35,8 @@ export function ObraCard({
   onDetalle,
   onAsignarCapataz,
 }: ObraCardProps) {
+  const { esAdmin, abrirHistorial, renderDialog } =
+    useHistorialAuditoriaDialog();
   const isFinalizada =
     obra.estadoActual.toUpperCase() === "SUSPENDIDA" ||
     obra.estadoActual.toUpperCase() === "FINALIZADA" ||
@@ -40,11 +54,11 @@ export function ObraCard({
       onKeyDown={
         onDetalle
           ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                handleDetalle();
-              }
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              handleDetalle();
             }
+          }
           : undefined
       }
       className={cn(
@@ -200,8 +214,33 @@ export function ObraCard({
               </TooltipContent>
             </Tooltip>
           ) : null}
+
+          {esAdmin && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-8 text-foreground-muted hover:bg-muted"
+                  aria-label="Más opciones"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <EllipsisVertical className="size-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <HistorialAuditoriaMenuItem
+                  onAbrir={() => abrirHistorial("obra", obra.id, obra.nombreObra)}
+                  conSeparador={false}
+                />
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
+
+      {renderDialog()}
     </div>
   );
 }

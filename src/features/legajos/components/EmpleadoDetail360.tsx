@@ -28,7 +28,19 @@ import { EmpleadoCategoriaTimeline } from "./EmpleadoCategoriaTimeline";
 import { AvatarMinio } from "./AvatarMinio";
 import { useActualizarFotoPerfil } from "../hooks/useLegajos";
 import { useHistorialCategoria } from "../hooks/useEmpleadoCategoria";
-import { Badge, Button, Spinner } from "@/shared/ui";
+import {
+  Badge,
+  Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+  Spinner,
+} from "@/shared/ui";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaMenuItem,
+} from "@/features/auditoria";
+import { EllipsisVertical } from "lucide-react";
 
 interface EmpleadoDetail360Props {
   legajo: EmpleadoResponseDto;
@@ -41,6 +53,8 @@ export function EmpleadoDetail360({
   historialEstados,
   onEdit,
 }: EmpleadoDetail360Props) {
+  const { esAdmin, abrirHistorial, renderDialog } =
+    useHistorialAuditoriaDialog();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const actualizarFotoMutation = useActualizarFotoPerfil();
   const historialCategoriaQuery = useHistorialCategoria(legajo.id);
@@ -97,6 +111,33 @@ export function EmpleadoDetail360({
           className="hidden"
           onChange={handleFotoChange}
         />
+
+        {esAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-9 text-foreground-muted hover:text-foreground"
+                aria-label="Más acciones"
+              >
+                <EllipsisVertical className="size-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <HistorialAuditoriaMenuItem
+                onAbrir={() =>
+                  abrirHistorial(
+                    "empleado",
+                    legajo.id,
+                    `${legajo.apellido}, ${legajo.nombre}`,
+                  )
+                }
+                conSeparador={false}
+              />
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Header Profile Card */}
@@ -330,6 +371,8 @@ export function EmpleadoDetail360({
       <EmpleadoCategoriaTimeline
         historialCategoria={historialCategoriaQuery.data ?? []}
       />
+
+      {renderDialog()}
     </div>
   );
 }
