@@ -1,6 +1,13 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useParams, useSearchParams } from "react-router-dom";
-import { CalendarDays, Clock3, FilterX, HardHat } from "lucide-react";
+import {
+  CalendarDays,
+  Clock3,
+  FilterX,
+  HardHat,
+  Pencil,
+  Plus,
+} from "lucide-react";
 import {
   Badge,
   Button,
@@ -42,6 +49,8 @@ import {
   tipoJornadaLabels,
 } from "../utils/planTrabajoFormatters";
 import { PlanTrabajoStatusBadge } from "../components/PlanTrabajoStatusBadge";
+import { PlanTrabajoFormDialog } from "../components/PlanTrabajoFormDialog";
+import { CrearJornadaExtraordinariaDialog } from "../components/CrearJornadaExtraordinariaDialog";
 
 const ALL = "TODOS";
 const tiposJornada = Object.keys(tipoJornadaLabels) as TipoJornada[];
@@ -62,6 +71,8 @@ function JornadaStatusBadge({ estado }: { estado: EstadoJornadaTrabajo }) {
 }
 
 export default function PlanTrabajoDetailPage() {
+  const [editOpen, setEditOpen] = useState(false);
+  const [extraordinaryOpen, setExtraordinaryOpen] = useState(false);
   const { cuadrillaId: rawCuadrillaId, planId: rawPlanId } = useParams();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -167,10 +178,32 @@ export default function PlanTrabajoDetailPage() {
           title={`Plan de trabajo #${plan.id}`}
           description={`${plan.cuadrillaNombre} • ${plan.obraNombre}`}
           actions={
-            <PlanTrabajoStatusBadge
-              estado={plan.estadoCalculado}
-              cancelado={plan.cancelado}
-            />
+            <div className="flex flex-wrap items-center justify-end gap-2">
+              {plan.accionesDisponibles.includes(
+                "CREAR_JORNADA_EXTRAORDINARIA",
+              ) ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setExtraordinaryOpen(true)}
+                >
+                  <Plus className="size-4" />
+                  Crear jornada extraordinaria
+                </Button>
+              ) : null}
+              {plan.accionesDisponibles.includes(
+                "MODIFICAR_PLAN_TRABAJO",
+              ) ? (
+                <Button type="button" onClick={() => setEditOpen(true)}>
+                  <Pencil className="size-4" />
+                  Modificar plan de trabajo
+                </Button>
+              ) : null}
+              <PlanTrabajoStatusBadge
+                estado={plan.estadoCalculado}
+                cancelado={plan.cancelado}
+              />
+            </div>
           }
         />
       </div>
@@ -274,6 +307,23 @@ export default function PlanTrabajoDetailPage() {
           </>
         )}
       </Card>
+
+      {editOpen ? (
+        <PlanTrabajoFormDialog
+          mode="edit"
+          cuadrillaId={plan.cuadrillaId}
+          cuadrillaNombre={plan.cuadrillaNombre}
+          obraNombre={plan.obraNombre}
+          plan={plan}
+          onClose={() => setEditOpen(false)}
+        />
+      ) : null}
+      {extraordinaryOpen ? (
+        <CrearJornadaExtraordinariaDialog
+          plan={plan}
+          onClose={() => setExtraordinaryOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

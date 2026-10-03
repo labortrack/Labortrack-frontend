@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import { CalendarDays, Clock3, FilterX, ListChecks } from "lucide-react";
+import { CalendarDays, Clock3, FilterX, ListChecks, Plus } from "lucide-react";
 import {
   Button,
   Card,
@@ -34,6 +34,7 @@ import {
   formatTime,
 } from "../utils/planTrabajoFormatters";
 import { PlanTrabajoStatusBadge } from "./PlanTrabajoStatusBadge";
+import { PlanTrabajoFormDialog } from "./PlanTrabajoFormDialog";
 
 const ALL = "TODOS";
 const estadosPlan: EstadoCalculadoPlanTrabajo[] = [
@@ -51,6 +52,7 @@ export function PlanesTrabajoPanel({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
+  const [createOpen, setCreateOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const estadoParam = searchParams.get("planEstado");
   const estado = estadosPlan.includes(
@@ -80,6 +82,9 @@ export function PlanesTrabajoPanel({
   const response = query.data;
   const planes = response?.planes.content ?? [];
   const hasFilters = estado !== ALL || Boolean(fechaDesde || fechaHasta);
+  const canCreate = response?.accionesDisponibles.includes(
+    "CREAR_PLAN_TRABAJO",
+  );
 
   const clearFilters = () => {
     setSearchParams((current) => {
@@ -170,6 +175,17 @@ export function PlanesTrabajoPanel({
       </Button>
     </div>
   );
+
+  const createAction = canCreate ? (
+    <Button
+      type="button"
+      onClick={() => setCreateOpen(true)}
+      className="shrink-0"
+    >
+      <Plus className="size-4" />
+      Crear plan de trabajo
+    </Button>
+  ) : null;
 
   const panelContent = (
     <CardContent className="p-0" aria-busy={query.isFetching}>
@@ -277,9 +293,21 @@ export function PlanesTrabajoPanel({
     return (
       <>
         <div className="border-b border-border bg-subtle p-4 sm:px-6">
-          {filters}
+          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+            {filters}
+            {createAction}
+          </div>
         </div>
         {panelContent}
+        {createOpen && response ? (
+          <PlanTrabajoFormDialog
+            mode="create"
+            cuadrillaId={response.cuadrillaId}
+            cuadrillaNombre={response.cuadrillaNombre}
+            obraNombre={response.obraNombre}
+            onClose={() => setCreateOpen(false)}
+          />
+        ) : null}
       </>
     );
   }
@@ -302,10 +330,22 @@ export function PlanesTrabajoPanel({
             </div>
           </div>
 
-          {filters}
+          <div className="flex flex-col gap-3 xl:items-end">
+            {createAction}
+            {filters}
+          </div>
         </div>
       </CardHeader>
       {panelContent}
+      {createOpen && response ? (
+        <PlanTrabajoFormDialog
+          mode="create"
+          cuadrillaId={response.cuadrillaId}
+          cuadrillaNombre={response.cuadrillaNombre}
+          obraNombre={response.obraNombre}
+          onClose={() => setCreateOpen(false)}
+        />
+      ) : null}
     </Card>
   );
 }

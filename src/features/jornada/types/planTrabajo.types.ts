@@ -1,4 +1,5 @@
 import type { SpringPage } from "@/shared/types/pagination.types";
+import type { EstadoCuadrilla } from "@/features/cuadrilla/types/cuadrilla.types";
 
 export type DiaSemana =
   | "LUNES"
@@ -71,6 +72,11 @@ export interface JornadaPlanTrabajoResponseDto {
   extraordinaria: boolean;
 }
 
+export type JornadaTrabajoProgramadaResponseDto = Omit<
+  JornadaPlanTrabajoResponseDto,
+  "extraordinaria"
+>;
+
 export interface PlanTrabajoDetalleResponseDto {
   id: number;
   cuadrillaId: number;
@@ -104,4 +110,73 @@ export interface JornadaPlanFiltros {
   estado?: EstadoJornadaTrabajo;
   page?: number;
   size?: number;
+}
+
+export interface GuardarPlanTrabajoRequestDto {
+  fechaVigenciaDesde: string;
+  fechaVigenciaHasta: string;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+  dias: DiaSemana[];
+}
+
+export type CrearPlanTrabajoRequestDto = GuardarPlanTrabajoRequestDto;
+export type ModificarPlanTrabajoRequestDto = GuardarPlanTrabajoRequestDto;
+
+export interface PlanTrabajoCuadrillaResponseDto {
+  id: number;
+  cuadrillaId: number;
+  cuadrillaNombre: string;
+  obraId: number;
+  obraNombre: string;
+  fechaVigenciaDesde: string;
+  fechaVigenciaHasta: string;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+  dias: DiaSemana[];
+  estadoCuadrilla: EstadoCuadrilla;
+  cantidadJornadas: number;
+  jornadas: JornadaTrabajoProgramadaResponseDto[];
+}
+
+export interface ModificarPlanTrabajoResponseDto {
+  id: number;
+  cuadrillaId: number;
+  cuadrillaNombre: string;
+  obraId: number;
+  obraNombre: string;
+  fechaVigenciaDesde: string;
+  fechaVigenciaHasta: string;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+  dias: DiaSemana[];
+  estado: EstadoCalculadoPlanTrabajo;
+  jornadasActualizadas: number;
+  jornadasCreadas: number;
+  jornadasAnuladas: number;
+  mensaje: string;
+}
+
+export interface CrearJornadaExtraordinariaRequestDto {
+  fecha: string;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+}
+
+export interface CrearJornadaExtraordinariaResponseDto {
+  id: number;
+  planTrabajoId: number;
+  cuadrillaId: number;
+  cuadrillaNombre: string;
+  obraId: number;
+  obraNombre: string;
+  fecha: string;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+  tipo: TipoJornada;
+  decisionDiaNoLaborable: DecisionDiaNoLaborable;
+  estado: EstadoJornadaTrabajo;
+  extraordinaria: boolean;
+  asistenciasGeneradas: number;
+  mensaje: string;
 }
