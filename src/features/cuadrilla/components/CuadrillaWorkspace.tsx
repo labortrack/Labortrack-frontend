@@ -1,4 +1,5 @@
 import { useState, type ComponentType } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CalendarClock, CalendarDays, Plus, Users } from "lucide-react";
 import { Button, Card } from "@/shared/ui";
 import { EmptyState, SearchInput } from "@/shared/components";
@@ -51,6 +52,7 @@ export function CuadrillaWorkspace({
   onSectionChange,
   canViewPlans = true,
 }: Props) {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [internalActive, setInternalActive] = useState<CuadrillaWorkspaceSection>(
     initialSection === "planes" && !canViewPlans ? "nomina" : initialSection,
   );
@@ -58,7 +60,19 @@ export function CuadrillaWorkspace({
     section === "planes" && !canViewPlans
       ? "nomina"
       : section ?? internalActive;
-  const [nominaSearchTerm, setNominaSearchTerm] = useState("");
+  const nominaSearchTerm = searchParams.get("nominaBuscar") ?? "";
+
+  const setNominaSearchTerm = (value: string) => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value) next.set("nominaBuscar", value);
+        else next.delete("nominaBuscar");
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   const selectSection = (nextSection: CuadrillaWorkspaceSection) => {
     if (nextSection === "planes" && !canViewPlans) return;

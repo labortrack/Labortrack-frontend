@@ -29,6 +29,7 @@ import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsisten
 import { useObras } from "@/features/obra/hooks/useObras";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
 import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
+import { useMiCuadrillaNavegacionStore } from "@/features/cuadrilla/store/miCuadrillaNavegacionStore";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import {
   Avatar,
@@ -50,6 +51,9 @@ export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
+  const miCuadrillaSearch = useMiCuadrillaNavegacionStore(
+    (state) => state.busquedaPorUsuario[String(user.idUsuario)] ?? "",
+  );
   const capacidadesQuery = useCapacidadesAsistencia();
   const empresaQuery = useEmpresa();
   const empresa = empresaQuery.data;
@@ -86,7 +90,12 @@ export function AppLayout() {
       ? [{ to: "/obras", label: "Obras", icon: HardHat }]
       : []),
     ...(esLiderDeCuadrilla
-      ? [{ to: "/mi-cuadrilla", label: "Mi cuadrilla", icon: UsersRound }]
+      ? [{
+        to: `/mi-cuadrilla${miCuadrillaSearch ? `?${miCuadrillaSearch}` : ""}`,
+        activePath: "/mi-cuadrilla",
+        label: "Mi cuadrilla",
+        icon: UsersRound,
+      }]
       : []),
     ...(canManageUsers
       ? [
@@ -155,17 +164,17 @@ export function AppLayout() {
         className="flex-1 space-y-1 overflow-y-auto p-3"
         aria-label="Navegación principal"
       >
-        {navItems.map(({ to, label, icon: Icon }) => {
+        {navItems.map(({ to, activePath = to, label, icon: Icon }) => {
           const isCurrentActive =
-            location.pathname === to ||
-            location.pathname.startsWith(`${to}/`) ||
-            (to === "/obras" &&
+            location.pathname === activePath ||
+            location.pathname.startsWith(`${activePath}/`) ||
+            (activePath === "/obras" &&
               (location.pathname.startsWith("/obras") ||
                 location.pathname.startsWith("/configuracion-obras"))) ||
-            (to === "/higiene-seguridad" &&
+            (activePath === "/higiene-seguridad" &&
               (location.pathname.startsWith("/higiene-seguridad") ||
                 location.pathname.startsWith("/epp"))) ||
-            (to === "/legajos" &&
+            (activePath === "/legajos" &&
               location.pathname.startsWith("/estructura-laboral"));
 
           return (
