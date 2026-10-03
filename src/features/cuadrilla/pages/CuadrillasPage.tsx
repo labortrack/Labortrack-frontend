@@ -281,6 +281,7 @@ export default function CuadrillasPage() {
             onRetryOperarios={() => void operariosQuery.refetch()}
             onAsignarOperario={() => setAsignarOperarioOpen(true)}
             onDesvincularOperario={(op) => setDesvincularOperario(op)}
+            section={initialSection}
             initialSection={initialSection}
             canViewPlans={user.rol !== "ROLE_ADMIN"}
             onSectionChange={(section) =>

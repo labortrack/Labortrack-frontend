@@ -1,20 +1,32 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import { HardHat } from "lucide-react";
 import { Card, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
 import { useCuadrilla, useOperariosCuadrilla } from "../hooks/useCuadrillas";
-import { CuadrillaWorkspace } from "../components/CuadrillaWorkspace";
+import {
+  CuadrillaWorkspace,
+  type CuadrillaWorkspaceSection,
+} from "../components/CuadrillaWorkspace";
 
 export default function MiCuadrillaPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
   const dashboardQuery = useDashboardResumen();
   const cuadrillas = useMemo(
     () => dashboardQuery.data?.cuadrilla?.misCuadrillas ?? [],
     [dashboardQuery.data],
   );
-  const [selectedId, setSelectedId] = useState<number | null>(null);
-
-  const effectiveSelectedId = selectedId ?? cuadrillas[0]?.cuadrillaId ?? null;
+  const selectedParam = Number(searchParams.get("cuadrilla"));
+  const effectiveSelectedId =
+    cuadrillas.find((item) => item.cuadrillaId === selectedParam)?.cuadrillaId ??
+    cuadrillas[0]?.cuadrillaId ??
+    null;
+  const sectionParam = searchParams.get("seccion");
+  const initialSection: CuadrillaWorkspaceSection =
+    sectionParam === "planes" || sectionParam === "jornadas"
+      ? sectionParam
+      : "nomina";
   const cuadrillaQuery = useCuadrilla(effectiveSelectedId);
   const operariosQuery = useOperariosCuadrilla(effectiveSelectedId);
 
@@ -42,7 +54,17 @@ export default function MiCuadrillaPage() {
         description="Consultá la nómina, los planes de trabajo y sus jornadas sin salir de tu espacio de Líder."
         actions={
           cuadrillas.length > 1 ? (
-            <Select value={String(effectiveSelectedId)} onValueChange={(value) => setSelectedId(Number(value))}>
+            <Select
+              value={String(effectiveSelectedId)}
+              onValueChange={(value) =>
+                setSearchParams((current) => {
+                  const next = new URLSearchParams(current);
+                  next.set("cuadrilla", value);
+                  if (!next.has("seccion")) next.set("seccion", "nomina");
+                  return next;
+                })
+              }
+            >
               <SelectTrigger className="w-64"><SelectValue /></SelectTrigger>
               <SelectContent>
                 {cuadrillas.map((item) => <SelectItem key={item.cuadrillaId} value={String(item.cuadrillaId)}>{item.nombreCuadrilla}</SelectItem>)}
@@ -75,6 +97,16 @@ export default function MiCuadrillaPage() {
           onAsignarOperario={() => undefined}
           onDesvincularOperario={() => undefined}
           readOnly
+          section={initialSection}
+          initialSection={initialSection}
+          onSectionChange={(section) =>
+            setSearchParams((current) => {
+              const next = new URLSearchParams(current);
+              next.set("cuadrilla", String(cuadrillaQuery.data.id));
+              next.set("seccion", section);
+              return next;
+            })
+          }
         />
       )}
     </div>
