@@ -1,10 +1,12 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { HardHat } from "lucide-react";
 import { Card, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { useCuadrilla, useOperariosCuadrilla } from "../hooks/useCuadrillas";
+import { useMiCuadrillaNavegacionStore } from "../store/miCuadrillaNavegacionStore";
 import {
   CuadrillaWorkspace,
   type CuadrillaWorkspaceSection,
@@ -12,6 +14,14 @@ import {
 
 export default function MiCuadrillaPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const usuarioId = useSessionStore((state) => state.user!.idUsuario);
+  const busquedaGuardada = useMiCuadrillaNavegacionStore(
+    (state) => state.busquedaPorUsuario[String(usuarioId)] ?? "",
+  );
+  const guardarBusqueda = useMiCuadrillaNavegacionStore(
+    (state) => state.guardarBusqueda,
+  );
+  const busquedaActual = searchParams.toString();
   const dashboardQuery = useDashboardResumen();
   const cuadrillas = useMemo(
     () => dashboardQuery.data?.cuadrilla?.misCuadrillas ?? [],
@@ -29,6 +39,23 @@ export default function MiCuadrillaPage() {
       : "nomina";
   const cuadrillaQuery = useCuadrilla(effectiveSelectedId);
   const operariosQuery = useOperariosCuadrilla(effectiveSelectedId);
+
+  useEffect(() => {
+    if (!busquedaActual && busquedaGuardada) {
+      setSearchParams(new URLSearchParams(busquedaGuardada), { replace: true });
+      return;
+    }
+
+    if (busquedaActual && busquedaActual !== busquedaGuardada) {
+      guardarBusqueda(usuarioId, busquedaActual);
+    }
+  }, [
+    busquedaActual,
+    busquedaGuardada,
+    guardarBusqueda,
+    setSearchParams,
+    usuarioId,
+  ]);
 
   if (dashboardQuery.isPending) {
     return <Card><LoadingState label="Cargando tu cuadrilla..." /></Card>;
