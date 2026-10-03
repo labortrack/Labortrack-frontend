@@ -1,7 +1,7 @@
 import { useState, type ComponentType, type ReactNode } from "react";
-import { CalendarClock, CalendarDays, Users } from "lucide-react";
-import { Card } from "@/shared/ui";
-import { EmptyState } from "@/shared/components";
+import { CalendarClock, CalendarDays, Plus, Users } from "lucide-react";
+import { Button, Card } from "@/shared/ui";
+import { EmptyState, SearchInput } from "@/shared/components";
 import { cn } from "@/shared/utils/cn";
 import type {
   CuadrillaResponseDto,
@@ -52,11 +52,83 @@ export function CuadrillaWorkspace({
   const [active, setActive] = useState<CuadrillaWorkspaceSection>(
     initialSection === "planes" && !canViewPlans ? "nomina" : initialSection,
   );
+  const [nominaSearchTerm, setNominaSearchTerm] = useState("");
 
   const selectSection = (section: CuadrillaWorkspaceSection) => {
     if (section === "planes" && !canViewPlans) return;
     setActive(section);
     onSectionChange?.(section);
+  };
+
+  const isSuspended = cuadrilla.estadoActual === "SUSPENDIDA";
+  const isFinalizada = cuadrilla.estadoActual === "FINALIZADA";
+
+  const renderActiveHeader = (compact = false) => {
+    if (active === "nomina") {
+      return (
+        <div className={cn("flex min-w-0 gap-4", compact ? "flex-col" : "items-center justify-between")}>
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+              <Users className="size-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <h3 className="truncate text-base font-bold text-foreground">
+                  Nómina Operativa de Cuadrilla
+                </h3>
+                <span className="shrink-0 rounded-full border border-primary/20 bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
+                  {operarios.length} operario{operarios.length !== 1 ? "s" : ""}
+                </span>
+              </div>
+              <p className="mt-0.5 truncate text-xs text-foreground-muted">
+                Personal asignado a <span className="font-semibold text-foreground">{cuadrilla.nombre}</span> ({cuadrilla.grupo?.tipoActividad || "General"})
+              </p>
+            </div>
+          </div>
+          <div className={cn("flex shrink-0 items-center gap-3", compact && "w-full flex-col sm:flex-row")}>
+            <div className={cn("w-56", compact && "w-full sm:flex-1")}>
+              <SearchInput
+                value={nominaSearchTerm}
+                onChange={(event) => setNominaSearchTerm(event.target.value)}
+                placeholder="Buscar por nombre o rol..."
+                className="h-9 text-xs"
+              />
+            </div>
+            {!readOnly ? (
+              <Button
+                type="button"
+                onClick={onAsignarOperario}
+                disabled={isSuspended || isFinalizada}
+                className={cn("h-9 shrink-0 gap-1.5 text-xs font-semibold", compact && "w-full sm:w-auto")}
+              >
+                <Plus className="size-4" />
+                Incorporar Operario
+              </Button>
+            ) : null}
+          </div>
+        </div>
+      );
+    }
+
+    const isPlanes = active === "planes";
+    const Icon = isPlanes ? CalendarDays : CalendarClock;
+    return (
+      <div className="flex min-w-0 items-center gap-3">
+        <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary-soft text-primary">
+          <Icon className="size-5" />
+        </div>
+        <div className="min-w-0">
+          <h3 className="truncate text-base font-bold text-foreground">
+            {isPlanes ? "Planes de trabajo" : "Jornadas"}
+          </h3>
+          <p className="mt-0.5 truncate text-xs text-foreground-muted">
+            {isPlanes
+              ? "Historial y planificación horaria de la cuadrilla."
+              : "Seguimiento consolidado de las jornadas de la cuadrilla."}
+          </p>
+        </div>
+      </div>
+    );
   };
 
   let content: ReactNode;
@@ -71,84 +143,102 @@ export function CuadrillaWorkspace({
         onAsignarOperario={onAsignarOperario}
         onDesvincularOperario={onDesvincularOperario}
         readOnly={readOnly}
+        embedded
+        searchTerm={nominaSearchTerm}
+        onSearchTermChange={setNominaSearchTerm}
       />
     );
   } else if (active === "planes") {
-    content = <PlanesTrabajoPanel cuadrillaId={cuadrilla.id} />;
+    content = <PlanesTrabajoPanel cuadrillaId={cuadrilla.id} embedded />;
   } else {
     content = (
-      <Card className="min-w-0 overflow-hidden border-border shadow-sm">
-        <EmptyState
-          title="Consulta de jornadas"
-          description="Esta sección queda preparada para la consulta consolidada de jornadas de la cuadrilla, que corresponde a la siguiente historia del módulo. Las jornadas generadas por cada plan ya pueden consultarse desde su detalle."
-        />
-      </Card>
+      <EmptyState
+        title="Consulta de jornadas"
+        description="Esta sección queda preparada para la consulta consolidada de jornadas de la cuadrilla, que corresponde a la siguiente historia del módulo. Las jornadas generadas por cada plan ya pueden consultarse desde su detalle."
+      />
     );
   }
 
+  const desktopColumns = sections
+    .map(({ id }) => (id === active ? "minmax(0, 1fr)" : "3.5rem"))
+    .join(" ");
+
   return (
     <section aria-label={`Espacio de trabajo de ${cuadrilla.nombre}`}>
-      <div className="mb-3 grid grid-cols-3 gap-2 lg:hidden" role="tablist">
-        {sections.map(({ id, label, icon: Icon }) => {
-          const disabled = id === "planes" && !canViewPlans;
-          return (
-            <button
-              key={id}
-              type="button"
-              role="tab"
-              aria-selected={active === id}
-              disabled={disabled}
-              onClick={() => selectSection(id)}
-              className={cn(
-                "flex min-h-11 items-center justify-center gap-2 rounded-control border px-2 text-xs font-semibold transition-colors",
-                active === id
-                  ? "border-primary bg-primary text-white"
-                  : "border-border bg-card text-foreground-muted hover:border-primary/40 hover:text-primary",
-                disabled && "cursor-not-allowed opacity-50",
-              )}
-            >
-              <Icon className="size-4" />
-              <span className="truncate">{label}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      <div className="hidden min-h-[360px] items-stretch gap-3 lg:flex">
-        <div className="min-w-0 flex-1" role="tabpanel">
-          {content}
-        </div>
-        <div className="flex gap-2" role="tablist" aria-orientation="vertical">
-          {sections
-            .filter(({ id }) => id !== active)
-            .map(({ id, label, icon: Icon }) => {
+      <Card className="min-w-0 overflow-hidden border-border shadow-sm">
+        <div className="border-b border-border bg-muted/20">
+          <div className="grid grid-cols-3 lg:hidden" role="tablist">
+            {sections.map(({ id, label, icon: Icon }) => {
               const disabled = id === "planes" && !canViewPlans;
               return (
                 <button
                   key={id}
                   type="button"
                   role="tab"
-                  aria-label={label}
-                  aria-selected={false}
-                  title={disabled ? "Sin permisos para consultar planes" : label}
+                  aria-selected={active === id}
                   disabled={disabled}
                   onClick={() => selectSection(id)}
                   className={cn(
-                    "group flex w-14 items-start justify-center rounded-card border border-border bg-card pt-6 text-foreground-muted shadow-sm transition-all hover:border-primary/40 hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
-                    disabled && "cursor-not-allowed opacity-50 hover:border-border hover:bg-card hover:text-foreground-muted",
+                    "flex min-h-12 items-center justify-center gap-2 border-r border-border px-2 text-xs font-semibold transition-colors last:border-r-0",
+                    active === id
+                      ? "bg-primary text-white"
+                      : "bg-card text-foreground-muted hover:bg-primary-soft hover:text-primary",
+                    disabled && "cursor-not-allowed opacity-50",
                   )}
                 >
-                  <Icon className="size-5" />
-                  <span className="sr-only">Abrir {label}</span>
+                  <Icon className="size-4" />
+                  <span className="truncate">{label}</span>
                 </button>
               );
             })}
-        </div>
-      </div>
+          </div>
+          <div className="p-4 lg:hidden">{renderActiveHeader(true)}</div>
 
-      <div className="lg:hidden" role="tabpanel">
-        {content}
-      </div>
+          <div
+            className="hidden min-h-[92px] w-full transition-[grid-template-columns] duration-500 ease-in-out lg:grid"
+            style={{ gridTemplateColumns: desktopColumns }}
+            role="group"
+            aria-label="Secciones de la cuadrilla"
+          >
+            {sections.map(({ id, label, icon: Icon }, index) => {
+              const isActive = active === id;
+              const disabled = id === "planes" && !canViewPlans;
+              return (
+                <div
+                  key={id}
+                  className={cn("min-w-0 overflow-hidden", index > 0 && "border-l border-border")}
+                >
+                  {isActive ? (
+                    <div
+                      className="lt-accordion-header-enter h-full min-w-0 p-4 sm:p-5"
+                    >
+                      {renderActiveHeader()}
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      aria-label={`Abrir ${label}`}
+                      title={disabled ? "Sin permisos para consultar planes" : label}
+                      disabled={disabled}
+                      onClick={() => selectSection(id)}
+                      className={cn(
+                        "flex h-full w-full items-center justify-center text-foreground-muted transition-colors hover:bg-primary-soft hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary/30",
+                        disabled && "cursor-not-allowed opacity-50 hover:bg-transparent hover:text-foreground-muted",
+                      )}
+                    >
+                      <Icon className="size-5 shrink-0" />
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        <div key={active} role="tabpanel" className="lt-accordion-content-enter min-h-64">
+          {content}
+        </div>
+      </Card>
     </section>
   );
 }
