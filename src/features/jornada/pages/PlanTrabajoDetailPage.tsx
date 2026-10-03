@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useMemo } from "react";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import { CalendarDays, Clock3, FilterX, HardHat } from "lucide-react";
 import {
   Badge,
@@ -43,6 +43,8 @@ import {
 import { PlanTrabajoStatusBadge } from "../components/PlanTrabajoStatusBadge";
 
 const ALL = "TODOS";
+const tiposJornada = Object.keys(tipoJornadaLabels) as TipoJornada[];
+const estadosJornada = Object.keys(estadoJornadaLabels) as EstadoJornadaTrabajo[];
 
 function JornadaStatusBadge({ estado }: { estado: EstadoJornadaTrabajo }) {
   const variant =
@@ -61,13 +63,21 @@ function JornadaStatusBadge({ estado }: { estado: EstadoJornadaTrabajo }) {
 export default function PlanTrabajoDetailPage() {
   const { cuadrillaId: rawCuadrillaId, planId: rawPlanId } = useParams();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const cuadrillaId = Number(rawCuadrillaId);
   const planId = Number(rawPlanId);
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-  const [tipo, setTipo] = useState(ALL);
-  const [estado, setEstado] = useState(ALL);
-  const [page, setPage] = useState(0);
+  const fechaDesde = searchParams.get("jornadaDesde") ?? "";
+  const fechaHasta = searchParams.get("jornadaHasta") ?? "";
+  const tipoParam = searchParams.get("jornadaTipo");
+  const tipo = tiposJornada.includes(tipoParam as TipoJornada)
+    ? tipoParam!
+    : ALL;
+  const estadoParam = searchParams.get("jornadaEstado");
+  const estado = estadosJornada.includes(estadoParam as EstadoJornadaTrabajo)
+    ? estadoParam!
+    : ALL;
+  const rawPage = Number(searchParams.get("jornadaPagina") ?? 0);
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 0;
 
   const filtros = useMemo(
     () => ({
@@ -88,11 +98,37 @@ export default function PlanTrabajoDetailPage() {
     (location.state as { from?: string } | null)?.from ?? "/dashboard";
 
   const clearFilters = () => {
-    setFechaDesde("");
-    setFechaHasta("");
-    setTipo(ALL);
-    setEstado(ALL);
-    setPage(0);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("jornadaDesde");
+      next.delete("jornadaHasta");
+      next.delete("jornadaTipo");
+      next.delete("jornadaEstado");
+      next.delete("jornadaPagina");
+      return next;
+    });
+  };
+
+  const updateFilter = (
+    key: "jornadaDesde" | "jornadaHasta" | "jornadaTipo" | "jornadaEstado",
+    value: string,
+  ) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (!value || value === ALL) next.delete(key);
+      else next.set(key, value);
+      next.delete("jornadaPagina");
+      return next;
+    });
+  };
+
+  const updatePage = (nextPage: number) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (nextPage <= 0) next.delete("jornadaPagina");
+      else next.set("jornadaPagina", String(nextPage));
+      return next;
+    });
   };
 
   if (query.isPending) {
@@ -158,16 +194,16 @@ export default function PlanTrabajoDetailPage() {
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-[145px_145px_160px_170px_auto]">
-              <Input type="date" aria-label="Fecha desde" value={fechaDesde} max={fechaHasta || undefined} onChange={(e) => { setFechaDesde(e.target.value); setPage(0); }} className="h-9 bg-card text-xs" />
-              <Input type="date" aria-label="Fecha hasta" value={fechaHasta} min={fechaDesde || undefined} onChange={(e) => { setFechaHasta(e.target.value); setPage(0); }} className="h-9 bg-card text-xs" />
-              <Select value={tipo} onValueChange={(value) => { setTipo(value); setPage(0); }}>
+              <Input type="date" aria-label="Fecha desde" value={fechaDesde} max={fechaHasta || undefined} onChange={(e) => updateFilter("jornadaDesde", e.target.value)} className="h-9 bg-card text-xs" />
+              <Input type="date" aria-label="Fecha hasta" value={fechaHasta} min={fechaDesde || undefined} onChange={(e) => updateFilter("jornadaHasta", e.target.value)} className="h-9 bg-card text-xs" />
+              <Select value={tipo} onValueChange={(value) => updateFilter("jornadaTipo", value)}>
                 <SelectTrigger className="h-9 bg-card text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL}>Todos los tipos</SelectItem>
                   {Object.entries(tipoJornadaLabels).map(([value, label]) => <SelectItem key={value} value={value}>{label}</SelectItem>)}
                 </SelectContent>
               </Select>
-              <Select value={estado} onValueChange={(value) => { setEstado(value); setPage(0); }}>
+              <Select value={estado} onValueChange={(value) => updateFilter("jornadaEstado", value)}>
                 <SelectTrigger className="h-9 bg-card text-xs"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value={ALL}>Todos los estados</SelectItem>
@@ -212,7 +248,7 @@ export default function PlanTrabajoDetailPage() {
                 </TableBody>
               </Table>
             </div>
-            <Pagination page={plan.jornadas.number} totalPages={plan.jornadas.totalPages} totalElements={plan.jornadas.totalElements} disabled={query.isFetching} onPageChange={setPage} />
+            <Pagination page={plan.jornadas.number} totalPages={plan.jornadas.totalPages} totalElements={plan.jornadas.totalElements} disabled={query.isFetching} onPageChange={updatePage} />
           </>
         )}
       </Card>

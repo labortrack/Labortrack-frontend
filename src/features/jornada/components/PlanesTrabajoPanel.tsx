@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useMemo } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { CalendarDays, Clock3, FilterX, ListChecks } from "lucide-react";
 import {
   Button,
@@ -35,6 +35,11 @@ import {
 import { PlanTrabajoStatusBadge } from "./PlanTrabajoStatusBadge";
 
 const ALL = "TODOS";
+const estadosPlan: EstadoCalculadoPlanTrabajo[] = [
+  "PROGRAMADO",
+  "VIGENTE",
+  "FINALIZADO",
+];
 
 export function PlanesTrabajoPanel({
   cuadrillaId,
@@ -45,10 +50,17 @@ export function PlanesTrabajoPanel({
 }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const [estado, setEstado] = useState<string>(ALL);
-  const [fechaDesde, setFechaDesde] = useState("");
-  const [fechaHasta, setFechaHasta] = useState("");
-  const [page, setPage] = useState(0);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const estadoParam = searchParams.get("planEstado");
+  const estado = estadosPlan.includes(
+    estadoParam as EstadoCalculadoPlanTrabajo,
+  )
+    ? estadoParam!
+    : ALL;
+  const fechaDesde = searchParams.get("planDesde") ?? "";
+  const fechaHasta = searchParams.get("planHasta") ?? "";
+  const rawPage = Number(searchParams.get("planPagina") ?? 0);
+  const page = Number.isInteger(rawPage) && rawPage > 0 ? rawPage : 0;
 
   const filtros = useMemo(
     () => ({
@@ -69,10 +81,36 @@ export function PlanesTrabajoPanel({
   const hasFilters = estado !== ALL || Boolean(fechaDesde || fechaHasta);
 
   const clearFilters = () => {
-    setEstado(ALL);
-    setFechaDesde("");
-    setFechaHasta("");
-    setPage(0);
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      next.delete("planEstado");
+      next.delete("planDesde");
+      next.delete("planHasta");
+      next.delete("planPagina");
+      return next;
+    });
+  };
+
+  const updateFilter = (
+    key: "planEstado" | "planDesde" | "planHasta",
+    value: string,
+  ) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (!value || value === ALL) next.delete(key);
+      else next.set(key, value);
+      next.delete("planPagina");
+      return next;
+    });
+  };
+
+  const updatePage = (nextPage: number) => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (nextPage <= 0) next.delete("planPagina");
+      else next.set("planPagina", String(nextPage));
+      return next;
+    });
   };
 
   const filters = (
@@ -84,8 +122,7 @@ export function PlanesTrabajoPanel({
           value={fechaDesde}
           max={fechaHasta || undefined}
           onChange={(event) => {
-            setFechaDesde(event.target.value);
-            setPage(0);
+            updateFilter("planDesde", event.target.value);
           }}
           className="h-9 bg-card text-xs"
         />
@@ -97,8 +134,7 @@ export function PlanesTrabajoPanel({
           value={fechaHasta}
           min={fechaDesde || undefined}
           onChange={(event) => {
-            setFechaHasta(event.target.value);
-            setPage(0);
+            updateFilter("planHasta", event.target.value);
           }}
           className="h-9 bg-card text-xs"
         />
@@ -107,10 +143,7 @@ export function PlanesTrabajoPanel({
         Estado
         <Select
           value={estado}
-          onValueChange={(value) => {
-            setEstado(value);
-            setPage(0);
-          }}
+          onValueChange={(value) => updateFilter("planEstado", value)}
         >
           <SelectTrigger className="h-9 bg-card text-xs">
             <SelectValue />
@@ -216,7 +249,7 @@ export function PlanesTrabajoPanel({
             totalPages={response!.planes.totalPages}
             totalElements={response!.planes.totalElements}
             disabled={query.isFetching}
-            onPageChange={setPage}
+            onPageChange={updatePage}
           />
         </>
       )}

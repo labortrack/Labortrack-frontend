@@ -279,9 +279,11 @@ export default function CuadrillasPage() {
             initialSection={initialSection}
             canViewPlans={user.rol !== "ROLE_ADMIN"}
             onSectionChange={(section) =>
-              setSearchParams({
-                cuadrilla: String(selectedCuadrilla.id),
-                seccion: section,
+              setSearchParams((current) => {
+                const next = new URLSearchParams(current);
+                next.set("cuadrilla", String(selectedCuadrilla.id));
+                next.set("seccion", section);
+                return next;
               })
             }
           />

@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type ReactNode } from "react";
+import { useState, type ComponentType } from "react";
 import { CalendarClock, CalendarDays, Plus, Users } from "lucide-react";
 import { Button, Card } from "@/shared/ui";
 import { EmptyState, SearchInput } from "@/shared/components";
@@ -131,9 +131,7 @@ export function CuadrillaWorkspace({
     );
   };
 
-  let content: ReactNode;
-  if (active === "nomina") {
-    content = (
+  const nominaContent = (
       <CuadrillaNominaTable
         cuadrilla={cuadrilla}
         operarios={operarios}
@@ -147,17 +145,7 @@ export function CuadrillaWorkspace({
         searchTerm={nominaSearchTerm}
         onSearchTermChange={setNominaSearchTerm}
       />
-    );
-  } else if (active === "planes") {
-    content = <PlanesTrabajoPanel cuadrillaId={cuadrilla.id} embedded />;
-  } else {
-    content = (
-      <EmptyState
-        title="Consulta de jornadas"
-        description="Esta sección queda preparada para la consulta consolidada de jornadas de la cuadrilla, que corresponde a la siguiente historia del módulo. Las jornadas generadas por cada plan ya pueden consultarse desde su detalle."
-      />
-    );
-  }
+  );
 
   return (
     <section aria-label={`Espacio de trabajo de ${cuadrilla.nombre}`}>
@@ -236,8 +224,31 @@ export function CuadrillaWorkspace({
           </div>
         </div>
 
-        <div key={active} role="tabpanel" className="lt-accordion-content-enter min-h-64">
-          {content}
+        <div
+          role="tabpanel"
+          hidden={active !== "nomina"}
+          className={cn(active === "nomina" && "lt-accordion-content-enter")}
+        >
+          {nominaContent}
+        </div>
+        {canViewPlans ? (
+          <div
+            role="tabpanel"
+            hidden={active !== "planes"}
+            className={cn(active === "planes" && "lt-accordion-content-enter")}
+          >
+            <PlanesTrabajoPanel cuadrillaId={cuadrilla.id} embedded />
+          </div>
+        ) : null}
+        <div
+          role="tabpanel"
+          hidden={active !== "jornadas"}
+          className={cn(active === "jornadas" && "lt-accordion-content-enter")}
+        >
+          <EmptyState
+            title="Consulta de jornadas"
+            description="Esta sección queda preparada para la consulta consolidada de jornadas de la cuadrilla, que corresponde a la siguiente historia del módulo. Las jornadas generadas por cada plan ya pueden consultarse desde su detalle."
+          />
         </div>
       </Card>
     </section>
