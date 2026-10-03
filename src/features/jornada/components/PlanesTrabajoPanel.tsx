@@ -241,7 +241,10 @@ export function PlanesTrabajoPanel({
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          const from = `${location.pathname}${location.search}`;
+                          const fromParams = new URLSearchParams(location.search);
+                          fromParams.set("cuadrilla", String(cuadrillaId));
+                          fromParams.set("seccion", "planes");
+                          const from = `${location.pathname}?${fromParams.toString()}`;
                           const detailParams = new URLSearchParams({ volver: from });
                           navigate(
                             `/cuadrillas/${cuadrillaId}/planes-trabajo/${plan.id}?${detailParams.toString()}`,
