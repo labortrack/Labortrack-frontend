@@ -33,6 +33,27 @@ import type {
   EmpleadoGrupoCuadrillaResponseDto,
 } from "../types/cuadrilla.types";
 
+function matchesCuadrillaFilters(
+  cuadrilla: CuadrillaResponseDto,
+  searchTerm: string,
+  statusFilter: string,
+) {
+  const term = searchTerm.toLowerCase().trim();
+  const matchesSearch =
+    !term ||
+    cuadrilla.nombre.toLowerCase().includes(term) ||
+    (cuadrilla.grupo?.tipoActividad &&
+      cuadrilla.grupo.tipoActividad.toLowerCase().includes(term)) ||
+    (cuadrilla.lider &&
+      `${cuadrilla.lider.nombre} ${cuadrilla.lider.apellido}`
+        .toLowerCase()
+        .includes(term));
+  const matchesStatus =
+    statusFilter === "TODAS" || cuadrilla.estadoActual === statusFilter;
+
+  return Boolean(matchesSearch && matchesStatus);
+}
+
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
   const obraId = Number(paramObraId);
@@ -80,31 +101,46 @@ export default function CuadrillasPage() {
 
   // Filtered cuadrillas list
   const filteredCuadrillas = useMemo(() => {
-    return cuadrillas.filter((c) => {
-      const term = searchTerm.toLowerCase().trim();
-      const matchesSearch =
-        !term ||
-        c.nombre.toLowerCase().includes(term) ||
-        (c.grupo?.tipoActividad &&
-          c.grupo.tipoActividad.toLowerCase().includes(term)) ||
-        (c.lider &&
-          `${c.lider.nombre} ${c.lider.apellido}`.toLowerCase().includes(term));
-
-      const matchesStatus =
-        statusFilter === "TODAS" || c.estadoActual === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
+    return cuadrillas.filter((cuadrilla) =>
+      matchesCuadrillaFilters(cuadrilla, searchTerm, statusFilter),
+    );
   }, [cuadrillas, searchTerm, statusFilter]);
+
+  const updateFilters = (nextSearchTerm: string, nextStatusFilter: string) => {
+    setSearchTerm(nextSearchTerm);
+    setStatusFilter(nextStatusFilter);
+
+    if (!selectedCuadrillaId) return;
+
+    const selectedIsVisible = cuadrillas.some(
+      (cuadrilla) =>
+        cuadrilla.id === selectedCuadrillaId &&
+        matchesCuadrillaFilters(
+          cuadrilla,
+          nextSearchTerm,
+          nextStatusFilter,
+        ),
+    );
+    if (selectedIsVisible) return;
+
+    setSelectedCuadrillaId(null);
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        next.delete("cuadrilla");
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   // Selected Cuadrilla Object
   const selectedCuadrilla = useMemo(() => {
-    if (selectedCuadrillaId) {
-      const found = cuadrillas.find((c) => c.id === selectedCuadrillaId);
-      if (found) return found;
-    }
-    return cuadrillas[0] ?? null;
-  }, [cuadrillas, selectedCuadrillaId]);
+    if (!selectedCuadrillaId) return null;
+    return (
+      filteredCuadrillas.find((c) => c.id === selectedCuadrillaId) ?? null
+    );
+  }, [filteredCuadrillas, selectedCuadrillaId]);
 
   // Query for workers of selected cuadrilla
   const operariosQuery = useOperariosCuadrilla(selectedCuadrilla?.id);
@@ -166,7 +202,9 @@ export default function CuadrillasPage() {
           <div className="w-full sm:w-72">
             <SearchInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(event) =>
+                updateFilters(event.target.value, statusFilter)
+              }
               placeholder="Buscar cuadrilla, líder o especialidad..."
               className="h-9 text-xs"
             />
@@ -185,7 +223,7 @@ export default function CuadrillasPage() {
               <button
                 key={st}
                 type="button"
-                onClick={() => setStatusFilter(st)}
+                onClick={() => updateFilters(searchTerm, st)}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   statusFilter === st
                     ? "bg-primary text-primary-foreground shadow-xs"
