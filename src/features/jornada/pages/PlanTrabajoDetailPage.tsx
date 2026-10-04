@@ -31,7 +31,6 @@ import {
   EmptyState,
   ErrorState,
   LoadingState,
-  PageHeader,
   Pagination,
 } from "@/shared/components";
 import { usePlanTrabajoDetalle } from "../hooks/usePlanesTrabajo";
@@ -170,42 +169,60 @@ export default function PlanTrabajoDetailPage() {
     );
   }
 
+  const canCreateExtraordinary = plan.accionesDisponibles.includes(
+    "CREAR_JORNADA_EXTRAORDINARIA",
+  );
+  const canEditPlan = plan.accionesDisponibles.includes(
+    "MODIFICAR_PLAN_TRABAJO",
+  );
+  const hasPlanActions = canCreateExtraordinary || canEditPlan;
+
   return (
     <div className="space-y-6">
       <div>
         <BackLink to={backTo} label="Volver a planes de trabajo" />
-        <PageHeader
-          title={`Plan de trabajo #${plan.id}`}
-          description={`${plan.cuadrillaNombre} • ${plan.obraNombre}`}
-          actions={
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              {plan.accionesDisponibles.includes(
-                "CREAR_JORNADA_EXTRAORDINARIA",
-              ) ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setExtraordinaryOpen(true)}
-                >
-                  <Plus className="size-4" />
-                  Crear jornada extraordinaria
-                </Button>
-              ) : null}
-              {plan.accionesDisponibles.includes(
-                "MODIFICAR_PLAN_TRABAJO",
-              ) ? (
-                <Button type="button" onClick={() => setEditOpen(true)}>
-                  <Pencil className="size-4" />
-                  Modificar plan de trabajo
-                </Button>
-              ) : null}
+        <header className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-start">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <h1 className="min-w-0 text-2xl font-medium leading-7 text-foreground">
+                Plan de trabajo #{plan.id}
+              </h1>
               <PlanTrabajoStatusBadge
                 estado={plan.estadoCalculado}
                 cancelado={plan.cancelado}
               />
             </div>
-          }
-        />
+            <p className="mt-1 text-sm text-foreground-muted">
+              {plan.cuadrillaNombre} • {plan.obraNombre}
+            </p>
+          </div>
+
+          {hasPlanActions ? (
+            <div className="grid w-full gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:justify-end">
+              {canEditPlan ? (
+                <Button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="w-full lg:order-2 lg:w-auto"
+                >
+                  <Pencil className="size-4" />
+                  Modificar plan de trabajo
+                </Button>
+              ) : null}
+              {canCreateExtraordinary ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setExtraordinaryOpen(true)}
+                  className="w-full lg:order-1 lg:w-auto"
+                >
+                  <Plus className="size-4" />
+                  Crear jornada extraordinaria
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
+        </header>
       </div>
 
       <Card className="grid gap-5 p-5 sm:grid-cols-2 xl:grid-cols-4">
