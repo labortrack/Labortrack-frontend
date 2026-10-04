@@ -1,16 +1,12 @@
 import { useEffect, useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
-import { HardHat } from "lucide-react";
 import { Card, Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/shared/ui";
 import { EmptyState, ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
-import { useCuadrilla, useOperariosCuadrilla } from "../hooks/useCuadrillas";
+import { useCuadrilla } from "../hooks/useCuadrillas";
 import { useMiCuadrillaNavegacionStore } from "../store/miCuadrillaNavegacionStore";
-import {
-  CuadrillaWorkspace,
-  type CuadrillaWorkspaceSection,
-} from "../components/CuadrillaWorkspace";
+import { CuadrillaDetailView } from "../components/CuadrillaDetailView";
 
 export default function MiCuadrillaPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -32,13 +28,7 @@ export default function MiCuadrillaPage() {
     cuadrillas.find((item) => item.cuadrillaId === selectedParam)?.cuadrillaId ??
     cuadrillas[0]?.cuadrillaId ??
     null;
-  const sectionParam = searchParams.get("seccion");
-  const initialSection: CuadrillaWorkspaceSection =
-    sectionParam === "planes" || sectionParam === "jornadas"
-      ? sectionParam
-      : "nomina";
   const cuadrillaQuery = useCuadrilla(effectiveSelectedId);
-  const operariosQuery = useOperariosCuadrilla(effectiveSelectedId);
 
   useEffect(() => {
     if (!busquedaActual && busquedaGuardada) {
@@ -101,40 +91,12 @@ export default function MiCuadrillaPage() {
         }
       />
 
-      <Card className="flex items-center gap-3 p-4">
-        <div className="flex size-10 items-center justify-center rounded-lg bg-primary-soft text-primary"><HardHat className="size-5" /></div>
-        <div>
-          <p className="font-bold">{cuadrillas.find((item) => item.cuadrillaId === effectiveSelectedId)?.nombreCuadrilla}</p>
-          <p className="text-sm text-foreground-muted">{cuadrillas.find((item) => item.cuadrillaId === effectiveSelectedId)?.nombreObra}</p>
-        </div>
-      </Card>
-
       {cuadrillaQuery.isPending ? (
         <Card><LoadingState label="Cargando información de la cuadrilla..." /></Card>
       ) : cuadrillaQuery.isError || !cuadrillaQuery.data ? (
         <Card><ErrorState message="No se pudo cargar la información de tu cuadrilla." onRetry={() => void cuadrillaQuery.refetch()} /></Card>
       ) : (
-        <CuadrillaWorkspace
-          key={cuadrillaQuery.data.id}
-          cuadrilla={cuadrillaQuery.data}
-          operarios={operariosQuery.data ?? []}
-          isLoadingOperarios={operariosQuery.isPending}
-          isErrorOperarios={operariosQuery.isError}
-          onRetryOperarios={() => void operariosQuery.refetch()}
-          onAsignarOperario={() => undefined}
-          onDesvincularOperario={() => undefined}
-          readOnly
-          section={initialSection}
-          initialSection={initialSection}
-          onSectionChange={(section) =>
-            setSearchParams((current) => {
-              const next = new URLSearchParams(current);
-              next.set("cuadrilla", String(cuadrillaQuery.data.id));
-              next.set("seccion", section);
-              return next;
-            })
-          }
-        />
+        <CuadrillaDetailView cuadrilla={cuadrillaQuery.data} readOnly />
       )}
     </div>
   );

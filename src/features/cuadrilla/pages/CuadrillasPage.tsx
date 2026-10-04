@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Plus, HardHat } from "lucide-react";
 import {
   BackLink,
@@ -10,28 +10,15 @@ import {
 } from "@/shared/components";
 import { Button, Card } from "@/shared/ui";
 import { useObra } from "@/features/obra/hooks/useObras";
-import {
-  useCuadrillasPorObra,
-  useOperariosCuadrilla,
-} from "../hooks/useCuadrillas";
+import { useCuadrillasPorObra } from "../hooks/useCuadrillas";
 import { CuadrillaMetrics } from "../components/CuadrillaMetrics";
 import { CuadrillaCard } from "../components/CuadrillaCard";
-import {
-  CuadrillaWorkspace,
-  type CuadrillaWorkspaceSection,
-} from "../components/CuadrillaWorkspace";
-import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { CreateCuadrillaDialog } from "../components/dialogs/CreateCuadrillaDialog";
 import { EditCuadrillaDialog } from "../components/dialogs/EditCuadrillaDialog";
 import { BajaCuadrillaDialog } from "../components/dialogs/BajaCuadrillaDialog";
 import { ReactivarCuadrillaDialog } from "../components/dialogs/ReactivarCuadrillaDialog";
 import { AsignarLiderDialog } from "../components/dialogs/AsignarLiderDialog";
-import { AsignarOperarioDialog } from "../components/dialogs/AsignarOperarioDialog";
-import { DesvincularOperarioDialog } from "../components/dialogs/DesvincularOperarioDialog";
-import type {
-  CuadrillaResponseDto,
-  EmpleadoGrupoCuadrillaResponseDto,
-} from "../types/cuadrilla.types";
+import type { CuadrillaResponseDto } from "../types/cuadrilla.types";
 
 function matchesCuadrillaFilters(
   cuadrilla: CuadrillaResponseDto,
@@ -57,8 +44,8 @@ function matchesCuadrillaFilters(
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
   const obraId = Number(paramObraId);
-  const [searchParams, setSearchParams] = useSearchParams();
-  const user = useSessionStore((state) => state.user)!;
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Queries
   const obraQuery = useObra(obraId);
@@ -69,17 +56,6 @@ export default function CuadrillasPage() {
     () => cuadrillasQuery.data?.content ?? [],
     [cuadrillasQuery.data],
   );
-
-  // Selected Cuadrilla for viewing active workers
-  const selectedParam = Number(searchParams.get("cuadrilla"));
-  const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(
-    Number.isFinite(selectedParam) && selectedParam > 0 ? selectedParam : null,
-  );
-  const sectionParam = searchParams.get("seccion");
-  const initialSection: CuadrillaWorkspaceSection =
-    sectionParam === "planes" || sectionParam === "jornadas"
-      ? sectionParam
-      : "nomina";
 
   // Filters
   const [searchTerm, setSearchTerm] = useState("");
@@ -95,9 +71,6 @@ export default function CuadrillasPage() {
     useState<CuadrillaResponseDto | null>(null);
   const [liderCuadrilla, setLiderCuadrilla] =
     useState<CuadrillaResponseDto | null>(null);
-  const [asignarOperarioOpen, setAsignarOperarioOpen] = useState(false);
-  const [desvincularOperario, setDesvincularOperario] =
-    useState<EmpleadoGrupoCuadrillaResponseDto | null>(null);
 
   // Filtered cuadrillas list
   const filteredCuadrillas = useMemo(() => {
@@ -106,45 +79,19 @@ export default function CuadrillasPage() {
     );
   }, [cuadrillas, searchTerm, statusFilter]);
 
-  const updateFilters = (nextSearchTerm: string, nextStatusFilter: string) => {
-    setSearchTerm(nextSearchTerm);
-    setStatusFilter(nextStatusFilter);
-
-    if (!selectedCuadrillaId) return;
-
-    const selectedIsVisible = cuadrillas.some(
-      (cuadrilla) =>
-        cuadrilla.id === selectedCuadrillaId &&
-        matchesCuadrillaFilters(
-          cuadrilla,
-          nextSearchTerm,
-          nextStatusFilter,
-        ),
-    );
-    if (selectedIsVisible) return;
-
-    setSelectedCuadrillaId(null);
-    setSearchParams(
-      (current) => {
-        const next = new URLSearchParams(current);
-        next.delete("cuadrilla");
-        return next;
-      },
-      { replace: true },
-    );
-  };
-
-  // Selected Cuadrilla Object
-  const selectedCuadrilla = useMemo(() => {
-    if (!selectedCuadrillaId) return null;
+  // Compatibilidad con links viejos: ?cuadrilla=X&seccion=Y ahora es una ruta propia.
+  const legacyCuadrillaId = Number(searchParams.get("cuadrilla"));
+  if (Number.isInteger(legacyCuadrillaId) && legacyCuadrillaId > 0) {
+    const legacyParams = new URLSearchParams(searchParams);
+    legacyParams.delete("cuadrilla");
+    const query = legacyParams.toString();
     return (
-      filteredCuadrillas.find((c) => c.id === selectedCuadrillaId) ?? null
+      <Navigate
+        replace
+        to={`/obras/${obraId}/cuadrillas/${legacyCuadrillaId}${query ? `?${query}` : ""}`}
+      />
     );
-  }, [filteredCuadrillas, selectedCuadrillaId]);
-
-  // Query for workers of selected cuadrilla
-  const operariosQuery = useOperariosCuadrilla(selectedCuadrilla?.id);
-  const operarios = operariosQuery.data ?? [];
+  }
 
   if (obraQuery.isPending) {
     return (
@@ -202,9 +149,7 @@ export default function CuadrillasPage() {
           <div className="w-full sm:w-72">
             <SearchInput
               value={searchTerm}
-              onChange={(event) =>
-                updateFilters(event.target.value, statusFilter)
-              }
+              onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Buscar cuadrilla, líder o especialidad..."
               className="h-9 text-xs"
             />
@@ -223,7 +168,7 @@ export default function CuadrillasPage() {
               <button
                 key={st}
                 type="button"
-                onClick={() => updateFilters(searchTerm, st)}
+                onClick={() => setStatusFilter(st)}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   statusFilter === st
                     ? "bg-primary text-primary-foreground shadow-xs"
@@ -287,16 +232,9 @@ export default function CuadrillasPage() {
               <CuadrillaCard
                 key={c.id}
                 cuadrilla={c}
-                isSelected={selectedCuadrilla?.id === c.id}
-                onSelect={(cuad) => {
-                  setSelectedCuadrillaId(cuad.id);
-                  setSearchParams((current) => {
-                    const next = new URLSearchParams(current);
-                    next.set("cuadrilla", String(cuad.id));
-                    if (!next.has("seccion")) next.set("seccion", "nomina");
-                    return next;
-                  });
-                }}
+                onSelect={(cuad) =>
+                  navigate(`/obras/${obraId}/cuadrillas/${cuad.id}`)
+                }
                 onEdit={(cuad) => setEditCuadrilla(cuad)}
                 onAsignarLider={(cuad) => setLiderCuadrilla(cuad)}
                 onBaja={(cuad) => setBajaCuadrilla(cuad)}
@@ -306,33 +244,6 @@ export default function CuadrillasPage() {
           </div>
         )}
       </div>
-
-      {/* ── Nómina Section for Selected Cuadrilla ──────────────── */}
-      {selectedCuadrilla && (
-        <div className="pt-2">
-          <CuadrillaWorkspace
-            key={selectedCuadrilla.id}
-            cuadrilla={selectedCuadrilla}
-            operarios={operarios}
-            isLoadingOperarios={operariosQuery.isPending}
-            isErrorOperarios={operariosQuery.isError}
-            onRetryOperarios={() => void operariosQuery.refetch()}
-            onAsignarOperario={() => setAsignarOperarioOpen(true)}
-            onDesvincularOperario={(op) => setDesvincularOperario(op)}
-            section={initialSection}
-            initialSection={initialSection}
-            canViewPlans={user.rol !== "ROLE_ADMIN"}
-            onSectionChange={(section) =>
-              setSearchParams((current) => {
-                const next = new URLSearchParams(current);
-                next.set("cuadrilla", String(selectedCuadrilla.id));
-                next.set("seccion", section);
-                return next;
-              })
-            }
-          />
-        </div>
-      )}
 
       {/* ── Dialogs ────────────────────────────────────────────── */}
       <CreateCuadrillaDialog
@@ -367,21 +278,6 @@ export default function CuadrillasPage() {
         cuadrilla={liderCuadrilla}
         open={Boolean(liderCuadrilla)}
         onOpenChange={(open) => !open && setLiderCuadrilla(null)}
-      />
-
-      <AsignarOperarioDialog
-        obraId={obraId}
-        cuadrilla={asignarOperarioOpen ? selectedCuadrilla : null}
-        open={asignarOperarioOpen}
-        onOpenChange={setAsignarOperarioOpen}
-      />
-
-      <DesvincularOperarioDialog
-        obraId={obraId}
-        cuadrillaId={selectedCuadrilla?.id ?? 0}
-        operario={desvincularOperario}
-        open={Boolean(desvincularOperario)}
-        onOpenChange={(open) => !open && setDesvincularOperario(null)}
       />
     </div>
   );

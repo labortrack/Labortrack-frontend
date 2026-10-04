@@ -22,6 +22,7 @@ import {
   ObraDetailPage,
   ObraQrDisplayPage,
   CuadrillasPage,
+  CuadrillaDetailPage,
   MiCuadrillaPage,
   PlanTrabajoDetailPage,
   LegajosPage,
@@ -171,6 +172,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
                         {suspense(<CuadrillasPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/obras/:obraId/cuadrillas/:cuadrillaId",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                        {suspense(<CuadrillaDetailPage />)}
                       </RoleRoute>
                     ),
                   },

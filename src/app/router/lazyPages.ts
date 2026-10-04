@@ -39,6 +39,9 @@ export const ObraQrDisplayPage = lazy(
 export const CuadrillasPage = lazy(
   () => import("@/features/cuadrilla/pages/CuadrillasPage"),
 );
+export const CuadrillaDetailPage = lazy(
+  () => import("@/features/cuadrilla/pages/CuadrillaDetailPage"),
+);
 export const MiCuadrillaPage = lazy(
   () => import("@/features/cuadrilla/pages/MiCuadrillaPage"),
 );
