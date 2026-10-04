@@ -36,6 +36,10 @@ import {
   Spinner,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaButton,
+} from "@/features/auditoria";
 
 // ─── Modal: Crear / Modificar Valor (Zona × Categoría) ──────────────────────
 
@@ -49,6 +53,7 @@ export function CategoriaZonaFormDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const isEdit = Boolean(celda);
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
   const crear = useCrearCategoriaZona();
   const modificar = useModificarCategoriaZona();
   const mutation = isEdit ? modificar : crear;
@@ -234,30 +239,48 @@ export function CategoriaZonaFormDialog({
             />
           </FormField>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => handleOpenChange(false)}
-              disabled={mutation.isPending}
-            >
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={mutation.isPending}>
-              {mutation.isPending ? (
-                <>
-                  <Spinner className="text-white" />
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <CheckCircle2 className="mr-2 size-4" />
-                  Guardar
-                </>
+          <DialogFooter className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+              {isEdit && celda && (
+                <HistorialAuditoriaButton
+                  onAbrir={() =>
+                    abrirHistorial(
+                      "categoria_zona",
+                      celda.id,
+                      `${celda.nombreCategoria} - ${celda.nombreZona}`,
+                    )
+                  }
+                  label="Historial"
+                />
               )}
-            </Button>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => handleOpenChange(false)}
+                disabled={mutation.isPending}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? (
+                  <>
+                    <Spinner className="text-white" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="mr-2 size-4" />
+                    Guardar
+                  </>
+                )}
+              </Button>
+            </div>
           </DialogFooter>
         </form>
+
+        {renderDialog()}
       </DialogContent>
     </Dialog>
   );

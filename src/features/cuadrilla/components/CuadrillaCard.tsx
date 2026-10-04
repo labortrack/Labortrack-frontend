@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronRight,
 } from "lucide-react";
+import { HistorialAuditoriaIconButton } from "@/features/auditoria";
 import { CuadrillaStatusBadge } from "./CuadrillaStatusBadge";
 import type { CuadrillaResponseDto } from "../types/cuadrilla.types";
 import { cn } from "@/shared/utils/cn";
@@ -21,6 +22,7 @@ interface CuadrillaCardProps {
   onAsignarLider: (cuadrilla: CuadrillaResponseDto) => void;
   onBaja: (cuadrilla: CuadrillaResponseDto) => void;
   onReactivar: (cuadrilla: CuadrillaResponseDto) => void;
+  onAbrirHistorial?: (cuadrilla: CuadrillaResponseDto) => void;
 }
 
 export function CuadrillaCard({
@@ -31,6 +33,7 @@ export function CuadrillaCard({
   onAsignarLider,
   onBaja,
   onReactivar,
+  onAbrirHistorial,
 }: CuadrillaCardProps) {
   const isSuspended = cuadrilla.estadoActual === "SUSPENDIDA";
   const isFinalizada = cuadrilla.estadoActual === "FINALIZADA";
@@ -120,6 +123,13 @@ export function CuadrillaCard({
         {/* Footer actions */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50 gap-2">
           <div className="flex items-center gap-1">
+            {onAbrirHistorial && (
+              <HistorialAuditoriaIconButton
+                onAbrir={() => onAbrirHistorial(cuadrilla)}
+                label={`Historial de ${cuadrilla.nombre}`}
+              />
+            )}
+
             <Button
               type="button"
               variant="ghost"

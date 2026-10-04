@@ -19,11 +19,16 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { cn } from "@/shared/utils/cn";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaIconButton,
+} from "@/features/auditoria";
 
 const TABS: TabFiltroZona[] = ["Todos", "Activos", "Inactivos"];
 
 export function ZonaTab() {
   const [filtro, setFiltro] = useState<TabFiltroZona>("Activos");
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editingZona, setEditingZona] = useState<ZonaResponseDto | null>(null);
@@ -139,6 +144,11 @@ export function ZonaTab() {
 
                 <TableCell>
                   <div className="flex justify-end gap-1">
+                    <HistorialAuditoriaIconButton
+                      onAbrir={() => abrirHistorial("zona", zona.id, zona.nombreZona)}
+                      label={`Historial de ${zona.nombreZona}`}
+                    />
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -219,6 +229,8 @@ export function ZonaTab() {
           if (!open) setActivarZona(null);
         }}
       />
+
+      {renderDialog()}
     </div>
   );
 }

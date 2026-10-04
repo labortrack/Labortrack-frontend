@@ -14,6 +14,7 @@ import {
 } from "@/shared/ui";
 import { InitialsAvatar } from "@/shared/components/InitialsAvatar";
 import { Search, CalendarClock } from "lucide-react";
+import { HistorialAuditoriaIconButton } from "@/features/auditoria";
 import type {
   EmpleadoGrupoResponseDto,
   GrupoResponseDto,
@@ -29,6 +30,7 @@ interface AsignacionesTableProps {
   filtroEstado: string;
   onFiltroEstadoChange: (val: string) => void;
   onFinalizar: (asig: EmpleadoGrupoResponseDto) => void;
+  onAbrirHistorial?: (asig: EmpleadoGrupoResponseDto) => void;
   isLoading?: boolean;
 }
 
@@ -42,6 +44,7 @@ export function AsignacionesTable({
   filtroEstado,
   onFiltroEstadoChange,
   onFinalizar,
+  onAbrirHistorial,
   isLoading,
 }: AsignacionesTableProps) {
   const filas = asignaciones.filter((a) => {
@@ -160,7 +163,7 @@ export function AsignacionesTable({
                   Fecha Fin
                 </span>
               </TableHead>
-              <TableHead className="py-3 px-4 w-[90px] text-center">
+              <TableHead className="py-3 px-4 w-[100px] text-center">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-foreground-muted">
                   Acciones
                 </span>
@@ -232,15 +235,23 @@ export function AsignacionesTable({
                       )}
                     </TableCell>
                     <TableCell className="py-3 px-4 text-center">
-                      {!asig.fechaHastaEmpleadoGrupo && (
-                        <button
-                          onClick={() => onFinalizar(asig)}
-                          title="Finalizar asignación"
-                          className="size-8 flex items-center justify-center rounded-[0.25rem] text-foreground-muted hover:text-accent-deep hover:bg-warning-soft transition-colors mx-auto cursor-pointer"
-                        >
-                          <CalendarClock className="size-4" />
-                        </button>
-                      )}
+                      <div className="flex items-center justify-center gap-1">
+                        {onAbrirHistorial && (
+                          <HistorialAuditoriaIconButton
+                            onAbrir={() => onAbrirHistorial(asig)}
+                            label={`Historial de ${nombreCompleto}`}
+                          />
+                        )}
+                        {!asig.fechaHastaEmpleadoGrupo && (
+                          <button
+                            onClick={() => onFinalizar(asig)}
+                            title="Finalizar asignación"
+                            className="size-8 flex items-center justify-center rounded-[0.25rem] text-foreground-muted hover:text-accent-deep hover:bg-warning-soft transition-colors cursor-pointer"
+                          >
+                            <CalendarClock className="size-4" />
+                          </button>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

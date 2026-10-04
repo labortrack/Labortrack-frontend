@@ -28,10 +28,12 @@ import type {
   CuadrillaResponseDto,
   EmpleadoGrupoCuadrillaResponseDto,
 } from "../types/cuadrilla.types";
+import { useHistorialAuditoriaDialog } from "@/features/auditoria";
 
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
   const obraId = Number(paramObraId);
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   // Queries
   const obraQuery = useObra(obraId);
@@ -240,6 +242,9 @@ export default function CuadrillasPage() {
                 onAsignarLider={(cuad) => setLiderCuadrilla(cuad)}
                 onBaja={(cuad) => setBajaCuadrilla(cuad)}
                 onReactivar={(cuad) => setReactivarCuadrilla(cuad)}
+                onAbrirHistorial={(cuad) =>
+                  abrirHistorial("cuadrilla", cuad.id, cuad.nombre)
+                }
               />
             ))}
           </div>
@@ -257,6 +262,13 @@ export default function CuadrillasPage() {
             onRetry={() => void operariosQuery.refetch()}
             onAsignarOperario={() => setAsignarOperarioOpen(true)}
             onDesvincularOperario={(op) => setDesvincularOperario(op)}
+            onAbrirHistorial={(op) =>
+              abrirHistorial(
+                "empleado_grupo_cuadrilla",
+                op.id,
+                `${op.apellidoEmpleado}, ${op.nombreEmpleado} (${op.descripcionActividad || "Operario"})`
+              )
+            }
           />
         </div>
       )}
@@ -310,6 +322,8 @@ export default function CuadrillasPage() {
         open={Boolean(desvincularOperario)}
         onOpenChange={(open) => !open && setDesvincularOperario(null)}
       />
+
+      {renderDialog()}
     </div>
   );
 }

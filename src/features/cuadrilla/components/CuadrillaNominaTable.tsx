@@ -24,6 +24,7 @@ import {
   HardHat,
   Calendar,
 } from "lucide-react";
+import { HistorialAuditoriaIconButton } from "@/features/auditoria";
 import type {
   CuadrillaResponseDto,
   EmpleadoGrupoCuadrillaResponseDto,
@@ -37,6 +38,7 @@ interface CuadrillaNominaTableProps {
   onRetry: () => void;
   onAsignarOperario: () => void;
   onDesvincularOperario: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
+  onAbrirHistorial?: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
 }
 
 export function CuadrillaNominaTable({
@@ -47,6 +49,7 @@ export function CuadrillaNominaTable({
   onRetry,
   onAsignarOperario,
   onDesvincularOperario,
+  onAbrirHistorial,
 }: CuadrillaNominaTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
 
@@ -219,17 +222,25 @@ export function CuadrillaNominaTable({
 
                     {/* Acciones */}
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="size-8 p-0 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-                        title="Desvincular de la cuadrilla"
-                        onClick={() => onDesvincularOperario(op)}
-                        disabled={isSuspended || isFinalizada}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        {onAbrirHistorial && (
+                          <HistorialAuditoriaIconButton
+                            onAbrir={() => onAbrirHistorial(op)}
+                            label={`Historial de ${op.apellidoEmpleado}, ${op.nombreEmpleado}`}
+                          />
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="size-8 p-0 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
+                          title="Desvincular de la cuadrilla"
+                          onClick={() => onDesvincularOperario(op)}
+                          disabled={isSuspended || isFinalizada}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}

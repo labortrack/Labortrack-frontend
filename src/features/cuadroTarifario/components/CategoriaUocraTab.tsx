@@ -28,11 +28,16 @@ import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
 import { getTipoLiquidacionLabel } from "../utils/tipoLiquidacionLabels";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaIconButton,
+} from "@/features/auditoria";
 
 const TABS: TabFiltroCategoriaUocra[] = ["Todos", "Activos", "Inactivos"];
 
 export function CategoriaUocraTab() {
   const [filtro, setFiltro] = useState<TabFiltroCategoriaUocra>("Activos");
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editingCategoria, setEditingCategoria] =
@@ -165,6 +170,16 @@ export function CategoriaUocraTab() {
 
                 <TableCell>
                   <div className="flex justify-end gap-1">
+                    <HistorialAuditoriaIconButton
+                      onAbrir={() =>
+                        abrirHistorial(
+                          "categoria_uocra",
+                          categoria.id,
+                          categoria.nombreCategoria,
+                        )
+                      }
+                      label={`Historial de ${categoria.nombreCategoria}`}
+                    />
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -249,6 +264,8 @@ export function CategoriaUocraTab() {
           if (!open) setActivarCategoria(null);
         }}
       />
+
+      {renderDialog()}
     </div>
   );
 }

@@ -21,6 +21,7 @@ import { NuevaAsignacionDialog } from "../components/dialogs/NuevaAsignacionDial
 import { FinalizarAsignacionDialog } from "../components/dialogs/FinalizarAsignacionDialog";
 import { EmpleadosSinGrupoDialog } from "../components/dialogs/EmpleadosSinGrupoDialog";
 import type { EmpleadoResumenResponseDto } from "@/features/legajos/types/legajo.types";
+import { useHistorialAuditoriaDialog } from "@/features/auditoria";
 import {
   useGruposList,
   useCreateGrupo,
@@ -40,6 +41,7 @@ import type {
 
 export default function EstructuraLaboralPage() {
   const [activeTab, setActiveTab] = useState<MainTab>("grupos");
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   // ── Queries & Mutations (Direct Backend Data) ──
   const gruposQuery = useGruposList();
@@ -283,6 +285,9 @@ export default function EstructuraLaboralPage() {
             onFiltroChange={setFiltroGrupo}
             onEdit={(g) => setEditTargetGrupo(g)}
             onDelete={(g) => setDeleteTargetGrupo(g)}
+            onAbrirHistorial={(g) =>
+              abrirHistorial("grupo", g.id, g.tipoActividad)
+            }
             isLoading={gruposQuery.isLoading}
           />
         </div>
@@ -336,6 +341,13 @@ export default function EstructuraLaboralPage() {
             filtroEstado={filtroEstadoAsig}
             onFiltroEstadoChange={setFiltroEstadoAsig}
             onFinalizar={(a) => setFinalizarTargetAsig(a)}
+            onAbrirHistorial={(a) =>
+              abrirHistorial(
+                "empleado_grupo",
+                a.id,
+                `${a.apellidoEmpleado}, ${a.nombreEmpleado} - ${a.tipoActividad}`
+              )
+            }
             isLoading={empleadoGruposQuery.isLoading}
           />
         </div>
@@ -402,6 +414,8 @@ export default function EstructuraLaboralPage() {
         onConfirmarFinalizar={handleConfirmarFinalizarAsig}
         isPending={finalizarEmpleadoGrupoMutation.isPending}
       />
+
+      {renderDialog()}
     </div>
   );
 }
