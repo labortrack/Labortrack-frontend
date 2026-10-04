@@ -8,7 +8,6 @@ import {
   ClipboardList,
   FileText,
   HardHat,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -22,9 +21,8 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "@/features/auth/hooks/useAuthActions";
-import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
-import type { RolNombre } from "@/features/auth/types/auth.types";
+import { rolLabels } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
 import { useObras } from "@/features/obra/hooks/useObras";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
@@ -40,16 +38,9 @@ import {
 } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 
-const roleLabels: Record<RolNombre, string> = {
-  ROLE_ADMIN: "Administrador",
-  ROLE_RRHH: "Recursos Humanos",
-  ROLE_OPERARIO: "Operario",
-};
-
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
   const miCuadrillaSearch = useMiCuadrillaNavegacionStore(
     (state) => state.busquedaPorUsuario[String(user.idUsuario)] ?? "",
@@ -243,41 +234,44 @@ export function AppLayout() {
             collapsed && !mobileOpen && "justify-center",
           )}
         >
-          <Avatar>{initials || "US"}</Avatar>
-          {!collapsed || mobileOpen ? (
-            <>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">
-                  {user.nombre} {user.apellido}
-                </p>
-                <p className="truncate text-xs text-foreground-muted">
-                  {roleLabels[user.rol]}
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-muted hover:text-primary"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setChangePasswordOpen(true);
-                    }}
-                    aria-label="Cambiar contraseña"
-                  >
-                    <KeyRound className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Cambiar contraseña</TooltipContent>
-              </Tooltip>
-              <button
-                className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
-                onClick={handleLogout}
-                disabled={logout.isPending}
-                aria-label="Cerrar sesión"
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <NavLink
+                to="/mis-datos"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Ver Mis Datos"
+                className={({ isActive }) =>
+                  cn(
+                    "group flex min-w-0 items-center gap-3 rounded-control p-1 transition-colors hover:bg-border",
+                    (!collapsed || mobileOpen) && "flex-1",
+                    isActive && "ring-2 ring-primary/30",
+                  )
+                }
               >
-                <LogOut className="size-4" />
-              </button>
-            </>
+                <Avatar>{initials || "US"}</Avatar>
+                {!collapsed || mobileOpen ? (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold group-hover:text-primary">
+                      {user.nombre} {user.apellido}
+                    </p>
+                    <p className="truncate text-xs text-foreground-muted">
+                      {rolLabels[user.rol]}
+                    </p>
+                  </div>
+                ) : null}
+              </NavLink>
+            </TooltipTrigger>
+            <TooltipContent side="top">Mis Datos</TooltipContent>
+          </Tooltip>
+          {!collapsed || mobileOpen ? (
+            <button
+              className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
+              onClick={handleLogout}
+              disabled={logout.isPending}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="size-4" />
+            </button>
           ) : null}
         </div>
       </div>
@@ -311,7 +305,7 @@ export function AppLayout() {
               {user.nombre} {user.apellido}
             </p>
             <p className="text-xs text-foreground-muted">
-              {roleLabels[user.rol]}
+              {rolLabels[user.rol]}
             </p>
           </div>
         </header>
@@ -321,10 +315,6 @@ export function AppLayout() {
           </div>
         </main>
       </div>
-      <ChangePasswordDialog
-        open={changePasswordOpen}
-        onOpenChange={setChangePasswordOpen}
-      />
     </div>
   );
 }

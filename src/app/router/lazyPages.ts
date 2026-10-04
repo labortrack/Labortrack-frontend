@@ -55,7 +55,7 @@ export const EstructuraLaboralPage = lazy(
   () => import("@/features/estructuraLaboral/pages/EstructuraLaboralPage"),
 );
 export const MisDatosPage = lazy(
-  () => import("@/features/legajos/pages/MisDatosPage"),
+  () => import("@/features/perfil/pages/MisDatosPage"),
 );
 
 export const MisAsistenciasPage = lazy(
