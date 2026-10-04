@@ -953,8 +953,8 @@ export function AsignarCapatazDialog({
             {isFinalizada && (
               <Alert variant="warning">
                 <AlertTriangle className="mt-0.5 size-4" />
-                No es posible asignar o modificar el capataz de una obra en estado{" "}
-                <strong>{obra.estadoActual}</strong>.
+                La obra está en estado <strong>{obra.estadoActual}</strong>. Para
+                reactivarla debe tener un capataz válido y sin otra obra activa.
               </Alert>
             )}
 
@@ -1005,7 +1005,6 @@ export function AsignarCapatazDialog({
                       disabled={
                         mutation.isPending ||
                         isLoadingCapataces ||
-                        isFinalizada ||
                         capatacesDisponibles.length === 0
                       }
                     >
@@ -1081,7 +1080,6 @@ export function AsignarCapatazDialog({
               type="submit"
               disabled={
                 mutation.isPending ||
-                isFinalizada ||
                 isLoadingCapataces ||
                 capatacesDisponibles.length === 0
               }

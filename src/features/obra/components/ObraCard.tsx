@@ -149,7 +149,6 @@ export function ObraCard({
                   variant="ghost"
                   size="icon"
                   onClick={() => onAsignarCapataz(obra)}
-                  disabled={isFinalizada}
                   className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary disabled:opacity-30"
                   aria-label={obra.capataz ? "Cambiar capataz" : "Asignar capataz"}
                 >
