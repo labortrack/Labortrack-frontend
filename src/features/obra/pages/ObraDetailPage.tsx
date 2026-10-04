@@ -150,10 +150,7 @@ export default function ObraDetailPage() {
                       <ArrowRightLeft className="size-4 text-foreground-muted" />
                       Cambiar Estado
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      disabled={isFinalizada}
-                      onSelect={() => setAsignarCapatazOpen(true)}
-                    >
+                    <DropdownMenuItem onSelect={() => setAsignarCapatazOpen(true)}>
                       <HardHat className="size-4 text-foreground-muted" />
                       {obra.capataz ? "Cambiar Capataz" : "Asignar Capataz"}
                     </DropdownMenuItem>
@@ -267,7 +264,6 @@ export default function ObraDetailPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => setAsignarCapatazOpen(true)}
-                  disabled={isFinalizada}
                   className="h-7 px-2 text-xs text-foreground-muted hover:text-primary cursor-pointer"
                 >
                   <ArrowRightLeft className="size-3 mr-1" />
@@ -337,7 +333,6 @@ export default function ObraDetailPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => setAsignarCapatazOpen(true)}
-                      disabled={isFinalizada}
                       className="w-full text-xs"
                     >
                       <UserCheck className="size-3.5 mr-1" />
