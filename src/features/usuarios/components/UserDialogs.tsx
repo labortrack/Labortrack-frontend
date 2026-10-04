@@ -38,6 +38,8 @@ import {
   Textarea,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
+import { puedeAsignarRol } from "@/features/auth/utils/rolesAsignables";
 
 const roleOptions: Array<{ value: RolNombre; label: string }> = [
   { value: "ROLE_OPERARIO", label: "Operario" },
@@ -52,13 +54,14 @@ function RoleSelect({
   value: RolNombre;
   onChange: (value: RolNombre) => void;
 }) {
+  const rolActor = useSessionStore((state) => state.user?.rol);
   return (
     <Select value={value} onValueChange={(next) => onChange(next as RolNombre)}>
       <SelectTrigger>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        {roleOptions.map((role) => (
+        {roleOptions.filter((role) => puedeAsignarRol(rolActor, role.value)).map((role) => (
           <SelectItem key={role.value} value={role.value}>
             {role.label}
           </SelectItem>
