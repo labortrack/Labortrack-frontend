@@ -8,7 +8,6 @@ import {
   ClipboardList,
   FileText,
   HardHat,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -22,7 +21,6 @@ import {
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "@/features/auth/hooks/useAuthActions";
-import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { rolLabels } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
@@ -43,7 +41,6 @@ import { cn } from "@/shared/utils/cn";
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
   const miCuadrillaSearch = useMiCuadrillaNavegacionStore(
     (state) => state.busquedaPorUsuario[String(user.idUsuario)] ?? "",
@@ -267,31 +264,14 @@ export function AppLayout() {
             <TooltipContent side="top">Mis Datos</TooltipContent>
           </Tooltip>
           {!collapsed || mobileOpen ? (
-            <>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-muted hover:text-primary"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setChangePasswordOpen(true);
-                    }}
-                    aria-label="Cambiar contraseña"
-                  >
-                    <KeyRound className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Cambiar contraseña</TooltipContent>
-              </Tooltip>
-              <button
-                className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
-                onClick={handleLogout}
-                disabled={logout.isPending}
-                aria-label="Cerrar sesión"
-              >
-                <LogOut className="size-4" />
-              </button>
-            </>
+            <button
+              className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
+              onClick={handleLogout}
+              disabled={logout.isPending}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="size-4" />
+            </button>
           ) : null}
         </div>
       </div>
@@ -335,10 +315,6 @@ export function AppLayout() {
           </div>
         </main>
       </div>
-      <ChangePasswordDialog
-        open={changePasswordOpen}
-        onOpenChange={setChangePasswordOpen}
-      />
     </div>
   );
 }
