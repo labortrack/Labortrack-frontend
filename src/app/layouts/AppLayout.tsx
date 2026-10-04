@@ -24,7 +24,7 @@ import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "@/features/auth/hooks/useAuthActions";
 import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
-import type { RolNombre } from "@/features/auth/types/auth.types";
+import { rolLabels } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
 import { useObras } from "@/features/obra/hooks/useObras";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
@@ -39,12 +39,6 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
-
-const roleLabels: Record<RolNombre, string> = {
-  ROLE_ADMIN: "Administrador",
-  ROLE_RRHH: "Recursos Humanos",
-  ROLE_OPERARIO: "Operario",
-};
 
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -243,17 +237,37 @@ export function AppLayout() {
             collapsed && !mobileOpen && "justify-center",
           )}
         >
-          <Avatar>{initials || "US"}</Avatar>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <NavLink
+                to="/mis-datos"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Ver Mis Datos"
+                className={({ isActive }) =>
+                  cn(
+                    "group flex min-w-0 items-center gap-3 rounded-control p-1 transition-colors hover:bg-border",
+                    (!collapsed || mobileOpen) && "flex-1",
+                    isActive && "ring-2 ring-primary/30",
+                  )
+                }
+              >
+                <Avatar>{initials || "US"}</Avatar>
+                {!collapsed || mobileOpen ? (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold group-hover:text-primary">
+                      {user.nombre} {user.apellido}
+                    </p>
+                    <p className="truncate text-xs text-foreground-muted">
+                      {rolLabels[user.rol]}
+                    </p>
+                  </div>
+                ) : null}
+              </NavLink>
+            </TooltipTrigger>
+            <TooltipContent side="top">Mis Datos</TooltipContent>
+          </Tooltip>
           {!collapsed || mobileOpen ? (
             <>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">
-                  {user.nombre} {user.apellido}
-                </p>
-                <p className="truncate text-xs text-foreground-muted">
-                  {roleLabels[user.rol]}
-                </p>
-              </div>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <button
@@ -311,7 +325,7 @@ export function AppLayout() {
               {user.nombre} {user.apellido}
             </p>
             <p className="text-xs text-foreground-muted">
-              {roleLabels[user.rol]}
+              {rolLabels[user.rol]}
             </p>
           </div>
         </header>
