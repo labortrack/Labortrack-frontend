@@ -5,6 +5,7 @@ export { HistorialAuditoriaDialog } from "./components/HistorialAuditoriaDialog"
 export type { HistorialAuditoriaDialogProps } from "./components/HistorialAuditoriaDialog";
 export { useHistorialAuditoriaDialog } from "./hooks/useHistorialAuditoriaDialog";
 export type { AuditoriaTarget } from "./hooks/useHistorialAuditoriaDialog";
+export { useEsAdminAuditoria } from "./hooks/useEsAdminAuditoria";
 export {
   HistorialAuditoriaMenuItem,
   HistorialAuditoriaIconButton,

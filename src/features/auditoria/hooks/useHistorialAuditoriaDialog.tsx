@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useSessionStore } from "@/features/auth/store/sessionStore";
+import { useEsAdminAuditoria } from "./useEsAdminAuditoria";
 import { HistorialAuditoriaDialog } from "../components/HistorialAuditoriaDialog";
 
 export interface AuditoriaTarget {
@@ -13,7 +13,7 @@ export interface AuditoriaTarget {
  * La verificación de rol ("ROLE_ADMIN") se centraliza aquí para todo el flujo.
  */
 export function useHistorialAuditoriaDialog() {
-  const esAdmin = useSessionStore((state) => state.user?.rol === "ROLE_ADMIN");
+  const esAdmin = useEsAdminAuditoria();
   const [open, setOpen] = useState(false);
   const [target, setTarget] = useState<AuditoriaTarget | null>(null);
 
