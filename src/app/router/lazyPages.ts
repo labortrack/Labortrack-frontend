@@ -39,6 +39,15 @@ export const ObraQrDisplayPage = lazy(
 export const CuadrillasPage = lazy(
   () => import("@/features/cuadrilla/pages/CuadrillasPage"),
 );
+export const CuadrillaDetailPage = lazy(
+  () => import("@/features/cuadrilla/pages/CuadrillaDetailPage"),
+);
+export const MiCuadrillaPage = lazy(
+  () => import("@/features/cuadrilla/pages/MiCuadrillaPage"),
+);
+export const PlanTrabajoDetailPage = lazy(
+  () => import("@/features/jornada/pages/PlanTrabajoDetailPage"),
+);
 export const LegajosPage = lazy(
   () => import("@/features/legajos/pages/LegajosPage"),
 );
@@ -46,7 +55,7 @@ export const EstructuraLaboralPage = lazy(
   () => import("@/features/estructuraLaboral/pages/EstructuraLaboralPage"),
 );
 export const MisDatosPage = lazy(
-  () => import("@/features/legajos/pages/MisDatosPage"),
+  () => import("@/features/perfil/pages/MisDatosPage"),
 );
 
 export const MisAsistenciasPage = lazy(

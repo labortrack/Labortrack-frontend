@@ -6,7 +6,6 @@ import {
   Pencil,
   Trash2,
   RotateCcw,
-  CheckCircle2,
   ChevronRight,
 } from "lucide-react";
 import { HistorialAuditoriaIconButton } from "@/features/auditoria";
@@ -16,7 +15,6 @@ import { cn } from "@/shared/utils/cn";
 
 interface CuadrillaCardProps {
   cuadrilla: CuadrillaResponseDto;
-  isSelected?: boolean;
   onSelect: (cuadrilla: CuadrillaResponseDto) => void;
   onEdit: (cuadrilla: CuadrillaResponseDto) => void;
   onAsignarLider: (cuadrilla: CuadrillaResponseDto) => void;
@@ -27,7 +25,6 @@ interface CuadrillaCardProps {
 
 export function CuadrillaCard({
   cuadrilla,
-  isSelected,
   onSelect,
   onEdit,
   onAsignarLider,
@@ -42,9 +39,7 @@ export function CuadrillaCard({
     <Card
       className={cn(
         "relative overflow-hidden transition-all duration-200 hover:shadow-md cursor-pointer border",
-        isSelected
-          ? "border-primary ring-2 ring-primary/20 shadow-md bg-card"
-          : "border-border hover:border-primary/40 bg-card/80",
+        "border-border hover:border-primary/40 bg-card/80",
         isSuspended && "opacity-80 bg-muted/30"
       )}
       onClick={() => onSelect(cuadrilla)}
@@ -178,7 +173,7 @@ export function CuadrillaCard({
 
           <Button
             type="button"
-            variant={isSelected ? "primary" : "outline"}
+            variant="outline"
             size="sm"
             className="h-8 text-xs font-semibold gap-1"
             onClick={(e) => {
@@ -186,17 +181,8 @@ export function CuadrillaCard({
               onSelect(cuadrilla);
             }}
           >
-            {isSelected ? (
-              <>
-                <CheckCircle2 className="size-3.5 text-primary-foreground" />
-                <span>Nómina Activa</span>
-              </>
-            ) : (
-              <>
-                <span>Ver Nómina</span>
-                <ChevronRight className="size-3.5" />
-              </>
-            )}
+            <span>Ver Cuadrilla</span>
+            <ChevronRight className="size-3.5" />
           </Button>
         </div>
       </CardContent>

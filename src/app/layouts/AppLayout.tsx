@@ -18,16 +18,18 @@ import {
   User,
   UserCheck,
   UserCog,
+  UsersRound,
   X,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useLogout } from "@/features/auth/hooks/useAuthActions";
-import { ChangePasswordDialog } from "@/features/auth/components/ChangePasswordDialog";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
-import type { RolNombre } from "@/features/auth/types/auth.types";
+import { rolLabels } from "@/features/auth/types/auth.types";
 import { useCapacidadesAsistencia } from "@/features/asistencia/hooks/useAsistencias";
 import { useObras } from "@/features/obra/hooks/useObras";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
+import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
+import { useMiCuadrillaNavegacionStore } from "@/features/cuadrilla/store/miCuadrillaNavegacionStore";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import {
   Avatar,
@@ -38,17 +40,13 @@ import {
 } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 
-const roleLabels: Record<RolNombre, string> = {
-  ROLE_ADMIN: "Administrador",
-  ROLE_RRHH: "Recursos Humanos",
-  ROLE_OPERARIO: "Operario",
-};
-
 export function AppLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [changePasswordOpen, setChangePasswordOpen] = useState(false);
   const user = useSessionStore((state) => state.user)!;
+  const miCuadrillaSearch = useMiCuadrillaNavegacionStore(
+    (state) => state.busquedaPorUsuario[String(user.idUsuario)] ?? "",
+  );
   const capacidadesQuery = useCapacidadesAsistencia();
   const empresaQuery = useEmpresa();
   const empresa = empresaQuery.data;
@@ -60,7 +58,12 @@ export function AppLayout() {
   const canManageUsers = user.rol === "ROLE_ADMIN" || user.rol === "ROLE_RRHH";
   const isOperario = user?.rol === "ROLE_OPERARIO";
   const obrasQuery = useObras(undefined, isOperario);
+  const dashboardQuery = useDashboardResumen(isOperario);
   const esCapatazDeAlgunaObra = isOperario && (obrasQuery.data?.length ?? 0) > 0;
+  const esLiderDeCuadrilla =
+    isOperario &&
+    dashboardQuery.data?.tipoAlcance === "CUADRILLA" &&
+    (dashboardQuery.data.cuadrilla?.misCuadrillas.length ?? 0) > 0;
   const capacidades = capacidadesQuery.isError
     ? undefined
     : capacidadesQuery.data;
@@ -78,6 +81,14 @@ export function AppLayout() {
       : []),
     ...(esCapatazDeAlgunaObra
       ? [{ to: "/obras", label: "Obras", icon: HardHat }]
+      : []),
+    ...(esLiderDeCuadrilla
+      ? [{
+        to: `/mi-cuadrilla${miCuadrillaSearch ? `?${miCuadrillaSearch}` : ""}`,
+        activePath: "/mi-cuadrilla",
+        label: "Mi cuadrilla",
+        icon: UsersRound,
+      }]
       : []),
     ...(canManageUsers
       ? [
@@ -147,17 +158,17 @@ export function AppLayout() {
         className="flex-1 space-y-1 overflow-y-auto p-3"
         aria-label="Navegación principal"
       >
-        {navItems.map(({ to, label, icon: Icon }) => {
+        {navItems.map(({ to, activePath = to, label, icon: Icon }) => {
           const isCurrentActive =
-            location.pathname === to ||
-            location.pathname.startsWith(`${to}/`) ||
-            (to === "/obras" &&
+            location.pathname === activePath ||
+            location.pathname.startsWith(`${activePath}/`) ||
+            (activePath === "/obras" &&
               (location.pathname.startsWith("/obras") ||
                 location.pathname.startsWith("/configuracion-obras"))) ||
-            (to === "/higiene-seguridad" &&
+            (activePath === "/higiene-seguridad" &&
               (location.pathname.startsWith("/higiene-seguridad") ||
                 location.pathname.startsWith("/epp"))) ||
-            (to === "/legajos" &&
+            (activePath === "/legajos" &&
               location.pathname.startsWith("/estructura-laboral"));
 
           return (
@@ -226,41 +237,44 @@ export function AppLayout() {
             collapsed && !mobileOpen && "justify-center",
           )}
         >
-          <Avatar>{initials || "US"}</Avatar>
-          {!collapsed || mobileOpen ? (
-            <>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold">
-                  {user.nombre} {user.apellido}
-                </p>
-                <p className="truncate text-xs text-foreground-muted">
-                  {roleLabels[user.rol]}
-                </p>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-muted hover:text-primary"
-                    onClick={() => {
-                      setMobileOpen(false);
-                      setChangePasswordOpen(true);
-                    }}
-                    aria-label="Cambiar contraseña"
-                  >
-                    <KeyRound className="size-4" />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Cambiar contraseña</TooltipContent>
-              </Tooltip>
-              <button
-                className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
-                onClick={handleLogout}
-                disabled={logout.isPending}
-                aria-label="Cerrar sesión"
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <NavLink
+                to="/mis-datos"
+                onClick={() => setMobileOpen(false)}
+                aria-label="Ver Mis Datos"
+                className={({ isActive }) =>
+                  cn(
+                    "group flex min-w-0 items-center gap-3 rounded-control p-1 transition-colors hover:bg-border",
+                    (!collapsed || mobileOpen) && "flex-1",
+                    isActive && "ring-2 ring-primary/30",
+                  )
+                }
               >
-                <LogOut className="size-4" />
-              </button>
-            </>
+                <Avatar>{initials || "US"}</Avatar>
+                {!collapsed || mobileOpen ? (
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-bold group-hover:text-primary">
+                      {user.nombre} {user.apellido}
+                    </p>
+                    <p className="truncate text-xs text-foreground-muted">
+                      {rolLabels[user.rol]}
+                    </p>
+                  </div>
+                ) : null}
+              </NavLink>
+            </TooltipTrigger>
+            <TooltipContent side="top">Mis Datos</TooltipContent>
+          </Tooltip>
+          {!collapsed || mobileOpen ? (
+            <button
+              className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"
+              onClick={handleLogout}
+              disabled={logout.isPending}
+              aria-label="Cerrar sesión"
+            >
+              <LogOut className="size-4" />
+            </button>
           ) : null}
         </div>
       </div>
@@ -294,7 +308,7 @@ export function AppLayout() {
               {user.nombre} {user.apellido}
             </p>
             <p className="text-xs text-foreground-muted">
-              {roleLabels[user.rol]}
+              {rolLabels[user.rol]}
             </p>
           </div>
         </header>
@@ -304,10 +318,6 @@ export function AppLayout() {
           </div>
         </main>
       </div>
-      <ChangePasswordDialog
-        open={changePasswordOpen}
-        onOpenChange={setChangePasswordOpen}
-      />
     </div>
   );
 }

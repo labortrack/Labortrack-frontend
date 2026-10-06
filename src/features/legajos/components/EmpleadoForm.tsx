@@ -52,6 +52,9 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { PASSWORD_HINT } from "@/shared/lib/validation/passwordSchema";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
+import type { RolNombre } from "@/features/auth/types/auth.types";
+import { puedeAsignarRol } from "@/features/auth/utils/rolesAsignables";
 
 const GRUPO_SANGUINEO_OPTIONS = [
   "A+",
@@ -68,7 +71,7 @@ const GENERO_OPTIONS: Array<{ value: Genero; label: string }> = (
   Object.keys(GENERO_LABELS) as Genero[]
 ).map((key) => ({ value: key, label: GENERO_LABELS[key] }));
 
-const ROL_OPTIONS: Array<{ value: string; label: string }> = [
+const ROL_OPTIONS: Array<{ value: RolNombre; label: string }> = [
   { value: "ROLE_OPERARIO", label: "Operario" },
   { value: "ROLE_RRHH", label: "Recursos Humanos" },
   { value: "ROLE_ADMIN", label: "Administrador" },
@@ -86,6 +89,7 @@ export function EmpleadoForm({
   onCancel,
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
+  const rolActor = useSessionStore((state) => state.user?.rol);
 
   const { data: empleadoData, isLoading: isLoadingEmpleado } =
     useLegajoDetail(empleadoId);
@@ -367,7 +371,7 @@ export function EmpleadoForm({
                       <SelectValue placeholder="Seleccioná un rol" />
                     </SelectTrigger>
                     <SelectContent>
-                      {ROL_OPTIONS.map((opt) => (
+                      {ROL_OPTIONS.filter((opt) => puedeAsignarRol(rolActor, opt.value)).map((opt) => (
                         <SelectItem key={opt.value} value={opt.value}>
                           {opt.label}
                         </SelectItem>

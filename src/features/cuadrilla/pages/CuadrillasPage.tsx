@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { Plus, HardHat } from "lucide-react";
 import {
   BackLink,
@@ -10,13 +10,9 @@ import {
 } from "@/shared/components";
 import { Button, Card } from "@/shared/ui";
 import { useObra } from "@/features/obra/hooks/useObras";
-import {
-  useCuadrillasPorObra,
-  useOperariosCuadrilla,
-} from "../hooks/useCuadrillas";
+import { useCuadrillasPorObra } from "../hooks/useCuadrillas";
 import { CuadrillaMetrics } from "../components/CuadrillaMetrics";
 import { CuadrillaCard } from "../components/CuadrillaCard";
-import { CuadrillaNominaTable } from "../components/CuadrillaNominaTable";
 import { CreateCuadrillaDialog } from "../components/dialogs/CreateCuadrillaDialog";
 import { EditCuadrillaDialog } from "../components/dialogs/EditCuadrillaDialog";
 import { BajaCuadrillaDialog } from "../components/dialogs/BajaCuadrillaDialog";
@@ -29,22 +25,44 @@ import type {
   EmpleadoGrupoCuadrillaResponseDto,
 } from "../types/cuadrilla.types";
 import { useHistorialAuditoriaDialog } from "@/features/auditoria";
+import type { CuadrillaResponseDto } from "../types/cuadrilla.types";
+
+function matchesCuadrillaFilters(
+  cuadrilla: CuadrillaResponseDto,
+  searchTerm: string,
+  statusFilter: string,
+) {
+  const term = searchTerm.toLowerCase().trim();
+  const matchesSearch =
+    !term ||
+    cuadrilla.nombre.toLowerCase().includes(term) ||
+    (cuadrilla.grupo?.tipoActividad &&
+      cuadrilla.grupo.tipoActividad.toLowerCase().includes(term)) ||
+    (cuadrilla.lider &&
+      `${cuadrilla.lider.nombre} ${cuadrilla.lider.apellido}`
+        .toLowerCase()
+        .includes(term));
+  const matchesStatus =
+    statusFilter === "TODAS" || cuadrilla.estadoActual === statusFilter;
+
+  return Boolean(matchesSearch && matchesStatus);
+}
 
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
   const obraId = Number(paramObraId);
   const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // Queries
   const obraQuery = useObra(obraId);
   const cuadrillasQuery = useCuadrillasPorObra(obraId);
 
   const obra = obraQuery.data;
-  const cuadrillas = cuadrillasQuery.data?.content ?? [];
-
-  // Selected Cuadrilla for viewing active workers
-  const [selectedCuadrillaId, setSelectedCuadrillaId] = useState<number | null>(
-    null
+  const cuadrillas = useMemo(
+    () => cuadrillasQuery.data?.content ?? [],
+    [cuadrillasQuery.data],
   );
 
   // Filters
@@ -61,41 +79,27 @@ export default function CuadrillasPage() {
     useState<CuadrillaResponseDto | null>(null);
   const [liderCuadrilla, setLiderCuadrilla] =
     useState<CuadrillaResponseDto | null>(null);
-  const [asignarOperarioOpen, setAsignarOperarioOpen] = useState(false);
-  const [desvincularOperario, setDesvincularOperario] =
-    useState<EmpleadoGrupoCuadrillaResponseDto | null>(null);
 
   // Filtered cuadrillas list
   const filteredCuadrillas = useMemo(() => {
-    return cuadrillas.filter((c) => {
-      const term = searchTerm.toLowerCase().trim();
-      const matchesSearch =
-        !term ||
-        c.nombre.toLowerCase().includes(term) ||
-        (c.grupo?.tipoActividad &&
-          c.grupo.tipoActividad.toLowerCase().includes(term)) ||
-        (c.lider &&
-          `${c.lider.nombre} ${c.lider.apellido}`.toLowerCase().includes(term));
-
-      const matchesStatus =
-        statusFilter === "TODAS" || c.estadoActual === statusFilter;
-
-      return matchesSearch && matchesStatus;
-    });
+    return cuadrillas.filter((cuadrilla) =>
+      matchesCuadrillaFilters(cuadrilla, searchTerm, statusFilter),
+    );
   }, [cuadrillas, searchTerm, statusFilter]);
 
-  // Selected Cuadrilla Object
-  const selectedCuadrilla = useMemo(() => {
-    if (selectedCuadrillaId) {
-      const found = cuadrillas.find((c) => c.id === selectedCuadrillaId);
-      if (found) return found;
-    }
-    return cuadrillas[0] ?? null;
-  }, [cuadrillas, selectedCuadrillaId]);
-
-  // Query for workers of selected cuadrilla
-  const operariosQuery = useOperariosCuadrilla(selectedCuadrilla?.id);
-  const operarios = operariosQuery.data ?? [];
+  // Compatibilidad con links viejos: ?cuadrilla=X&seccion=Y ahora es una ruta propia.
+  const legacyCuadrillaId = Number(searchParams.get("cuadrilla"));
+  if (Number.isInteger(legacyCuadrillaId) && legacyCuadrillaId > 0) {
+    const legacyParams = new URLSearchParams(searchParams);
+    legacyParams.delete("cuadrilla");
+    const query = legacyParams.toString();
+    return (
+      <Navigate
+        replace
+        to={`/obras/${obraId}/cuadrillas/${legacyCuadrillaId}${query ? `?${query}` : ""}`}
+      />
+    );
+  }
 
   if (obraQuery.isPending) {
     return (
@@ -153,7 +157,7 @@ export default function CuadrillasPage() {
           <div className="w-full sm:w-72">
             <SearchInput
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(event) => setSearchTerm(event.target.value)}
               placeholder="Buscar cuadrilla, líder o especialidad..."
               className="h-9 text-xs"
             />
@@ -236,8 +240,9 @@ export default function CuadrillasPage() {
               <CuadrillaCard
                 key={c.id}
                 cuadrilla={c}
-                isSelected={selectedCuadrilla?.id === c.id}
-                onSelect={(cuad) => setSelectedCuadrillaId(cuad.id)}
+                onSelect={(cuad) =>
+                  navigate(`/obras/${obraId}/cuadrillas/${cuad.id}`)
+                }
                 onEdit={(cuad) => setEditCuadrilla(cuad)}
                 onAsignarLider={(cuad) => setLiderCuadrilla(cuad)}
                 onBaja={(cuad) => setBajaCuadrilla(cuad)}
