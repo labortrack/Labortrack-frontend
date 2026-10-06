@@ -22,6 +22,9 @@ export type {
   AuditoriaLogDTO,
   CambioCampoDTO,
   OperacionAuditoria,
+  AuditoriaFeedItem,
+  AuditoriaFeedPage,
+  AuditoriaFeedFiltros,
 } from "./types/auditoria.types";
 
 // Constantes y Utilidades de Entidades
@@ -44,10 +47,14 @@ export {
   auditoriaApi,
   obtenerEntidadesAuditables,
   obtenerHistorial,
+  obtenerCambios,
 } from "./api/auditoria.api";
 export {
   useAuditoria,
   useHistorialAuditoria,
   useEntidadesAuditables,
+  useCambiosAuditoria,
   auditoriaKeys,
 } from "./hooks/useAuditoria";
+export type { UseCambiosAuditoriaFiltros } from "./hooks/useAuditoria";
+
