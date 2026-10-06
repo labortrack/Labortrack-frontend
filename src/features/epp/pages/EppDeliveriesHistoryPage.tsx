@@ -30,6 +30,11 @@ import {
   TableRow,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import {
+  HistorialAuditoriaIconButton,
+  useEsAdminAuditoria,
+  useHistorialAuditoriaDialog,
+} from "@/features/auditoria";
 
 function formatFecha(fecha: string): string {
   if (!fecha) return "-";
@@ -46,6 +51,8 @@ export function EppDeliveriesHistoryPage() {
   const [page, setPage] = useState(0);
   const size = 10;
   const [isDeliveryModalOpen, setIsDeliveryModalOpen] = useState(false);
+  const esAdmin = useEsAdminAuditoria();
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   const { data, isLoading, isError, error, refetch } = useEntregasPaginadas(
     page,
@@ -167,10 +174,13 @@ export function EppDeliveriesHistoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[18%]">Fecha</TableHead>
-                <TableHead className="w-[37%]">Operario</TableHead>
-                <TableHead className="w-[30%]">EPP Entregado</TableHead>
-                <TableHead className="w-[15%] text-center">Cantidad</TableHead>
+                <TableHead className={esAdmin ? "w-[16%]" : "w-[18%]"}>Fecha</TableHead>
+                <TableHead className={esAdmin ? "w-[34%]" : "w-[37%]"}>Operario</TableHead>
+                <TableHead className={esAdmin ? "w-[28%]" : "w-[30%]"}>EPP Entregado</TableHead>
+                <TableHead className={esAdmin ? "w-[14%] text-center" : "w-[15%] text-center"}>Cantidad</TableHead>
+                {esAdmin && (
+                  <TableHead className="w-[8%] text-right">Acciones</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -225,6 +235,23 @@ export function EppDeliveriesHistoryPage() {
                         {entrega.cantidadEntregada === 1 ? "unidad" : "unidades"}
                       </span>
                     </TableCell>
+
+                    {/* Acciones (solo ROLE_ADMIN) */}
+                    {esAdmin && (
+                      <TableCell className="text-right">
+                        {entrega.id != null ? (
+                          <HistorialAuditoriaIconButton
+                            onAbrir={() =>
+                              abrirHistorial(
+                                "empleado_epp",
+                                entrega.id!,
+                                `${operarioNombre} - ${eppNombre} - ${formatFecha(entrega.fechaEntrega)}`,
+                              )
+                            }
+                          />
+                        ) : null}
+                      </TableCell>
+                    )}
                   </TableRow>
                 );
               })}
@@ -247,6 +274,8 @@ export function EppDeliveriesHistoryPage() {
         open={isDeliveryModalOpen}
         onOpenChange={setIsDeliveryModalOpen}
       />
+
+      {renderDialog()}
     </div>
   );
 }

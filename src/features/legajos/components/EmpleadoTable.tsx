@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowRight, Pencil, RotateCcw, Trash2, UserX2 } from "lucide-react";
+import { ArrowRight, EllipsisVertical, Pencil, RotateCcw, Trash2, UserX2 } from "lucide-react";
 import type { EmpleadoResumenResponseDto } from "../types/legajo.types";
 import { CATEGORIA_LABELS, ESTADO_LABELS } from "../types/legajo.types";
 import { AvatarMinio } from "./AvatarMinio";
@@ -11,6 +11,9 @@ import { Pagination } from "@/shared/components";
 import {
   Badge,
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
   Table,
   TableBody,
   TableCell,
@@ -21,6 +24,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/shared/ui";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaMenuItem,
+} from "@/features/auditoria";
 
 interface EmpleadoTableProps {
   data: EmpleadoResumenResponseDto[];
@@ -60,6 +67,8 @@ export function EmpleadoTable({
   onSelectEmpleado,
   isLoading,
 }: EmpleadoTableProps) {
+  const { esAdmin, abrirHistorial, renderDialog } =
+    useHistorialAuditoriaDialog();
   const [isBajaModalOpen, setIsBajaModalOpen] = useState(false);
   const [empleadoIdParaBaja, setEmpleadoIdParaBaja] = useState<number | null>(null);
   const [empleadoIdParaReactivar, setEmpleadoIdParaReactivar] = useState<
@@ -204,7 +213,7 @@ export function EmpleadoTable({
                         </TooltipTrigger>
                         <TooltipContent>Reactivar</TooltipContent>
                       </Tooltip>
-                    ) : canBaja ? (
+                      ) : canBaja ? (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
@@ -224,6 +233,34 @@ export function EmpleadoTable({
                         <TooltipContent>Dar de baja</TooltipContent>
                       </Tooltip>
                     ) : null}
+
+                    {esAdmin && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-foreground-muted hover:text-foreground"
+                            aria-label="Más opciones"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            <EllipsisVertical className="size-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56" onClick={(e) => e.stopPropagation()}>
+                          <HistorialAuditoriaMenuItem
+                            onAbrir={() =>
+                              abrirHistorial(
+                                "empleado",
+                                empleado.id,
+                                `${empleado.apellido}, ${empleado.nombre}`,
+                              )
+                            }
+                            conSeparador={false}
+                          />
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
                   </div>
                 </TableCell>
               </TableRow>
@@ -274,6 +311,8 @@ export function EmpleadoTable({
           }}
         />
       ) : null}
+
+      {renderDialog()}
     </div>
   );
 }

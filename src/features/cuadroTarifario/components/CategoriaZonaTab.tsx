@@ -28,11 +28,16 @@ import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { formatCurrency } from "@/shared/utils/currency";
 import { cn } from "@/shared/utils/cn";
 import { esLiquidacionMensual } from "../utils/tipoLiquidacionLabels";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaIconButton,
+} from "@/features/auditoria";
 
 const TABS: TabFiltroCategoriaZona[] = ["Todos", "Activos", "Inactivos"];
 
 export function CategoriaZonaTab() {
   const [filtro, setFiltro] = useState<TabFiltroCategoriaZona>("Activos");
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editingCelda, setEditingCelda] =
@@ -153,6 +158,17 @@ export function CategoriaZonaTab() {
 
                 <TableCell>
                   <div className="flex justify-end gap-1">
+                    <HistorialAuditoriaIconButton
+                      onAbrir={() =>
+                        abrirHistorial(
+                          "categoria_zona",
+                          celda.id,
+                          `${celda.nombreCategoria} - ${celda.nombreZona}`,
+                        )
+                      }
+                      label={`Historial de ${celda.nombreCategoria} - ${celda.nombreZona}`}
+                    />
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -237,6 +253,8 @@ export function CategoriaZonaTab() {
           if (!open) setActivarCelda(null);
         }}
       />
+
+      {renderDialog()}
     </div>
   );
 }

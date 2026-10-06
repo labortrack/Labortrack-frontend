@@ -29,6 +29,10 @@ import { ReactivarCuadrillaDialog } from "../components/dialogs/ReactivarCuadril
 import { AsignarLiderDialog } from "../components/dialogs/AsignarLiderDialog";
 import { AsignarOperarioDialog } from "../components/dialogs/AsignarOperarioDialog";
 import { DesvincularOperarioDialog } from "../components/dialogs/DesvincularOperarioDialog";
+import {
+  HistorialAuditoriaMenuItem,
+  useHistorialAuditoriaDialog,
+} from "@/features/auditoria";
 import type { EmpleadoGrupoCuadrillaResponseDto } from "../types/cuadrilla.types";
 
 export default function CuadrillaDetailPage() {
@@ -50,6 +54,8 @@ export default function CuadrillaDetailPage() {
   const [asignarOperarioOpen, setAsignarOperarioOpen] = useState(false);
   const [desvincularOperario, setDesvincularOperario] =
     useState<EmpleadoGrupoCuadrillaResponseDto | null>(null);
+
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   const backTo = `/obras/${obraId}/cuadrillas`;
 
@@ -135,6 +141,11 @@ export default function CuadrillaDetailPage() {
                       Dar de Baja
                     </DropdownMenuItem>
                   ) : null}
+                  <HistorialAuditoriaMenuItem
+                    onAbrir={() =>
+                      abrirHistorial("cuadrilla", cuadrilla.id, cuadrilla.nombre)
+                    }
+                  />
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -146,6 +157,13 @@ export default function CuadrillaDetailPage() {
         cuadrilla={cuadrilla}
         onAsignarOperario={() => setAsignarOperarioOpen(true)}
         onDesvincularOperario={(op) => setDesvincularOperario(op)}
+        onAbrirHistorialOperario={(op) =>
+          abrirHistorial(
+            "empleado_grupo_cuadrilla",
+            op.id,
+            `${op.apellidoEmpleado}, ${op.nombreEmpleado} (${op.descripcionActividad || "Operario"})`,
+          )
+        }
       />
 
       {/* ── Dialogs ────────────────────────────────────────────── */}
@@ -191,6 +209,8 @@ export default function CuadrillaDetailPage() {
         open={Boolean(desvincularOperario)}
         onOpenChange={(open) => !open && setDesvincularOperario(null)}
       />
+
+      {renderDialog()}
     </div>
   );
 }

@@ -8,6 +8,7 @@ import {
   ClipboardList,
   FileText,
   HardHat,
+  History,
   LayoutDashboard,
   LogOut,
   Menu,
@@ -100,6 +101,7 @@ export function AppLayout() {
       ? [
         { to: "/mi-empresa", label: "Mi Empresa", icon: Building2 },
         { to: "/recibos", label: "Recibos", icon: Receipt },
+        { to: "/auditoria", label: "Auditoría", icon: History },
       ]
       : []),
     { to: "/documentacion", label: "Documentación", icon: FileText },

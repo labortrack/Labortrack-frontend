@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   Edit2,
+  EllipsisVertical,
   Filter,
   Plus,
   RotateCcw,
@@ -9,6 +10,10 @@ import {
   Trash2,
   Users,
 } from "lucide-react";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaMenuItem,
+} from "@/features/auditoria";
 import {
   CreateUserDialog,
   DeactivateUserDialog,
@@ -34,6 +39,9 @@ import {
   Button,
   Card,
   CardContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
   Select,
   SelectContent,
   SelectItem,
@@ -69,6 +77,8 @@ const defaultFilters: UserFiltersForm = {
 };
 
 export default function UsuariosPage() {
+  const { esAdmin, abrirHistorial, renderDialog } =
+    useHistorialAuditoriaDialog();
   const [filters, setFilters] = useState<UsuarioFilterDto>({});
   const [page, setPage] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
@@ -269,6 +279,34 @@ export default function UsuariosPage() {
                           </TooltipTrigger>
                           <TooltipContent>Dar de baja</TooltipContent>
                         </Tooltip>
+
+                        {esAdmin && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="size-8"
+                                onClick={(e) => e.stopPropagation()}
+                                aria-label="Más opciones"
+                              >
+                                <EllipsisVertical className="size-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <HistorialAuditoriaMenuItem
+                                onAbrir={() =>
+                                  abrirHistorial(
+                                    "usuario",
+                                    user.idUsuario,
+                                    `${user.nombre} ${user.apellido}`,
+                                  )
+                                }
+                                conSeparador={false}
+                              />
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -300,6 +338,7 @@ export default function UsuariosPage() {
           if (!open) setDeactivatingUser(null);
         }}
       />
+      {renderDialog()}
     </div>
   );
 }

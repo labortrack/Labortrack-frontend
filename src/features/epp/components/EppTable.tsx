@@ -11,6 +11,10 @@ import {
   TableRow,
 } from "@/shared/ui";
 import { EmptyState } from "@/shared/components";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaIconButton,
+} from "@/features/auditoria";
 
 interface EppTableProps {
   epps: Epp[];
@@ -27,6 +31,8 @@ export function EppTable({
   onToggleStatus,
   isTogglingId,
 }: EppTableProps) {
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
+
   if (epps.length === 0) {
     return (
       <div className="rounded-card border border-border bg-card p-6 shadow-soft">
@@ -73,13 +79,12 @@ export function EppTable({
 
                 <TableCell className="text-center">
                   <span
-                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      isOutOfStock
-                        ? "bg-error-soft text-error-strong"
-                        : isLowStock
-                          ? "bg-warning-soft text-warning"
-                          : "bg-subtle text-foreground"
-                    }`}
+                    className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${isOutOfStock
+                      ? "bg-error-soft text-error-strong"
+                      : isLowStock
+                        ? "bg-warning-soft text-warning"
+                        : "bg-subtle text-foreground"
+                      }`}
                   >
                     {epp.stockEPP} {epp.stockEPP === 1 ? "unidad" : "unidades"}
                   </span>
@@ -121,11 +126,10 @@ export function EppTable({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className={`size-8 p-0 ${
-                        epp.activo
-                          ? "text-foreground-muted hover:text-error"
-                          : "text-foreground-muted hover:text-success"
-                      }`}
+                      className={`size-8 p-0 ${epp.activo
+                        ? "text-foreground-muted hover:text-error"
+                        : "text-foreground-muted hover:text-success"
+                        }`}
                       title={epp.activo ? "Desactivar EPP" : "Activar EPP"}
                       aria-label={
                         epp.activo
@@ -139,6 +143,11 @@ export function EppTable({
                         className={`size-4 ${isToggling ? "animate-spin" : ""}`}
                       />
                     </Button>
+
+                    {/* Botón: Ver Historial de Auditoría */}
+                    <HistorialAuditoriaIconButton
+                      onAbrir={() => abrirHistorial("epp", epp.id, epp.nombreEPP)}
+                    />
                   </div>
                 </TableCell>
               </TableRow>
@@ -146,6 +155,8 @@ export function EppTable({
           })}
         </TableBody>
       </Table>
+
+      {renderDialog()}
     </div>
   );
 }

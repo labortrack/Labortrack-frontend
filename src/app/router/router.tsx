@@ -42,6 +42,7 @@ import {
   EppInventoryPage,
   EppDeliveriesHistoryPage,
   MisEppsPage,
+  AuditoriaGlobalPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -243,6 +244,15 @@ export const router = createBrowserRouter([
                       </RoleRoute>
                     ),
                   },
+                  {
+                    path: "/auditoria",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN"]}>
+                        {suspense(<AuditoriaGlobalPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+
                   {
                     path: "/mis-asistencias",
                     element: (

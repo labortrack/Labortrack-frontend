@@ -19,6 +19,7 @@ import { BajaCuadrillaDialog } from "../components/dialogs/BajaCuadrillaDialog";
 import { ReactivarCuadrillaDialog } from "../components/dialogs/ReactivarCuadrillaDialog";
 import { AsignarLiderDialog } from "../components/dialogs/AsignarLiderDialog";
 import type { CuadrillaResponseDto } from "../types/cuadrilla.types";
+import { useHistorialAuditoriaDialog } from "@/features/auditoria";
 
 function matchesCuadrillaFilters(
   cuadrilla: CuadrillaResponseDto,
@@ -44,6 +45,7 @@ function matchesCuadrillaFilters(
 export default function CuadrillasPage() {
   const { obraId: paramObraId } = useParams<{ obraId: string }>();
   const obraId = Number(paramObraId);
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -239,6 +241,9 @@ export default function CuadrillasPage() {
                 onAsignarLider={(cuad) => setLiderCuadrilla(cuad)}
                 onBaja={(cuad) => setBajaCuadrilla(cuad)}
                 onReactivar={(cuad) => setReactivarCuadrilla(cuad)}
+                onAbrirHistorial={(cuad) =>
+                  abrirHistorial("cuadrilla", cuad.id, cuad.nombre)
+                }
               />
             ))}
           </div>
@@ -279,6 +284,8 @@ export default function CuadrillasPage() {
         open={Boolean(liderCuadrilla)}
         onOpenChange={(open) => !open && setLiderCuadrilla(null)}
       />
+
+      {renderDialog()}
     </div>
   );
 }
