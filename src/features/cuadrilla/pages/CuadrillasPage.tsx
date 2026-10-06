@@ -18,14 +18,8 @@ import { EditCuadrillaDialog } from "../components/dialogs/EditCuadrillaDialog";
 import { BajaCuadrillaDialog } from "../components/dialogs/BajaCuadrillaDialog";
 import { ReactivarCuadrillaDialog } from "../components/dialogs/ReactivarCuadrillaDialog";
 import { AsignarLiderDialog } from "../components/dialogs/AsignarLiderDialog";
-import { AsignarOperarioDialog } from "../components/dialogs/AsignarOperarioDialog";
-import { DesvincularOperarioDialog } from "../components/dialogs/DesvincularOperarioDialog";
-import type {
-  CuadrillaResponseDto,
-  EmpleadoGrupoCuadrillaResponseDto,
-} from "../types/cuadrilla.types";
-import { useHistorialAuditoriaDialog } from "@/features/auditoria";
 import type { CuadrillaResponseDto } from "../types/cuadrilla.types";
+import { useHistorialAuditoriaDialog } from "@/features/auditoria";
 
 function matchesCuadrillaFilters(
   cuadrilla: CuadrillaResponseDto,
@@ -256,28 +250,6 @@ export default function CuadrillasPage() {
         )}
       </div>
 
-      {/* ── Nómina Section for Selected Cuadrilla ──────────────── */}
-      {selectedCuadrilla && (
-        <div className="pt-2">
-          <CuadrillaNominaTable
-            cuadrilla={selectedCuadrilla}
-            operarios={operarios}
-            isLoading={operariosQuery.isPending}
-            isError={operariosQuery.isError}
-            onRetry={() => void operariosQuery.refetch()}
-            onAsignarOperario={() => setAsignarOperarioOpen(true)}
-            onDesvincularOperario={(op) => setDesvincularOperario(op)}
-            onAbrirHistorial={(op) =>
-              abrirHistorial(
-                "empleado_grupo_cuadrilla",
-                op.id,
-                `${op.apellidoEmpleado}, ${op.nombreEmpleado} (${op.descripcionActividad || "Operario"})`
-              )
-            }
-          />
-        </div>
-      )}
-
       {/* ── Dialogs ────────────────────────────────────────────── */}
       <CreateCuadrillaDialog
         obraId={obraId}
@@ -311,21 +283,6 @@ export default function CuadrillasPage() {
         cuadrilla={liderCuadrilla}
         open={Boolean(liderCuadrilla)}
         onOpenChange={(open) => !open && setLiderCuadrilla(null)}
-      />
-
-      <AsignarOperarioDialog
-        obraId={obraId}
-        cuadrilla={asignarOperarioOpen ? selectedCuadrilla : null}
-        open={asignarOperarioOpen}
-        onOpenChange={setAsignarOperarioOpen}
-      />
-
-      <DesvincularOperarioDialog
-        obraId={obraId}
-        cuadrillaId={selectedCuadrilla?.id ?? 0}
-        operario={desvincularOperario}
-        open={Boolean(desvincularOperario)}
-        onOpenChange={(open) => !open && setDesvincularOperario(null)}
       />
 
       {renderDialog()}

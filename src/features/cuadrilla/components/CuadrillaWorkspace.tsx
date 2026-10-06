@@ -21,6 +21,7 @@ interface Props {
   onRetryOperarios: () => void;
   onAsignarOperario: () => void;
   onDesvincularOperario: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
+  onAbrirHistorialOperario?: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
   readOnly?: boolean;
   section?: CuadrillaWorkspaceSection;
   initialSection?: CuadrillaWorkspaceSection;
@@ -46,6 +47,7 @@ export function CuadrillaWorkspace({
   onRetryOperarios,
   onAsignarOperario,
   onDesvincularOperario,
+  onAbrirHistorialOperario,
   readOnly = false,
   section,
   initialSection = "nomina",
@@ -160,6 +162,7 @@ export function CuadrillaWorkspace({
         onRetry={onRetryOperarios}
         onAsignarOperario={onAsignarOperario}
         onDesvincularOperario={onDesvincularOperario}
+        onAbrirHistorial={onAbrirHistorialOperario}
         readOnly={readOnly}
         embedded
         searchTerm={nominaSearchTerm}

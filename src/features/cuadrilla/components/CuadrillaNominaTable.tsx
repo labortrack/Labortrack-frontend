@@ -183,17 +183,34 @@ export function CuadrillaNominaTable({
                   </TableCell>
                   {!readOnly ? (
                     <TableCell className="text-right">
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="size-8 p-0 text-error hover:bg-error-soft hover:text-error-strong"
-                        title="Desvincular de la cuadrilla"
-                        onClick={() => onDesvincularOperario(op)}
-                        disabled={isSuspended || isFinalizada}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-1">
+                        {onAbrirHistorial && (
+                          <HistorialAuditoriaIconButton
+                            onAbrir={() => onAbrirHistorial(op)}
+                            label={`Historial de ${op.apellidoEmpleado}, ${op.nombreEmpleado}`}
+                          />
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="size-8 p-0 text-error hover:bg-error-soft hover:text-error-strong"
+                          title="Desvincular de la cuadrilla"
+                          onClick={() => onDesvincularOperario(op)}
+                          disabled={isSuspended || isFinalizada}
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  ) : onAbrirHistorial ? (
+                    <TableCell className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <HistorialAuditoriaIconButton
+                          onAbrir={() => onAbrirHistorial(op)}
+                          label={`Historial de ${op.apellidoEmpleado}, ${op.nombreEmpleado}`}
+                        />
+                      </div>
                     </TableCell>
                   ) : null}
                 </TableRow>
@@ -254,37 +271,8 @@ export function CuadrillaNominaTable({
           </div>
         </div>
       </CardHeader>
-
-                    {/* Acciones */}
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-1">
-                        {onAbrirHistorial && (
-                          <HistorialAuditoriaIconButton
-                            onAbrir={() => onAbrirHistorial(op)}
-                            label={`Historial de ${op.apellidoEmpleado}, ${op.nombreEmpleado}`}
-                          />
-                        )}
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="size-8 p-0 text-destructive/80 hover:text-destructive hover:bg-destructive/10"
-                          title="Desvincular de la cuadrilla"
-                          onClick={() => onDesvincularOperario(op)}
-                          disabled={isSuspended || isFinalizada}
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </CardContent>
       {tableContent}
     </Card>
   );
 }
+

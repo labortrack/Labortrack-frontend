@@ -9,7 +9,6 @@ import {
   FileText,
   HardHat,
   History,
-  KeyRound,
   LayoutDashboard,
   LogOut,
   Menu,
