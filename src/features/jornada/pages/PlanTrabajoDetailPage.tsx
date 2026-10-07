@@ -3,15 +3,21 @@ import { useLocation, useParams, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   Clock3,
+  EllipsisVertical,
   FilterX,
   HardHat,
   Pencil,
   Plus,
+  CalendarX2,
 } from "lucide-react";
 import {
   Badge,
   Button,
   Card,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Input,
   Select,
   SelectContent,
@@ -50,6 +56,7 @@ import {
 import { PlanTrabajoStatusBadge } from "../components/PlanTrabajoStatusBadge";
 import { PlanTrabajoFormDialog } from "../components/PlanTrabajoFormDialog";
 import { CrearJornadaExtraordinariaDialog } from "../components/CrearJornadaExtraordinariaDialog";
+import { CerrarPlanTrabajoDialog } from "../components/CerrarPlanTrabajoDialog";
 
 const ALL = "TODOS";
 const tiposJornada = Object.keys(tipoJornadaLabels) as TipoJornada[];
@@ -72,6 +79,9 @@ function JornadaStatusBadge({ estado }: { estado: EstadoJornadaTrabajo }) {
 export default function PlanTrabajoDetailPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [extraordinaryOpen, setExtraordinaryOpen] = useState(false);
+  const [cierreAction, setCierreAction] = useState<
+    "cancelar" | "finalizar" | null
+  >(null);
   const { cuadrillaId: rawCuadrillaId, planId: rawPlanId } = useParams();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -175,7 +185,15 @@ export default function PlanTrabajoDetailPage() {
   const canEditPlan = plan.accionesDisponibles.includes(
     "MODIFICAR_PLAN_TRABAJO",
   );
-  const hasPlanActions = canCreateExtraordinary || canEditPlan;
+  const canCancelPlan = plan.accionesDisponibles.includes(
+    "CANCELAR_PLAN_TRABAJO",
+  );
+  const canFinishPlan = plan.accionesDisponibles.includes(
+    "FINALIZAR_PLAN_TRABAJO_ANTICIPADAMENTE",
+  );
+  const canClosePlan = canCancelPlan || canFinishPlan;
+  const hasPlanActions =
+    canCreateExtraordinary || canEditPlan || canClosePlan;
 
   return (
     <div className="space-y-6">
@@ -220,6 +238,33 @@ export default function PlanTrabajoDetailPage() {
                   Crear jornada extraordinaria
                 </Button>
               ) : null}
+              {canClosePlan ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full lg:order-3 lg:w-auto"
+                    >
+                      <EllipsisVertical className="size-4" />
+                      Más acciones
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-64">
+                    <DropdownMenuItem
+                      className="text-error data-[highlighted]:bg-error-soft data-[highlighted]:text-error"
+                      onSelect={() =>
+                        setCierreAction(canCancelPlan ? "cancelar" : "finalizar")
+                      }
+                    >
+                      <CalendarX2 className="size-4" />
+                      {canCancelPlan
+                        ? "Cancelar plan"
+                        : "Finalizar anticipadamente"}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : null}
             </div>
           ) : null}
         </header>
@@ -239,10 +284,47 @@ export default function PlanTrabajoDetailPage() {
           <p className="mt-1 font-semibold">{formatDays(plan.dias)}</p>
         </div>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Cancelación</p>
-          <p className="mt-1 font-semibold">{plan.fechaHoraCancelacion ? formatDateTime(plan.fechaHoraCancelacion) : "—"}</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Cierre</p>
+          <p className="mt-1 font-semibold">{plan.fechaHoraCierre ? formatDateTime(plan.fechaHoraCierre) : plan.fechaHoraCancelacion ? formatDateTime(plan.fechaHoraCancelacion) : "—"}</p>
         </div>
       </Card>
+
+      {plan.tipoCierre ? (
+        <Card className="p-5">
+          <div className="flex items-start gap-3">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-error-soft text-error">
+              <CalendarX2 className="size-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="font-bold">
+                {plan.tipoCierre === "CANCELACION"
+                  ? "Plan cancelado"
+                  : "Plan finalizado anticipadamente"}
+              </h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Fecha y hora</p>
+                  <p className="mt-1 text-sm font-semibold">{plan.fechaHoraCierre ? formatDateTime(plan.fechaHoraCierre) : "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Responsable</p>
+                  <p className="mt-1 text-sm font-semibold">{plan.usuarioResponsableCierreNombre ?? "—"}</p>
+                </div>
+                {plan.fechaVigenciaHastaOriginal ? (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Fin originalmente planificado</p>
+                    <p className="mt-1 text-sm font-semibold">{formatDate(plan.fechaVigenciaHastaOriginal)}</p>
+                  </div>
+                ) : null}
+                <div className="sm:col-span-2 xl:col-span-1">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-foreground-muted">Motivo</p>
+                  <p className="mt-1 break-words text-sm font-semibold">{plan.motivoCierre ?? "—"}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <Card className="overflow-hidden" aria-busy={query.isFetching}>
         <div className="border-b border-border bg-muted/20 p-4 sm:p-6">
@@ -339,6 +421,13 @@ export default function PlanTrabajoDetailPage() {
         <CrearJornadaExtraordinariaDialog
           plan={plan}
           onClose={() => setExtraordinaryOpen(false)}
+        />
+      ) : null}
+      {cierreAction ? (
+        <CerrarPlanTrabajoDialog
+          plan={plan}
+          accion={cierreAction}
+          onClose={() => setCierreAction(null)}
         />
       ) : null}
     </div>

@@ -1,6 +1,8 @@
 import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   ConsultaPlanesTrabajoResponseDto,
+  CerrarPlanTrabajoRequestDto,
+  CerrarPlanTrabajoResponseDto,
   CrearJornadaExtraordinariaRequestDto,
   CrearJornadaExtraordinariaResponseDto,
   CrearPlanTrabajoRequestDto,
@@ -83,6 +85,30 @@ export const planTrabajoApi = {
         `${baseUrl(cuadrillaId)}/${planId}/jornadas-extraordinarias`,
         payload,
       );
+    return response.data;
+  },
+
+  cancelar: async (
+    cuadrillaId: number,
+    planId: number,
+    payload: CerrarPlanTrabajoRequestDto,
+  ) => {
+    const response = await httpClient.patch<CerrarPlanTrabajoResponseDto>(
+      `${baseUrl(cuadrillaId)}/${planId}/cancelacion`,
+      payload,
+    );
+    return response.data;
+  },
+
+  finalizarAnticipadamente: async (
+    cuadrillaId: number,
+    planId: number,
+    payload: CerrarPlanTrabajoRequestDto,
+  ) => {
+    const response = await httpClient.patch<CerrarPlanTrabajoResponseDto>(
+      `${baseUrl(cuadrillaId)}/${planId}/finalizacion-anticipada`,
+      payload,
+    );
     return response.data;
   },
 };

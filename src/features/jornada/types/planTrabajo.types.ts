@@ -37,7 +37,13 @@ export type DecisionDiaNoLaborable =
 export type AccionPlanTrabajo =
   | "CREAR_PLAN_TRABAJO"
   | "MODIFICAR_PLAN_TRABAJO"
-  | "CREAR_JORNADA_EXTRAORDINARIA";
+  | "CREAR_JORNADA_EXTRAORDINARIA"
+  | "CANCELAR_PLAN_TRABAJO"
+  | "FINALIZAR_PLAN_TRABAJO_ANTICIPADAMENTE";
+
+export type TipoCierrePlanTrabajo =
+  | "CANCELACION"
+  | "FINALIZACION_ANTICIPADA";
 
 export interface PlanTrabajoResumenResponseDto {
   id: number;
@@ -91,6 +97,12 @@ export interface PlanTrabajoDetalleResponseDto {
   estadoCalculado: EstadoCalculadoPlanTrabajo;
   cancelado: boolean;
   fechaHoraCancelacion: string | null;
+  tipoCierre: TipoCierrePlanTrabajo | null;
+  motivoCierre: string | null;
+  fechaHoraCierre: string | null;
+  usuarioResponsableCierreId: number | null;
+  usuarioResponsableCierreNombre: string | null;
+  fechaVigenciaHastaOriginal: string | null;
   accionesDisponibles: AccionPlanTrabajo[];
   jornadas: SpringPage<JornadaPlanTrabajoResponseDto>;
 }
@@ -178,5 +190,21 @@ export interface CrearJornadaExtraordinariaResponseDto {
   estado: EstadoJornadaTrabajo;
   extraordinaria: boolean;
   asistenciasGeneradas: number;
+  mensaje: string;
+}
+
+export interface CerrarPlanTrabajoRequestDto {
+  motivo: string;
+}
+
+export interface CerrarPlanTrabajoResponseDto {
+  planId: number;
+  tipoCierre: TipoCierrePlanTrabajo;
+  fechaVigenciaHasta: string;
+  fechaVigenciaHastaOriginal: string | null;
+  fechaHoraCierre: string;
+  jornadasAnuladas: number;
+  asistenciasAnuladas: number;
+  estadoCuadrilla: EstadoCuadrilla;
   mensaje: string;
 }
