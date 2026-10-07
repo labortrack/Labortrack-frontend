@@ -22,6 +22,10 @@ import {
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { cn } from "@/shared/utils/cn";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaIconButton,
+} from "@/features/auditoria";
 import { useListarDocumentos } from "../hooks/useDocumentacion";
 import type { DocumentoFilterDto, DocumentoRespuestaDto } from "../types/documentacion.types";
 
@@ -52,6 +56,7 @@ export function DocumentosTable({
   onPrevisualizar,
   onBaja,
 }: DocumentosTableProps) {
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
   const [page, setPage] = useState(0);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const PAGE_SIZE = 10;
@@ -250,6 +255,17 @@ export function DocumentosTable({
                       <TooltipContent>Dar de baja</TooltipContent>
                     </Tooltip>
                   ) : null}
+
+                  {/* ── Ver Historial de Auditoría — SOLO ADMIN ── */}
+                  <HistorialAuditoriaIconButton
+                    onAbrir={() =>
+                      abrirHistorial(
+                        "documento",
+                        doc.idDocumento,
+                        doc.nombreDocumento,
+                      )
+                    }
+                  />
                 </div>
               </TableCell>
             </TableRow>
@@ -265,6 +281,8 @@ export function DocumentosTable({
         disabled={query.isFetching}
         onPageChange={setPage}
       />
+
+      {renderDialog()}
     </>
   );
 }

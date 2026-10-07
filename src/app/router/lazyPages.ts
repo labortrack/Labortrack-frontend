@@ -94,4 +94,8 @@ export const EppDeliveriesHistoryPage = lazy(
 export const MisEppsPage = lazy(
   () => import("@/features/epp/pages/MisEppsPage"),
 );
+export const AuditoriaGlobalPage = lazy(
+  () => import("@/features/auditoria/pages/AuditoriaGlobalPage"),
+);
+
 

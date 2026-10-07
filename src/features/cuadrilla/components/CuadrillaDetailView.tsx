@@ -45,12 +45,14 @@ type Props =
       readOnly: true;
       onAsignarOperario?: never;
       onDesvincularOperario?: never;
+      onAbrirHistorialOperario?: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
     }
   | {
       cuadrilla: CuadrillaResponseDto;
       readOnly?: false;
       onAsignarOperario: () => void;
       onDesvincularOperario: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
+      onAbrirHistorialOperario?: (operario: EmpleadoGrupoCuadrillaResponseDto) => void;
     };
 
 // Vista de una cuadrilla: resumen + nómina / planes / jornadas.
@@ -61,6 +63,7 @@ export function CuadrillaDetailView({
   readOnly = false,
   onAsignarOperario,
   onDesvincularOperario,
+  onAbrirHistorialOperario,
 }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
   const canViewPlans = useSessionStore((state) => state.user?.rol !== "ROLE_ADMIN");
@@ -130,6 +133,7 @@ export function CuadrillaDetailView({
         onRetryOperarios={() => void operariosQuery.refetch()}
         onAsignarOperario={onAsignarOperario ?? (() => undefined)}
         onDesvincularOperario={onDesvincularOperario ?? (() => undefined)}
+        onAbrirHistorialOperario={onAbrirHistorialOperario}
         readOnly={readOnly}
         section={section}
         initialSection={section}

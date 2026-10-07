@@ -37,11 +37,16 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { cn } from "@/shared/utils/cn";
+import {
+  HistorialAuditoriaIconButton,
+  useHistorialAuditoriaDialog,
+} from "@/features/auditoria";
 
 const TABS: TabFiltroEstadoObra[] = ["Todos", "Activos", "Inactivos"];
 
 export default function ConfiguracionObrasPage() {
   const [filtro, setFiltro] = useState<TabFiltroEstadoObra>("Activos");
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
   // Modals state
   const [createOpen, setCreateOpen] = useState(false);
@@ -230,6 +235,16 @@ export default function ConfiguracionObrasPage() {
                             {isInactivo ? "Ya está inactivo" : "Dar de baja"}
                           </TooltipContent>
                         </Tooltip>
+
+                        <HistorialAuditoriaIconButton
+                          onAbrir={() =>
+                            abrirHistorial(
+                              "estado_obra",
+                              estado.id,
+                              estado.nombreEstadoObra,
+                            )
+                          }
+                        />
                       </div>
                     </TableCell>
                   </TableRow>
@@ -262,6 +277,8 @@ export default function ConfiguracionObrasPage() {
           if (!open) setDeletingEstado(null);
         }}
       />
+
+      {renderDialog()}
     </div>
   );
 }

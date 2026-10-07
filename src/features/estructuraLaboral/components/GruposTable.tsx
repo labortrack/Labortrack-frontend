@@ -7,6 +7,7 @@ import {
   TableCell,
 } from "@/shared/ui";
 import { Layers, Users, Pencil, Trash2 } from "lucide-react";
+import { HistorialAuditoriaIconButton } from "@/features/auditoria";
 import type {
   GrupoResponseDto,
   TabFiltroGrupo,
@@ -19,6 +20,7 @@ interface GruposTableProps {
   onFiltroChange: (tab: TabFiltroGrupo) => void;
   onEdit: (grupo: GrupoResponseDto) => void;
   onDelete: (grupo: GrupoResponseDto) => void;
+  onAbrirHistorial?: (grupo: GrupoResponseDto) => void;
   isLoading?: boolean;
 }
 
@@ -29,6 +31,7 @@ export function GruposTable({
   onFiltroChange,
   onEdit,
   onDelete,
+  onAbrirHistorial,
   isLoading,
 }: GruposTableProps) {
   const tabs: TabFiltroGrupo[] = ["Activos", "Inactivos", "Todos"];
@@ -183,6 +186,12 @@ export function GruposTable({
                     </TableCell>
                     <TableCell className="py-3 px-4">
                       <div className="flex items-center justify-center gap-1">
+                        {onAbrirHistorial && (
+                          <HistorialAuditoriaIconButton
+                            onAbrir={() => onAbrirHistorial(grupo)}
+                            label={`Historial de ${grupo.tipoActividad}`}
+                          />
+                        )}
                         <button
                           onClick={() => onEdit(grupo)}
                           title="Editar grupo"
