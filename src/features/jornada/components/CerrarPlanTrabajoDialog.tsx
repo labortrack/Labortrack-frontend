@@ -104,20 +104,22 @@ export function CerrarPlanTrabajoDialog({
           </div>
         </DialogHeader>
 
-        <Alert variant="warning">
-          <TriangleAlert className="mt-0.5 size-4 shrink-0" />
-          <span>
-            Esta operación no puede revertirse. Para volver a planificar la
-            cuadrilla será necesario crear un nuevo plan.
-          </span>
-        </Alert>
-
-        {errorEnvio ? (
-          <Alert variant="error" role="alert">
-            <AlertCircle className="mt-0.5 size-4 shrink-0" />
-            <span>{errorEnvio}</span>
+        <div className="space-y-3">
+          <Alert variant="warning">
+            <TriangleAlert className="mt-0.5 size-4 shrink-0" />
+            <span>
+              Esta operación no puede revertirse. Para volver a planificar la
+              cuadrilla será necesario crear un nuevo plan.
+            </span>
           </Alert>
-        ) : null}
+
+          {errorEnvio ? (
+            <Alert variant="error" role="alert">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <span>{errorEnvio}</span>
+            </Alert>
+          ) : null}
+        </div>
 
         <FormField
           id="motivo-cierre-plan"
