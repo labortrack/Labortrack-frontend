@@ -7,6 +7,7 @@ import {
 import { planTrabajoApi } from "../api/planTrabajoApi";
 import type {
   CrearJornadaExtraordinariaRequestDto,
+  CerrarPlanTrabajoRequestDto,
   CrearPlanTrabajoRequestDto,
   JornadaPlanFiltros,
   ModificarPlanTrabajoRequestDto,
@@ -112,6 +113,25 @@ export function useCrearJornadaExtraordinaria(
         planId,
         payload,
       ),
+    onSuccess: invalidate,
+  });
+}
+
+export function useCerrarPlanTrabajo(
+  cuadrillaId: number,
+  planId: number,
+  accion: "cancelar" | "finalizar",
+) {
+  const invalidate = useInvalidatePlanificacion(cuadrillaId);
+  return useMutation({
+    mutationFn: (payload: CerrarPlanTrabajoRequestDto) =>
+      accion === "cancelar"
+        ? planTrabajoApi.cancelar(cuadrillaId, planId, payload)
+        : planTrabajoApi.finalizarAnticipadamente(
+            cuadrillaId,
+            planId,
+            payload,
+          ),
     onSuccess: invalidate,
   });
 }
