@@ -237,6 +237,7 @@ export interface ParteDiarioFiltros {
   fecha: string;
   obraId?: number;
   cuadrillaId?: number;
+  jornadaId?: number;
   estado?: EstadoAsistencia;
   trabajador?: string;
 }

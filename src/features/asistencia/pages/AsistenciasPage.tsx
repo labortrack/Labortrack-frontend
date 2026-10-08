@@ -57,6 +57,7 @@ const CLAVES_FILTRO = [
   "fecha",
   "obraId",
   "cuadrillaId",
+  "jornadaId",
   "estado",
   "trabajador",
 ] as const;
@@ -67,6 +68,7 @@ function leerFiltrosDesdeUrl(
   const fecha = searchParams.get("fecha") || undefined;
   const obraId = leerId(searchParams.get("obraId"));
   const cuadrillaId = leerId(searchParams.get("cuadrillaId"));
+  const jornadaId = leerId(searchParams.get("jornadaId"));
   const estado = leerEstado(searchParams.get("estado"));
   const trabajador = searchParams.get("trabajador") || undefined;
 
@@ -74,6 +76,7 @@ function leerFiltrosDesdeUrl(
     ...(fecha ? { fecha } : {}),
     ...(obraId ? { obraId } : {}),
     ...(cuadrillaId ? { cuadrillaId } : {}),
+    ...(jornadaId ? { jornadaId } : {}),
     ...(estado ? { estado } : {}),
     ...(trabajador ? { trabajador } : {}),
   };
@@ -86,6 +89,7 @@ function crearParametrosFiltros(filtros: ParteDiarioFiltrosPersistidos) {
   if (filtros.cuadrillaId) {
     params.set("cuadrillaId", String(filtros.cuadrillaId));
   }
+  if (filtros.jornadaId) params.set("jornadaId", String(filtros.jornadaId));
   if (filtros.estado) params.set("estado", filtros.estado);
   if (filtros.trabajador) params.set("trabajador", filtros.trabajador);
   return params;
@@ -118,6 +122,7 @@ export default function AsistenciasPage() {
   const fecha = filtrosSeleccionados.fecha || hoy;
   const obraId = filtrosSeleccionados.obraId;
   const cuadrillaId = filtrosSeleccionados.cuadrillaId;
+  const jornadaId = filtrosSeleccionados.jornadaId;
   const estado = filtrosSeleccionados.estado;
   const trabajador = filtrosSeleccionados.trabajador ?? "";
   const trabajadorDiferido = useDeferredValue(trabajador.trim());
@@ -141,6 +146,7 @@ export default function AsistenciasPage() {
       ...(cuadrillaIdEfectiva
         ? { cuadrillaId: cuadrillaIdEfectiva }
         : {}),
+      ...(jornadaId ? { jornadaId } : {}),
       ...(estado ? { estado } : {}),
       ...(trabajadorDiferido ? { trabajador: trabajadorDiferido } : {}),
     }),
@@ -148,13 +154,14 @@ export default function AsistenciasPage() {
       cuadrillaIdEfectiva,
       estado,
       fecha,
+      jornadaId,
       obraIdEfectiva,
       trabajadorDiferido,
     ],
   );
   const parteQuery = useParteDiarioAsistencia(filtros);
   const filtrosAplicados = Boolean(
-    obraId || cuadrillaId || estado || trabajadorDiferido,
+    obraId || cuadrillaId || jornadaId || estado || trabajadorDiferido,
   );
 
   useEffect(() => {
@@ -183,6 +190,7 @@ export default function AsistenciasPage() {
       fecha: nuevaFecha === hoy ? undefined : nuevaFecha,
       obraId: undefined,
       cuadrillaId: undefined,
+      jornadaId: undefined,
     });
   };
 
@@ -191,6 +199,7 @@ export default function AsistenciasPage() {
       ...filtrosSeleccionados,
       obraId: nuevaObraId,
       cuadrillaId: undefined,
+      jornadaId: undefined,
     });
   };
 
@@ -198,6 +207,7 @@ export default function AsistenciasPage() {
     aplicarFiltros({
       ...filtrosSeleccionados,
       cuadrillaId: nuevaCuadrillaId,
+      jornadaId: undefined,
     });
   };
 
@@ -253,6 +263,15 @@ export default function AsistenciasPage() {
         onTrabajadorChange={cambiarTrabajador}
         onLimpiar={limpiar}
       />
+
+      {jornadaId ? (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary/20 bg-primary-soft px-4 py-3 text-sm text-primary">
+          <span>Parte diario de la jornada #{jornadaId}</span>
+          <button type="button" className="font-semibold underline" onClick={() => aplicarFiltros({ ...filtrosSeleccionados, jornadaId: undefined })}>
+            Ver todas las jornadas de la fecha
+          </button>
+        </div>
+      ) : null}
 
       {opcionesQuery.isError ? (
         <Alert variant="warning">

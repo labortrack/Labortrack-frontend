@@ -6,6 +6,7 @@ import {
   ChevronRight,
   ClipboardCheck,
   ClipboardList,
+  CalendarDays,
   FileText,
   HardHat,
   History,
@@ -80,6 +81,9 @@ export function AppLayout() {
       : []),
     ...(esCapatazDeAlgunaObra
       ? [{ to: "/obras", label: "Obras", icon: HardHat }]
+      : []),
+    ...(user.rol === "ROLE_RRHH" || esCapatazDeAlgunaObra
+      ? [{ to: "/jornadas", label: "Jornadas", icon: CalendarDays }]
       : []),
     ...(esLiderDeCuadrilla
       ? [{
