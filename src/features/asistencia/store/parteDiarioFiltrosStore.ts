@@ -6,6 +6,7 @@ export interface ParteDiarioFiltrosPersistidos {
   fecha?: string;
   obraId?: number;
   cuadrillaId?: number;
+  jornadaId?: number;
   estado?: EstadoAsistencia;
   trabajador?: string;
 }

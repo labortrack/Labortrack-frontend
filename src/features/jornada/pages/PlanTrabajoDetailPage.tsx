@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
   Clock3,
@@ -57,6 +57,7 @@ import { PlanTrabajoStatusBadge } from "../components/PlanTrabajoStatusBadge";
 import { PlanTrabajoFormDialog } from "../components/PlanTrabajoFormDialog";
 import { CrearJornadaExtraordinariaDialog } from "../components/CrearJornadaExtraordinariaDialog";
 import { CerrarPlanTrabajoDialog } from "../components/CerrarPlanTrabajoDialog";
+import { rutaDetalleJornada } from "../utils/jornadaNavigation";
 
 const ALL = "TODOS";
 const tiposJornada = Object.keys(tipoJornadaLabels) as TipoJornada[];
@@ -77,6 +78,7 @@ function JornadaStatusBadge({ estado }: { estado: EstadoJornadaTrabajo }) {
 }
 
 export default function PlanTrabajoDetailPage() {
+  const navigate = useNavigate();
   const [editOpen, setEditOpen] = useState(false);
   const [extraordinaryOpen, setExtraordinaryOpen] = useState(false);
   const [cierreAction, setCierreAction] = useState<
@@ -386,6 +388,7 @@ export default function PlanTrabajoDetailPage() {
                     <TableHead>Día no laborable</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Origen</TableHead>
+                    <TableHead>Detalle</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -397,6 +400,7 @@ export default function PlanTrabajoDetailPage() {
                       <TableCell>{decisionLabels[jornada.decisionDiaNoLaborable]}</TableCell>
                       <TableCell><JornadaStatusBadge estado={jornada.estado} /></TableCell>
                       <TableCell>{jornada.extraordinaria ? <Badge variant="warning">Extraordinaria</Badge> : <span className="inline-flex items-center gap-1.5 text-sm text-foreground-muted"><HardHat className="size-4" />Planificada</span>}</TableCell>
+                      <TableCell><Button variant="outline" size="sm" onClick={() => navigate(rutaDetalleJornada(jornada.id, `${location.pathname}${location.search}`))}>Ver jornada</Button></TableCell>
                     </TableRow>
                   ))}
                 </TableBody>

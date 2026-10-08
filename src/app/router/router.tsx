@@ -25,6 +25,8 @@ import {
   CuadrillaDetailPage,
   MiCuadrillaPage,
   PlanTrabajoDetailPage,
+  JornadasPage,
+  JornadaDetailPage,
   LegajosPage,
   EstructuraLaboralPage,
   MisDatosPage,
@@ -82,6 +84,8 @@ export const router = createBrowserRouter([
                 element: <AppLayout />,
                 children: [
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
+                  { path: "/jornadas", element: <RoleRoute allowed={["ROLE_RRHH", "ROLE_OPERARIO"]}>{suspense(<JornadasPage />)}</RoleRoute> },
+                  { path: "/jornadas/:jornadaId", element: <RoleRoute allowed={["ROLE_RRHH", "ROLE_OPERARIO"]}>{suspense(<JornadaDetailPage />)}</RoleRoute> },
                   { path: "/mis-ausencias", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisSolicitudesAusenciaPage />)}</RoleRoute> },
                   { path: "/mis-ausencias/:solicitudId", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MiSolicitudAusenciaDetailPage />)}</RoleRoute> },
                   { path: "/mis-epps", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisEppsPage />)}</RoleRoute> },

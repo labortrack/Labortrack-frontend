@@ -48,6 +48,12 @@ export const MiCuadrillaPage = lazy(
 export const PlanTrabajoDetailPage = lazy(
   () => import("@/features/jornada/pages/PlanTrabajoDetailPage"),
 );
+export const JornadasPage = lazy(
+  () => import("@/features/jornada/pages/JornadasPage"),
+);
+export const JornadaDetailPage = lazy(
+  () => import("@/features/jornada/pages/JornadaDetailPage"),
+);
 export const LegajosPage = lazy(
   () => import("@/features/legajos/pages/LegajosPage"),
 );

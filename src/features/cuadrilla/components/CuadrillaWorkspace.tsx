@@ -2,7 +2,7 @@ import { useState, type ComponentType } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CalendarClock, CalendarDays, Plus, Users } from "lucide-react";
 import { Button, Card } from "@/shared/ui";
-import { EmptyState, SearchInput } from "@/shared/components";
+import { SearchInput } from "@/shared/components";
 import { cn } from "@/shared/utils/cn";
 import type {
   CuadrillaResponseDto,
@@ -10,6 +10,8 @@ import type {
 } from "../types/cuadrilla.types";
 import { CuadrillaNominaTable } from "./CuadrillaNominaTable";
 import { PlanesTrabajoPanel } from "@/features/jornada/components/PlanesTrabajoPanel";
+import { JornadasExplorer } from "@/features/jornada/components/JornadasExplorer";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 
 export type CuadrillaWorkspaceSection = "nomina" | "planes" | "jornadas";
 
@@ -54,12 +56,14 @@ export function CuadrillaWorkspace({
   onSectionChange,
   canViewPlans = true,
 }: Props) {
+  const rrhh = useSessionStore((state) => state.user?.rol === "ROLE_RRHH");
+  const canViewJornadas = useSessionStore((state) => state.user?.rol !== "ROLE_ADMIN");
   const [searchParams, setSearchParams] = useSearchParams();
   const [internalActive, setInternalActive] = useState<CuadrillaWorkspaceSection>(
     initialSection === "planes" && !canViewPlans ? "nomina" : initialSection,
   );
   const active =
-    section === "planes" && !canViewPlans
+    (section === "planes" && !canViewPlans) || (section === "jornadas" && !canViewJornadas)
       ? "nomina"
       : section ?? internalActive;
   const nominaSearchTerm = searchParams.get("nominaBuscar") ?? "";
@@ -77,7 +81,7 @@ export function CuadrillaWorkspace({
   };
 
   const selectSection = (nextSection: CuadrillaWorkspaceSection) => {
-    if (nextSection === "planes" && !canViewPlans) return;
+    if ((nextSection === "planes" && !canViewPlans) || (nextSection === "jornadas" && !canViewJornadas)) return;
     setInternalActive(nextSection);
     onSectionChange?.(nextSection);
   };
@@ -176,7 +180,7 @@ export function CuadrillaWorkspace({
         <div className="border-b border-border bg-muted/20">
           <div className="grid grid-cols-3 lg:hidden" role="tablist">
             {sections.map(({ id, label, icon: Icon }) => {
-              const disabled = id === "planes" && !canViewPlans;
+              const disabled = (id === "planes" && !canViewPlans) || (id === "jornadas" && !canViewJornadas);
               return (
                 <button
                   key={id}
@@ -208,7 +212,7 @@ export function CuadrillaWorkspace({
           >
             {sections.map(({ id, label, icon: Icon }, index) => {
               const isActive = active === id;
-              const disabled = id === "planes" && !canViewPlans;
+              const disabled = (id === "planes" && !canViewPlans) || (id === "jornadas" && !canViewJornadas);
               return (
                 <div
                   key={id}
@@ -263,16 +267,13 @@ export function CuadrillaWorkspace({
             <PlanesTrabajoPanel cuadrillaId={cuadrilla.id} embedded />
           </div>
         ) : null}
-        <div
+        {canViewJornadas ? <div
           role="tabpanel"
           hidden={active !== "jornadas"}
           className={cn(active === "jornadas" && "lt-accordion-content-enter")}
         >
-          <EmptyState
-            title="Consulta de jornadas"
-            description="Esta sección queda preparada para la consulta consolidada de jornadas de la cuadrilla, que corresponde a la siguiente historia del módulo. Las jornadas generadas por cada plan ya pueden consultarse desde su detalle."
-          />
-        </div>
+          <JornadasExplorer cuadrillaId={cuadrilla.id} embedded active={active === "jornadas"} rrhh={rrhh} />
+        </div> : null}
       </Card>
     </section>
   );
