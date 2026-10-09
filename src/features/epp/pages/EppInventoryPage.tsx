@@ -138,8 +138,8 @@ export function EppInventoryPage() {
     <div className="space-y-6">
       {/* Encabezado con acciones principales */}
       <PageHeader
-        title="Gestión de EPP"
-        description="Inventario de elementos de protección personal, reposición de stock en pañol y registro de entregas a operarios."
+        title="Elementos de Protección Personal (EPP)"
+        description="Inventario, reposición de stock en pañol y registro de entregas a operarios."
         actions={
           <div className="flex flex-wrap items-center gap-2.5">
             <Button
