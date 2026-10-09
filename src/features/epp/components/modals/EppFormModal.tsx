@@ -50,19 +50,23 @@ export function EppFormModal({
     register,
     handleSubmit,
     reset,
+    setError,
     formState: { errors },
   } = useForm<FormValues>({
     resolver: zodResolver(isEdit ? modificarEppSchema : altaEppSchema),
     values: epp
       ? {
           nombreEPP: epp.nombreEPP,
-          stockEPP: epp.stockEPP,
         }
       : undefined,
-    defaultValues: {
-      nombreEPP: "",
-      stockEPP: 1,
-    },
+    defaultValues: isEdit
+      ? {
+          nombreEPP: "",
+        }
+      : {
+          nombreEPP: "",
+          stockEPP: 1,
+        },
   });
 
   const handleClose = (nextOpen: boolean) => {
@@ -81,16 +85,16 @@ export function EppFormModal({
           id: epp.id,
           payload: {
             nombreEPP: values.nombreEPP.trim(),
-            stockEPP: values.stockEPP,
           },
         });
         toast.success("EPP actualizado correctamente", {
           description: `Se han guardado los cambios para "${values.nombreEPP}".`,
         });
       } else {
+        const altaValues = values as AltaEppForm;
         await createMutation.mutateAsync({
-          nombreEPP: values.nombreEPP.trim(),
-          stockEPP: values.stockEPP ?? 1,
+          nombreEPP: altaValues.nombreEPP.trim(),
+          stockEPP: altaValues.stockEPP ?? 1,
         });
         toast.success("EPP registrado con éxito", {
           description: `"${values.nombreEPP}" fue añadido al inventario.`,
@@ -117,7 +121,7 @@ export function EppFormModal({
           </DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Actualizá la información técnica y el stock del EPP seleccionado."
+              ? "Actualizá la denominación del EPP seleccionado."
               : "Ingresá los datos del nuevo equipo de protección para incorporarlo al pañol."}
           </DialogDescription>
         </DialogHeader>
@@ -146,25 +150,27 @@ export function EppFormModal({
             />
           </FormField>
 
-          <FormField
-            id="stockEPP"
-            label={isEdit ? "Stock Disponible" : "Stock Inicial"}
-            icon={Box}
-            required
-            hint="Debe ser un número entero mayor a cero."
-            error={errors.stockEPP?.message}
-          >
-            <Input
+          {!isEdit && (
+            <FormField
               id="stockEPP"
-              type="number"
-              min={1}
-              step={1}
-              placeholder="Ej: 50"
-              disabled={isPending}
-              aria-invalid={Boolean(errors.stockEPP)}
-              {...register("stockEPP", { valueAsNumber: true })}
-            />
-          </FormField>
+              label="Stock Inicial"
+              icon={Box}
+              required
+              hint="Debe ser un número entero mayor a cero."
+              error={"stockEPP" in errors ? errors.stockEPP?.message : undefined}
+            >
+              <Input
+                id="stockEPP"
+                type="number"
+                min={1}
+                step={1}
+                placeholder="Ej: 50"
+                disabled={isPending}
+                aria-invalid={Boolean("stockEPP" in errors && errors.stockEPP)}
+                {...register("stockEPP", { valueAsNumber: true })}
+              />
+            </FormField>
+          )}
 
           <DialogFooter>
             <Button

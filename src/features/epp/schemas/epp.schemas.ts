@@ -18,11 +18,6 @@ export const modificarEppSchema = z.object({
     .trim()
     .min(1, "El nombre del EPP es obligatorio.")
     .max(150, "El nombre no puede superar los 150 caracteres."),
-  stockEPP: z
-    .number({ error: "El stock debe ser un número válido." })
-    .int("El stock debe ser un número entero.")
-    .positive("El stock debe ser un número entero positivo.")
-    .optional(),
 });
 
 export const reponerEppSchema = z.object({
