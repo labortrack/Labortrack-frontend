@@ -39,7 +39,7 @@ export function MisEppsPage() {
     <div className="space-y-6">
       {/* Encabezado informativo */}
       <PageHeader
-        title="Mis EPPs"
+        title="Mi equipo (EPP)"
         description="Consultá el equipamiento y los elementos de protección personal que te han sido asignados por la empresa."
       />
 
