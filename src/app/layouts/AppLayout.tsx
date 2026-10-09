@@ -76,7 +76,7 @@ export function AppLayout() {
       ? [
         { to: "/mis-datos", label: "Mis Datos", icon: User },
         { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList },
-        { to: "/mis-epps", label: "Mi equipo (EPP)", icon: HardHat },
+        { to: "/mis-epps", label: "Mi Equipo", icon: HardHat },
       ]
       : []),
     ...(esCapatazDeAlgunaObra
