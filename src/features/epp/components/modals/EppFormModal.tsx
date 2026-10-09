@@ -109,6 +109,20 @@ export function EppFormModal({
           : "No se pudo dar de alta el EPP.",
       );
       setSubmitError(normalized.message);
+
+      // Si es HTTP 409 (Conflict) o el mensaje contiene indicadores de duplicado/inactivo con mismo nombre
+      const esDuplicadoONombreInvalido =
+        normalized.status === 409 ||
+        /ya existe/i.test(normalized.message) ||
+        /duplicad/i.test(normalized.message) ||
+        /nombre/i.test(normalized.message);
+
+      if (esDuplicadoONombreInvalido) {
+        setError("nombreEPP", {
+          type: "server",
+          message: normalized.message,
+        });
+      }
     }
   });
 

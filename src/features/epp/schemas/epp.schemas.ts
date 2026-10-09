@@ -4,8 +4,8 @@ export const altaEppSchema = z.object({
   nombreEPP: z
     .string()
     .trim()
-    .min(1, "El nombre del EPP es obligatorio.")
-    .max(150, "El nombre no puede superar los 150 caracteres."),
+    .min(3, "El nombre del EPP debe tener entre 3 y 100 caracteres.")
+    .max(100, "El nombre del EPP debe tener entre 3 y 100 caracteres."),
   stockEPP: z
     .number({ error: "El stock es obligatorio." })
     .int("El stock debe ser un número entero.")
@@ -16,8 +16,8 @@ export const modificarEppSchema = z.object({
   nombreEPP: z
     .string()
     .trim()
-    .min(1, "El nombre del EPP es obligatorio.")
-    .max(150, "El nombre no puede superar los 150 caracteres."),
+    .min(3, "El nombre del EPP debe tener entre 3 y 100 caracteres.")
+    .max(100, "El nombre del EPP debe tener entre 3 y 100 caracteres."),
 });
 
 export const reponerEppSchema = z.object({
