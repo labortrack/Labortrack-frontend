@@ -61,6 +61,13 @@ export function DocumentosTable({
   const [isRefreshing, setIsRefreshing] = useState(false);
   const PAGE_SIZE = 10;
 
+  // Si cambian los filtros (incluido el estado o búsqueda), reiniciamos la página a 0
+  const [prevFilters, setPrevFilters] = useState(filters);
+  if (prevFilters !== filters) {
+    setPrevFilters(filters);
+    setPage(0);
+  }
+
   // ── RBAC ───────────────────────────────────────────────────────────────────
   // El botón "Dar de baja" solo se renderiza para ADMIN y RRHH.
   // ROLE_OPERARIO puede ver y descargar, pero NO puede eliminar documentos.
@@ -101,8 +108,16 @@ export function DocumentosTable({
   if (!query.data?.content.length) {
     return (
       <EmptyState
-        title="Sin documentos"
-        description="No se encontraron documentos con los filtros aplicados."
+        title={
+          filters.estado === "INACTIVOS"
+            ? "No hay documentos inactivos"
+            : "Sin documentos"
+        }
+        description={
+          filters.estado === "INACTIVOS"
+            ? "No hay registros dados de baja que coincidan con la búsqueda."
+            : "No se encontraron documentos con los filtros aplicados."
+        }
         action={
           <Button
             variant="outline"

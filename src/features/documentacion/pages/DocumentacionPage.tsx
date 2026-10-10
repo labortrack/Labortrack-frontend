@@ -44,8 +44,15 @@ import { TipoDocumento360Modal } from "../components/TipoDocumento360Modal";
 import type {
   DocumentoFilterDto,
   DocumentoRespuestaDto,
+  EstadoDocumentoFiltro,
   TipoDocumentoDTO,
 } from "../types/documentacion.types";
+
+const TABS_ESTADO: { label: string; value: EstadoDocumentoFiltro }[] = [
+  { label: "Activos", value: "ACTIVOS" },
+  { label: "Inactivos", value: "INACTIVOS" },
+  { label: "Todos", value: "TODOS" },
+];
 
 export default function DocumentacionPage() {
   // ── RBAC ───────────────────────────────────────────────────────────────────
@@ -59,6 +66,12 @@ export default function DocumentacionPage() {
   const [bajaDoc, setBajaDoc] = useState<DocumentoRespuestaDto | null>(null);
   const [nombreFiltro, setNombreFiltro] = useState("");
   const [filters, setFilters] = useState<DocumentoFilterDto>({});
+  const [filtroEstado, setFiltroEstado] = useState<EstadoDocumentoFiltro>("ACTIVOS");
+
+  const appliedFilters: DocumentoFilterDto = useMemo(() => ({
+    ...filters,
+    ...(esAdmin ? { estado: filtroEstado } : {}),
+  }), [filters, esAdmin, filtroEstado]);
 
   // ── Polling inteligente de vectorización RAG ──────────────────────────────
   const { iniciarPolling } = useRagIndexingPolling();
@@ -242,9 +255,28 @@ export default function DocumentacionPage() {
               </Button>
             </div>
 
-            {/* Barra de búsqueda */}
+            {/* Barra de búsqueda y control de estado */}
             <Card>
-              <CardContent>
+              <CardContent className="space-y-3">
+                {esAdmin && (
+                  <div className="flex rounded-lg border border-border bg-muted/40 p-1 w-fit">
+                    {TABS_ESTADO.map((tab) => (
+                      <button
+                        key={tab.value}
+                        type="button"
+                        onClick={() => setFiltroEstado(tab.value)}
+                        className={cn(
+                          "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
+                          filtroEstado === tab.value
+                            ? "bg-card text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <SearchInput
                     placeholder="Buscar por nombre de documento..."
@@ -283,7 +315,7 @@ export default function DocumentacionPage() {
               </div>
 
               <DocumentosTable
-                filters={filters}
+                filters={appliedFilters}
                 onPrevisualizar={handlePrevisualizar}
                 onBaja={setBajaDoc}
               />
