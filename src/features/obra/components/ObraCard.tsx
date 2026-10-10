@@ -47,7 +47,8 @@ export function ObraCard({
   const handleDetalle = () => onDetalle?.(obra);
 
   return (
-    <div
+    <>
+      <div
       role={onDetalle ? "button" : undefined}
       tabIndex={onDetalle ? 0 : undefined}
       onClick={onDetalle ? handleDetalle : undefined}
@@ -239,7 +240,9 @@ export function ObraCard({
         </div>
       </div>
 
+      </div>
+
       {renderDialog()}
-    </div>
+    </>
   );
 }
