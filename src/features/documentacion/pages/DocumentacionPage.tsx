@@ -1,5 +1,4 @@
-// Página del Módulo de Documentación y Gestión RAG
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   FileUp,
   Files,
@@ -27,10 +26,12 @@ import {
   TabsTrigger,
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { cn } from "@/shared/utils/cn";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import {
   useBajaDocumento,
   useBajaTipoDocumento,
+  useReactivarDocumento,
   useReactivarTipoDocumento,
 } from "../hooks/useDocumentacion";
 import { useRagIndexingPolling } from "../hooks/useRagIndexingPolling";
@@ -64,6 +65,7 @@ export default function DocumentacionPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentoRespuestaDto | null>(null);
   const [bajaDoc, setBajaDoc] = useState<DocumentoRespuestaDto | null>(null);
+  const [reactivarDoc, setReactivarDoc] = useState<DocumentoRespuestaDto | null>(null);
   const [nombreFiltro, setNombreFiltro] = useState("");
   const [filters, setFilters] = useState<DocumentoFilterDto>({});
   const [filtroEstado, setFiltroEstado] = useState<EstadoDocumentoFiltro>("ACTIVOS");
@@ -88,6 +90,7 @@ export default function DocumentacionPage() {
   };
 
   const bajaMutation = useBajaDocumento();
+  const reactivarDocMutation = useReactivarDocumento();
 
   const applySearch = () => {
     setFilters(
@@ -113,6 +116,19 @@ export default function DocumentacionPage() {
     } catch (error) {
       toast.error(
         normalizeApiError(error, "No se pudo dar de baja el documento.").message,
+      );
+    }
+  };
+
+  const handleConfirmarReactivarDoc = async () => {
+    if (!reactivarDoc) return;
+    try {
+      await reactivarDocMutation.mutateAsync(reactivarDoc.idDocumento);
+      toast.success(`"${reactivarDoc.nombreDocumento}" reactivado exitosamente.`);
+      setReactivarDoc(null);
+    } catch (error) {
+      toast.error(
+        normalizeApiError(error, "No se pudo reactivar el documento.").message,
       );
     }
   };
@@ -247,36 +263,37 @@ export default function DocumentacionPage() {
         {/* ══ Tab: Documentos Institucionales ══ */}
         <TabsContent value="institucionales">
           <div className="space-y-4">
-            {/* Acciones del tab (disponible para todos los roles) */}
-            <div className="flex justify-end">
+            {/* Acciones del tab y filtros de estado */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              {esAdmin ? (
+                <div className="flex w-full sm:w-auto items-center gap-1 rounded-lg border border-border bg-muted p-1">
+                  {TABS_ESTADO.map((tab) => (
+                    <button
+                      key={tab.value}
+                      type="button"
+                      onClick={() => setFiltroEstado(tab.value)}
+                      className={cn(
+                        "flex-1 sm:flex-initial flex h-8 items-center justify-center gap-1.5 rounded-control px-3 text-xs font-semibold transition-all cursor-pointer",
+                        filtroEstado === tab.value
+                          ? "bg-card text-primary shadow-soft"
+                          : "text-foreground-muted hover:text-foreground",
+                      )}
+                    >
+                      <span>{tab.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : <div />}
+
               <Button onClick={() => setUploadOpen(true)}>
                 <FileUp />
                 Subir documento
               </Button>
             </div>
 
-            {/* Barra de búsqueda y control de estado */}
+            {/* Barra de búsqueda */}
             <Card>
-              <CardContent className="space-y-3">
-                {esAdmin && (
-                  <div className="flex rounded-lg border border-border bg-muted/40 p-1 w-fit">
-                    {TABS_ESTADO.map((tab) => (
-                      <button
-                        key={tab.value}
-                        type="button"
-                        onClick={() => setFiltroEstado(tab.value)}
-                        className={cn(
-                          "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-                          filtroEstado === tab.value
-                            ? "bg-card text-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground",
-                        )}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
-                )}
+              <CardContent>
                 <div className="flex gap-2">
                   <SearchInput
                     placeholder="Buscar por nombre de documento..."
@@ -307,7 +324,7 @@ export default function DocumentacionPage() {
               <div className="flex items-center gap-2 border-b border-border px-5 py-4">
                 <Files className="size-5 text-primary" />
                 <h2 className="font-semibold">Documentos Institucionales</h2>
-                {Object.keys(filters).length > 0 ? (
+                {(Object.keys(filters).length > 0 || (esAdmin && filtroEstado !== "ACTIVOS")) ? (
                   <Badge variant="neutral" className="ml-auto text-xs">
                     Filtrado
                   </Badge>
@@ -318,6 +335,7 @@ export default function DocumentacionPage() {
                 filters={appliedFilters}
                 onPrevisualizar={handlePrevisualizar}
                 onBaja={setBajaDoc}
+                onReactivar={setReactivarDoc}
               />
             </Card>
           </div>
@@ -442,6 +460,46 @@ export default function DocumentacionPage() {
               disabled={bajaMutation.isPending}
             >
               {bajaMutation.isPending ? "Procesando..." : "Confirmar baja"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Confirmar reactivación de documento */}
+      <Dialog
+        open={Boolean(reactivarDoc)}
+        onOpenChange={(o) => {
+          if (!o) setReactivarDoc(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reactivar documento</DialogTitle>
+            <DialogDescription>
+              ¿Confirmás que querés reactivar el documento{" "}
+              <strong className="text-foreground">
+                {reactivarDoc?.nombreDocumento}
+              </strong>
+              ? Volverá a estar disponible en el sistema.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
+            ⚠ Si el documento se usaba con el asistente de IA, tendrá que indexarse de nuevo: la reactivación no lo hace automáticamente.
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setReactivarDoc(null)}
+              disabled={reactivarDocMutation.isPending}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmarReactivarDoc}
+              disabled={reactivarDocMutation.isPending}
+            >
+              {reactivarDocMutation.isPending ? "Reactivando..." : "Confirmar reactivación"}
             </Button>
           </div>
         </DialogContent>
