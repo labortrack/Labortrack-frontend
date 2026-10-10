@@ -103,8 +103,7 @@ export function Documento360Modal({
   const user = useSessionStore((state) => state.user);
   const esOperario = user?.rol === "ROLE_OPERARIO";
   const esAdmin = user?.rol === "ROLE_ADMIN";
-  const puedeEliminar =
-    user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
+  const puedeEliminar = esAdmin && !doc?.fechaBaja;
 
   // Resetear preview cuando cambia el documento o se abre/cierra el modal
   const [prevDocKey, setPrevDocKey] = useState<string | null>(null);

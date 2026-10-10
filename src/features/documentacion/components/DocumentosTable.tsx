@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Loader2, RefreshCw, Trash2 } from "lucide-react";
+import { Eye, Loader2, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
 import {
   EmptyState,
   ErrorState,
@@ -47,6 +47,7 @@ interface DocumentosTableProps {
   filters: DocumentoFilterDto;
   onPrevisualizar: (doc: DocumentoRespuestaDto) => void;
   onBaja: (doc: DocumentoRespuestaDto) => void;
+  onReactivar?: (doc: DocumentoRespuestaDto) => void;
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -55,6 +56,7 @@ export function DocumentosTable({
   filters,
   onPrevisualizar,
   onBaja,
+  onReactivar,
 }: DocumentosTableProps) {
   const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
   const [page, setPage] = useState(0);
@@ -69,11 +71,11 @@ export function DocumentosTable({
   }
 
   // ── RBAC ───────────────────────────────────────────────────────────────────
-  // El botón "Dar de baja" solo se renderiza para ADMIN y RRHH.
-  // ROLE_OPERARIO puede ver y descargar, pero NO puede eliminar documentos.
+  // El backend exige ROLE_ADMIN para baja y reactivación de documentos.
   const user = useSessionStore((state) => state.user);
-  const puedeEliminar =
-    user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
+  const esAdmin = user?.rol === "ROLE_ADMIN";
+  const puedeEliminar = esAdmin;
+  const puedeReactivar = esAdmin;
 
   const query = useListarDocumentos(filters, page, PAGE_SIZE);
 
@@ -106,18 +108,28 @@ export function DocumentosTable({
   }
 
   if (!query.data?.content.length) {
+    const emptyTitle =
+      filters.nombreDocumento?.trim()
+        ? "Sin coincidencias"
+        : filters.estado === "INACTIVOS"
+          ? "No hay documentos inactivos"
+          : filters.estado === "TODOS"
+            ? "Sin documentos registrados"
+            : "No hay documentos activos";
+
+    const emptyDescription =
+      filters.nombreDocumento?.trim()
+        ? `No se encontraron documentos que coincidan con "${filters.nombreDocumento}".`
+        : filters.estado === "INACTIVOS"
+          ? "No se encontraron documentos dados de baja en el sistema."
+          : filters.estado === "TODOS"
+            ? "Todavía no se ha subido ningún documento al sistema."
+            : "No hay documentos activos para mostrar.";
+
     return (
       <EmptyState
-        title={
-          filters.estado === "INACTIVOS"
-            ? "No hay documentos inactivos"
-            : "Sin documentos"
-        }
-        description={
-          filters.estado === "INACTIVOS"
-            ? "No hay registros dados de baja que coincidan con la búsqueda."
-            : "No se encontraron documentos con los filtros aplicados."
-        }
+        title={emptyTitle}
+        description={emptyDescription}
         action={
           <Button
             variant="outline"
@@ -140,6 +152,9 @@ export function DocumentosTable({
   }
 
   // ── Tabla ──────────────────────────────────────────────────────────────────
+  const mostrarBadgeEstado =
+    filters.estado === "INACTIVOS" || filters.estado === "TODOS";
+
   return (
     <>
       {/* ── Barra de Sincronización Manual ── */}
@@ -188,6 +203,7 @@ export function DocumentosTable({
         </TableHeader>
         <TableBody>
           {query.data.content.map((doc) => {
+            const isDadoDeBaja = Boolean(doc.fechaBaja);
             const esProcesableIa =
               doc.esIndexadoRag ||
               (doc.indexadoEnRag && doc.indexadoEnRag !== "NO_APLICA");
@@ -195,12 +211,22 @@ export function DocumentosTable({
             return (
               <TableRow
                 key={doc.idDocumento}
-                className="cursor-pointer transition-colors hover:bg-muted/60"
+                className={cn(
+                  "cursor-pointer transition-colors hover:bg-muted/60",
+                  isDadoDeBaja && "opacity-60 bg-muted/20",
+                )}
                 onClick={() => onPrevisualizar(doc)}
               >
                 {/* Nombre del documento */}
                 <TableCell>
-                  <p className="font-medium leading-tight">{doc.nombreDocumento}</p>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-medium leading-tight">{doc.nombreDocumento}</p>
+                    {mostrarBadgeEstado && (
+                      <Badge variant={isDadoDeBaja ? "neutral" : "success"}>
+                        {isDadoDeBaja ? "Inactivo" : "Activo"}
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-foreground-muted">
                     {doc.nombreArchivoOriginal}
                   </p>
@@ -250,8 +276,29 @@ export function DocumentosTable({
                     <TooltipContent>Ver Vista 360°</TooltipContent>
                   </Tooltip>
 
-                  {/* ── Dar de baja — SOLO ADMIN / RRHH ── */}
-                  {puedeEliminar ? (
+                  {/* ── Reactivar — SOLO ADMIN (documentos inactivos) ── */}
+                  {isDadoDeBaja && puedeReactivar && onReactivar ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-primary hover:bg-primary-soft hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onReactivar(doc);
+                          }}
+                          aria-label={`Reactivar documento ${doc.nombreDocumento}`}
+                        >
+                          <RotateCcw className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Reactivar documento</TooltipContent>
+                    </Tooltip>
+                  ) : null}
+
+                  {/* ── Dar de baja — SOLO ADMIN (documentos activos) ── */}
+                  {!isDadoDeBaja && puedeEliminar ? (
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
