@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { FileUser, ShieldCheck, UserRound } from "lucide-react";
 import { PageHeader } from "@/shared/components";
 import { Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
@@ -13,7 +14,7 @@ import { esErrorSinLegajo } from "../utils/legajoError";
 
 export default function MisDatosPage() {
   const user = useSessionStore((state) => state.user)!;
-  const [activeTab, setActiveTab] = useState("cuenta");
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
 
   const { data: empresa } = useEmpresa();
@@ -30,6 +31,44 @@ export default function MisDatosPage() {
   const esSinLegajo = isErrorLegajo && esErrorSinLegajo(errorLegajo);
   const puedeMostrarTabLegajo = !esSinLegajo && (tieneLegajo || isErrorLegajo);
 
+  const rawTab = searchParams.get("tab");
+  const tabEsValido =
+    rawTab === "cuenta" ||
+    rawTab === "terminos" ||
+    (rawTab === "legajo" && (isLoadingLegajo || puedeMostrarTabLegajo));
+
+  const activeTab = tabEsValido ? (rawTab as string) : "cuenta";
+
+  useEffect(() => {
+    if (isLoadingLegajo) return;
+    if (
+      rawTab &&
+      rawTab !== "cuenta" &&
+      rawTab !== "terminos" &&
+      (rawTab !== "legajo" || !puedeMostrarTabLegajo)
+    ) {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set("tab", "cuenta");
+          return next;
+        },
+        { replace: true },
+      );
+    }
+  }, [rawTab, isLoadingLegajo, puedeMostrarTabLegajo, setSearchParams]);
+
+  const handleTabChange = (nextTab: string) => {
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.set("tab", nextTab);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -45,7 +84,7 @@ export default function MisDatosPage() {
       />
 
       {/* ── Pestañas de Mis Datos ────────────────────────────── */}
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
+      <Tabs value={activeTab} onValueChange={handleTabChange}>
         <TabsList className="w-full justify-start overflow-x-auto border-b border-border">
           <TabsTrigger value="cuenta" className="gap-1.5">
             <UserRound className="size-4" />
