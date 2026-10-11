@@ -85,29 +85,31 @@ export default function MisDatosPage() {
 
       {/* ── Pestañas de Mis Datos ────────────────────────────── */}
       <Tabs value={activeTab} onValueChange={handleTabChange}>
-        <TabsList className="w-full justify-start overflow-x-auto border-b border-border">
-          <TabsTrigger value="cuenta" className="gap-1.5">
-            <UserRound className="size-4" />
-            Cuenta
-          </TabsTrigger>
-
-          {isLoadingLegajo ? (
-            <div className="flex items-center gap-1.5 px-3 pb-3 text-xs text-foreground-muted animate-pulse">
-              <Spinner className="size-3.5" />
-              <span>Verificando legajo...</span>
-            </div>
-          ) : puedeMostrarTabLegajo ? (
-            <TabsTrigger value="legajo" className="gap-1.5">
-              <FileUser className="size-4" />
-              Mi Legajo
+        <div className="sticky top-0 z-10 -mx-4 px-4 sm:-mx-8 sm:px-8 bg-page pt-[max(0.5rem,env(safe-area-inset-top))] pb-1 pl-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] transition-all">
+          <TabsList className="w-full justify-start overflow-x-auto border-b border-border flex-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsTrigger value="cuenta" className="gap-1.5 shrink-0 whitespace-nowrap">
+              <UserRound className="size-4" />
+              Cuenta
             </TabsTrigger>
-          ) : null}
 
-          <TabsTrigger value="terminos" className="gap-1.5">
-            <ShieldCheck className="size-4" />
-            Términos y condiciones
-          </TabsTrigger>
-        </TabsList>
+            {isLoadingLegajo ? (
+              <div className="flex items-center gap-1.5 px-3 pb-3 text-xs text-foreground-muted animate-pulse shrink-0 whitespace-nowrap">
+                <Spinner className="size-3.5" />
+                <span>Verificando legajo...</span>
+              </div>
+            ) : puedeMostrarTabLegajo ? (
+              <TabsTrigger value="legajo" className="gap-1.5 shrink-0 whitespace-nowrap">
+                <FileUser className="size-4" />
+                Mi Legajo
+              </TabsTrigger>
+            ) : null}
+
+            <TabsTrigger value="terminos" className="gap-1.5 shrink-0 whitespace-nowrap">
+              <ShieldCheck className="size-4" />
+              Términos y condiciones
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         <TabsContent value="cuenta">
           <CuentaTab
