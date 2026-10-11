@@ -4,6 +4,7 @@ import type {
   TipoDocumentoModificacionDto,
   DocumentoRespuestaDto,
   DocumentoFilterDto,
+  EstadoRagResponseDto,
 } from "../types/documentacion.types";
 import type {
   ConsultarChatRequestDto,
@@ -224,6 +225,29 @@ export const documentacionApi = {
     (
       await httpClient.get<DocumentoRespuestaDto[]>(
         `${DOCS_BASE}/mi-documentacion`,
+      )
+    ).data,
+
+  /**
+   * GET /api/v1/documentos/{id}/estado-rag
+   * Consulta el estado de indexación RAG del documento.
+   */
+  obtenerEstadoRag: async (id: number): Promise<EstadoRagResponseDto> =>
+    (
+      await httpClient.get<EstadoRagResponseDto>(
+        `${DOCS_BASE}/${id}/estado-rag`,
+      )
+    ).data,
+
+  /**
+   * POST /api/v1/documentos/{id}/reindexar
+   * Solicita la reindexación en segundo plano del documento (solo ADMIN).
+   * Devuelve 202 con { estadoRag: "INDEXANDO" }.
+   */
+  reindexarDocumento: async (id: number): Promise<EstadoRagResponseDto> =>
+    (
+      await httpClient.post<EstadoRagResponseDto>(
+        `${DOCS_BASE}/${id}/reindexar`,
       )
     ).data,
 

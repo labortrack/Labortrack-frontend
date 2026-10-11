@@ -62,6 +62,12 @@ export interface TipoDocumentoModificacionDto {
 
 // ─── Documentos ───────────────────────────────────────────────────────────────
 
+export type EstadoRag = "NO_APLICA" | "INDEXADO" | "INDEXANDO" | "SIN_INDEXAR";
+
+export interface EstadoRagResponseDto {
+  estadoRag: EstadoRag;
+}
+
 export interface DocumentoRespuestaDto {
   idDocumento: number;
   nombreDocumento: string;
@@ -76,7 +82,7 @@ export interface DocumentoRespuestaDto {
   visibilidad: string;
   esIndexadoRag: boolean;
   indexadoEnRag?: "PENDIENTE" | "COMPLETADO" | "FALLIDO" | "NO_APLICA" | string;
-  estadoRag?: "PENDIENTE" | "COMPLETADO" | "FALLIDO" | "NO_APLICA" | string;
+  estadoRag?: EstadoRag | string;
   tipoDocumentoNombre: string;
   usuarioSubidaId: number;
   /** Presente únicamente cuando el documento está asociado a un empleado. */

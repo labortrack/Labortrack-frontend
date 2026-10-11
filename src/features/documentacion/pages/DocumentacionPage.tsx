@@ -484,7 +484,7 @@ export default function DocumentacionPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning">
-            ⚠ Si el documento se usaba con el asistente de IA, tendrá que indexarse de nuevo: la reactivación no lo hace automáticamente.
+            ⚠ Si el documento se usaba con el asistente de IA, después de reactivarlo vas a poder indexarlo de nuevo con el botón &apos;Indexar para la IA&apos;. No se reindexa automáticamente.
           </div>
           <div className="flex justify-end gap-2 pt-2">
             <Button

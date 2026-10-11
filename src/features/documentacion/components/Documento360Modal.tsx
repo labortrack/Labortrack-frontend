@@ -11,7 +11,9 @@ import {
   FileText,
   Globe,
   Layers,
+  Loader2,
   Lock,
+  Sparkles,
   Trash2,
   User,
   UserCheck,
@@ -24,11 +26,15 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogHeader,
   DialogTitle,
   Spinner,
 } from "@/shared/ui";
+import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
+import { documentacionApi } from "../api/documentacionApi";
 import { useObtenerUrlVisor } from "../hooks/useDocumentacion";
+import { useRagIndexingPolling } from "../hooks/useRagIndexingPolling";
 import type { DocumentoRespuestaDto } from "../types/documentacion.types";
 
 interface Documento360ModalProps {
@@ -36,6 +42,7 @@ interface Documento360ModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onBaja?: (doc: DocumentoRespuestaDto) => void;
+  onReindexar?: (doc: DocumentoRespuestaDto) => void;
 }
 
 function formatFechaCompleta(iso: string) {
@@ -93,10 +100,14 @@ export function Documento360Modal({
   open,
   onOpenChange,
   onBaja,
+  onReindexar,
 }: Documento360ModalProps) {
   // Estados de visualización
   const [visorUrl, setVisorUrl] = useState<string | null>(null);
   const [incompatibleNotice, setIncompatibleNotice] = useState<string | null>(null);
+  const [reindexarConfirmOpen, setReindexarConfirmOpen] = useState(false);
+  const [isReindexando, setIsReindexando] = useState(false);
+  const { iniciarPolling } = useRagIndexingPolling();
 
   const obtenerUrlVisorMutation = useObtenerUrlVisor();
 
@@ -104,6 +115,23 @@ export function Documento360Modal({
   const esOperario = user?.rol === "ROLE_OPERARIO";
   const esAdmin = user?.rol === "ROLE_ADMIN";
   const puedeEliminar = esAdmin;
+
+  const handleConfirmarReindexar = async () => {
+    if (!doc) return;
+    setIsReindexando(true);
+    try {
+      await documentacionApi.reindexarDocumento(doc.idDocumento);
+      iniciarPolling(doc);
+      onReindexar?.(doc);
+      setReindexarConfirmOpen(false);
+    } catch (error) {
+      toast.error(
+        normalizeApiError(error, "No se pudo iniciar la reindexación.").message,
+      );
+    } finally {
+      setIsReindexando(false);
+    }
+  };
 
   // Resetear preview cuando cambia el documento o se abre/cierra el modal
   const [prevDocKey, setPrevDocKey] = useState<string | null>(null);
@@ -116,6 +144,9 @@ export function Documento360Modal({
   }
 
   if (!doc) return null;
+
+  const estadoRagEfectivo =
+    doc.estadoRag ?? (doc.esIndexadoRag ? "INDEXADO" : "SIN_INDEXAR");
 
   const esDocumentoPublico =
     doc.visibilidad?.toUpperCase() === "PUBLICO" ||
@@ -156,40 +187,46 @@ export function Documento360Modal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 transition-all duration-200">
-        {/* ── Encabezado 360 ── */}
-        <div className="border-b border-border bg-card px-6 py-5">
-          <div className="flex items-start gap-4">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
-              {getFileIcon(doc.contentType, doc.nombreArchivoOriginal)}
-            </div>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto p-0 transition-all duration-200">
+          {/* ── Encabezado 360 ── */}
+          <div className="border-b border-border bg-card px-6 py-5">
+            <div className="flex items-start gap-4">
+              <div className="flex size-12 shrink-0 items-center justify-center rounded-xl bg-primary-soft">
+                {getFileIcon(doc.contentType, doc.nombreArchivoOriginal)}
+              </div>
 
-            <div className="min-w-0 flex-1 space-y-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="neutral" className="font-mono text-xs">
-                  DOC #{doc.idDocumento}
-                </Badge>
-                <Badge variant="neutral">
-                  {doc.tipoDocumentoNombre || "General"}
-                </Badge>
-                {doc.fechaBaja && (
-                  <Badge variant="error">
-                    Inactivo
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge variant="neutral" className="font-mono text-xs">
+                    DOC #{doc.idDocumento}
                   </Badge>
-                )}
-                {esAdmin && (
-                  doc.esIndexadoRag ? (
-                    <Badge variant="primary">
-                      <Brain className="mr-1 size-3" />
-                      IA Indexado (RAG)
+                  <Badge variant="neutral">
+                    {doc.tipoDocumentoNombre || "General"}
+                  </Badge>
+                  {doc.fechaBaja && (
+                    <Badge variant="error">
+                      Inactivo
                     </Badge>
-                  ) : (
-                    <Badge variant="neutral" className="text-foreground-muted">
-                      Sin RAG
-                    </Badge>
-                  )
-                )}
+                  )}
+                  {esAdmin && (
+                    estadoRagEfectivo === "INDEXADO" ? (
+                      <Badge variant="primary">
+                        <Brain className="mr-1 size-3" />
+                        IA Indexado (RAG)
+                      </Badge>
+                    ) : estadoRagEfectivo === "INDEXANDO" ? (
+                      <Badge variant="primary">
+                        <Loader2 className="mr-1 size-3 animate-spin text-primary" />
+                        Indexando IA…
+                      </Badge>
+                    ) : estadoRagEfectivo === "SIN_INDEXAR" ? (
+                      <Badge variant="warning">
+                        Sin indexar
+                      </Badge>
+                    ) : null
+                  )}
                 <Badge
                   variant="neutral"
                   className="flex items-center gap-1 text-xs"
@@ -408,25 +445,61 @@ export function Documento360Modal({
 
               {/* Sección IA / RAG (Solo ROLE_ADMIN) */}
               {esAdmin && (
-                <div className="rounded-lg border border-border bg-card p-4 space-y-2">
-                  <div className="flex items-center justify-between">
+                <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-foreground-muted">
                       <Brain className="size-4 text-primary" />
                       Motor de Búsqueda IA & RAG
                     </div>
-                    {doc.esIndexadoRag ? (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                        <Brain className="size-3" /> Activo en IA
-                      </span>
-                    ) : (
-                      <span className="text-xs text-foreground-muted">Inactivo</span>
-                    )}
+                    <div>
+                      {estadoRagEfectivo === "INDEXADO" && (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                          <Brain className="size-3" /> Activo en IA
+                        </span>
+                      )}
+                      {estadoRagEfectivo === "INDEXANDO" && (
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
+                          <Loader2 className="size-3 animate-spin text-primary" />
+                          Indexando…
+                        </span>
+                      )}
+                      {estadoRagEfectivo === "SIN_INDEXAR" && (
+                        <Badge variant="warning" className="text-xs">
+                          Sin indexar
+                        </Badge>
+                      )}
+                      {estadoRagEfectivo === "NO_APLICA" && (
+                        <span className="text-xs text-foreground-muted">No aplica</span>
+                      )}
+                    </div>
                   </div>
                   <p className="text-xs leading-relaxed text-foreground-muted">
-                    {doc.esIndexadoRag
-                      ? "Este documento ha sido vectorizado e indexado en el motor RAG de LaborTrack para consultas semánticas en el asistente inteligente."
-                      : "Este documento no forma parte de la base vectorial de IA. Se encuentra almacenado para archivo administrativo y consulta directa."}
+                    {estadoRagEfectivo === "INDEXADO" &&
+                      "Este documento ha sido vectorizado e indexado en el motor RAG de LaborTrack para consultas semánticas en el asistente inteligente."}
+                    {estadoRagEfectivo === "INDEXANDO" &&
+                      "El documento se está vectorizando en segundo plano. Estará disponible en el asistente en breve."}
+                    {estadoRagEfectivo === "SIN_INDEXAR" &&
+                      "Este documento no forma parte de la base vectorial de IA. Puede indexarse manualmente con el botón a continuación."}
+                    {estadoRagEfectivo === "NO_APLICA" &&
+                      "Este tipo de documento no está configurado para procesarse con Inteligencia Artificial."}
                   </p>
+
+                  {/* Botón Indexar para la IA (Solo ADMIN, activo y SIN_INDEXAR) */}
+                  {!doc.fechaBaja && estadoRagEfectivo === "SIN_INDEXAR" && (
+                    <div className="pt-1">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        className="gap-1.5 text-xs text-primary hover:bg-primary-soft hover:text-primary"
+                        onClick={() => setReindexarConfirmOpen(true)}
+                        disabled={isReindexando}
+                      >
+                        <Sparkles className="size-3.5" />
+                        Indexar para la IA
+                      </Button>
+                    </div>
+                  )}
                 </div>
               )}
             </>
@@ -464,5 +537,43 @@ export function Documento360Modal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+
+    {/* ── Diálogo de confirmación para Reindexar en Modal 360 ── */}
+    <Dialog
+      open={reindexarConfirmOpen}
+      onOpenChange={(op) => {
+        if (!op && !isReindexando) setReindexarConfirmOpen(false);
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Indexar documento para IA</DialogTitle>
+          <DialogDescription>
+            ¿Confirmás que querés enviar el documento{" "}
+            <strong className="text-foreground">
+              {doc?.nombreDocumento}
+            </strong>{" "}
+            a procesar en el motor de Inteligencia Artificial (RAG)?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex justify-end gap-2 pt-2">
+          <Button
+            variant="ghost"
+            onClick={() => setReindexarConfirmOpen(false)}
+            disabled={isReindexando}
+          >
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleConfirmarReindexar}
+            disabled={isReindexando}
+          >
+            {isReindexando ? "Iniciando..." : "Confirmar indexación"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  </>
+);
 }
