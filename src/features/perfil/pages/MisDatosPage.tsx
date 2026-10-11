@@ -112,6 +112,7 @@ export default function MisDatosPage() {
       <MisDatosBanner
         user={user}
         legajo={legajo}
+        isLoadingLegajo={isLoadingLegajo}
         nombreEmpresa={nombreEmpresa}
       />
 

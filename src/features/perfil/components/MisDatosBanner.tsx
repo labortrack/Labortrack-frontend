@@ -2,18 +2,21 @@ import { Building2, Mail } from "lucide-react";
 import type { CurrentUser } from "@/features/auth/types/auth.types";
 import { rolLabels } from "@/features/auth/types/auth.types";
 import type { EmpleadoResponseDto } from "@/features/legajos/types/legajo.types";
+import { ESTADO_LABELS } from "@/features/legajos/types/legajo.types";
 import { AvatarMinio } from "@/features/legajos/components/AvatarMinio";
-import { Avatar, Badge, Card } from "@/shared/ui";
+import { Avatar, Badge, Card, Skeleton } from "@/shared/ui";
 
 interface MisDatosBannerProps {
   user: CurrentUser;
   legajo?: EmpleadoResponseDto;
+  isLoadingLegajo?: boolean;
   nombreEmpresa?: string;
 }
 
 export function MisDatosBanner({
   user,
   legajo,
+  isLoadingLegajo = false,
   nombreEmpresa,
 }: MisDatosBannerProps) {
   const nombreCompleto = `${user.nombre} ${user.apellido}`;
@@ -45,6 +48,20 @@ export function MisDatosBanner({
               {nombreCompleto}
             </h2>
             <Badge variant="primary">{rolLabels[user.rol]}</Badge>
+            {isLoadingLegajo ? (
+              <Skeleton className="h-5 w-20 rounded-full" />
+            ) : legajo?.estadoActual ? (
+              <Badge
+                variant={
+                  legajo.estadoActual === "ACTIVO" ||
+                  legajo.estadoActual === "EN_OBRA"
+                    ? "success"
+                    : "warning"
+                }
+              >
+                {ESTADO_LABELS[legajo.estadoActual] || legajo.estadoActual}
+              </Badge>
+            ) : null}
           </div>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground-muted">
             <span className="flex min-w-0 items-center gap-1.5">
