@@ -47,6 +47,7 @@ interface EmpleadoDetail360Props {
   historialEstados: EmpleadoEstadoResponseDto[];
   onEdit?: () => void;
   mostrarSubBanner?: boolean;
+  mostrarCambiarFoto?: boolean;
 }
 
 export function EmpleadoDetail360({
@@ -54,6 +55,7 @@ export function EmpleadoDetail360({
   historialEstados,
   onEdit,
   mostrarSubBanner = true,
+  mostrarCambiarFoto = true,
 }: EmpleadoDetail360Props) {
   const { esAdmin, abrirHistorial, renderDialog } =
     useHistorialAuditoriaDialog();
@@ -82,37 +84,46 @@ export function EmpleadoDetail360({
     }
   };
 
+  const tieneAcciones = Boolean(onEdit || mostrarCambiarFoto || esAdmin);
+
   return (
     <div className="space-y-6">
       {/* Acciones */}
-      <div className="flex items-center justify-end gap-2">
-        {onEdit ? (
-          <Button variant="outline" onClick={onEdit} className="gap-2">
-            <Pencil className="size-4" />
-            Editar Mis Datos
-          </Button>
-        ) : null}
+      {tieneAcciones && (
+        <div className="flex items-center justify-end gap-2">
+          {onEdit ? (
+            <Button variant="outline" onClick={onEdit} className="gap-2">
+              <Pencil className="size-4" />
+              Editar Mis Datos
+            </Button>
+          ) : null}
 
-        <Button
-          variant="outline"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={actualizarFotoMutation.isPending}
-          className="gap-2"
-        >
-          {actualizarFotoMutation.isPending ? (
-            <Spinner className="size-4" />
-          ) : (
-            <Camera className="size-4" />
+          {mostrarCambiarFoto && (
+            <>
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={actualizarFotoMutation.isPending}
+                className="gap-2"
+              >
+                {actualizarFotoMutation.isPending ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <Camera className="size-4" />
+                )}
+                {actualizarFotoMutation.isPending
+                  ? "Subiendo..."
+                  : "Cambiar Foto"}
+              </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg, image/png"
+                className="hidden"
+                onChange={handleFotoChange}
+              />
+            </>
           )}
-          {actualizarFotoMutation.isPending ? "Subiendo..." : "Cambiar Foto"}
-        </Button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/jpeg, image/png"
-          className="hidden"
-          onChange={handleFotoChange}
-        />
 
         {esAdmin && (
           <DropdownMenu>
@@ -141,6 +152,7 @@ export function EmpleadoDetail360({
           </DropdownMenu>
         )}
       </div>
+    )}
 
       {/* Header Profile Card */}
       {mostrarSubBanner && (

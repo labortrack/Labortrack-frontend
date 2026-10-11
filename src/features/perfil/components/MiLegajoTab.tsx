@@ -84,6 +84,7 @@ export function MiLegajoTab({
       historialEstados={historialEstadosData || []}
       onEdit={onStartEditing}
       mostrarSubBanner={false}
+      mostrarCambiarFoto={false}
     />
   );
 }
