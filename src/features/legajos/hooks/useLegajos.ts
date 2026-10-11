@@ -67,6 +67,13 @@ export function useHistorialEstados(id: number | null | undefined) {
   });
 }
 
+/**
+ * Duración de staleTime para la URL firmada de la foto de perfil.
+ * El backend (S3StorageService.generarLinkDescarga) genera URLs con duración de 10 minutos (Duration.ofMinutes(10)).
+ * Definimos un staleTime menor (8 minutos = 480_000 ms) para asegurar renovación antes de su vencimiento.
+ */
+export const FOTO_PRESIGNED_URL_STALE_TIME_MS = 8 * 60 * 1000;
+
 export function useFotoPresignedUrl(
   id: number | null | undefined,
   enabled: boolean,
@@ -75,6 +82,7 @@ export function useFotoPresignedUrl(
     queryKey: legajosKeys.fotoUrl(id ?? 0),
     queryFn: () => legajosApi.getFotoPresignedUrl(id!),
     enabled: Boolean(id && id > 0 && enabled),
+    staleTime: FOTO_PRESIGNED_URL_STALE_TIME_MS,
   });
 }
 
@@ -121,11 +129,26 @@ export function useModificarEmpleado() {
 }
 
 export function useActualizarFotoPerfil() {
+  const queryClient = useQueryClient();
   const invalidate = useInvalidateLegajos();
   return useMutation({
     mutationFn: ({ id, foto }: { id: number; foto: File }) =>
       legajosApi.actualizarFoto(id, foto),
-    onSuccess: invalidate,
+    onSuccess: async (_, variables) => {
+      // 1. Invalida y refetchea de inmediato la URL de la foto del empleado para solicitar firma nueva
+      await queryClient.invalidateQueries({
+        queryKey: legajosKeys.fotoUrl(variables.id),
+      });
+      await queryClient.refetchQueries({
+        queryKey: legajosKeys.fotoUrl(variables.id),
+      });
+      // 2. Invalida y refetchea miLegajo y legajos generales
+      invalidate();
+      await queryClient.refetchQueries({ queryKey: legajosKeys.miLegajo() });
+      await queryClient.refetchQueries({
+        queryKey: legajosKeys.detail(variables.id),
+      });
+    },
   });
 }
 

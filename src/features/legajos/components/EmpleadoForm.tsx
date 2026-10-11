@@ -30,11 +30,8 @@ import type {
   EmpleadoUpdateDto,
 } from "../types/legajo.types";
 import { formatCuit } from "@/shared/utils/cuit";
-import {
-  PAISES_FRECUENTES,
-  PAISES_RESTO,
-  normalizarPais,
-} from "@/shared/constants/paises";
+import { PAISES_FRECUENTES, PAISES_RESTO, normalizarPais } from "@/shared/constants/paises";
+import { validarFotoPerfil } from "../utils/validarFotoPerfil";
 import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
 import { useZonasActivas } from "@/features/cuadroTarifario/hooks/useZonas";
 import { FormField, LoadingState } from "@/shared/components";
@@ -81,12 +78,14 @@ export interface EmpleadoFormProps {
   empleadoId?: number;
   onSuccess?: () => void;
   onCancel?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function EmpleadoForm({
   empleadoId,
   onSuccess,
   onCancel,
+  onDirtyChange,
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
   const rolActor = useSessionStore((state) => state.user?.rol);
@@ -112,7 +111,7 @@ export function EmpleadoForm({
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EmpleadoFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -140,9 +139,21 @@ export function EmpleadoForm({
     },
   });
 
-  // Pre-llenar campos en modo edición
   useEffect(() => {
-    if (isEdit && empleadoData) {
+    onDirtyChange?.(isDirty || Boolean(fotoFile));
+  }, [isDirty, fotoFile, onDirtyChange]);
+
+  const initializedEmpleadoIdRef = useRef<number | null>(null);
+
+  // Pre-llenar campos en modo edición únicamente cuando se inicializa el empleadoId actual
+  useEffect(() => {
+    if (
+      isEdit &&
+      empleadoData &&
+      empleadoId &&
+      initializedEmpleadoIdRef.current !== empleadoId
+    ) {
+      initializedEmpleadoIdRef.current = empleadoId;
       reset({
         dni: empleadoData.dni || "",
         cuil: empleadoData.cuil || "",
@@ -167,11 +178,17 @@ export function EmpleadoForm({
         },
       });
     }
-  }, [isEdit, empleadoData, reset]);
+  }, [isEdit, empleadoData, empleadoId, reset]);
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
     if (file) {
+      const errorValidacion = validarFotoPerfil(file);
+      if (errorValidacion) {
+        toast.error(errorValidacion);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+        return;
+      }
       setFotoFile(file);
       const reader = new FileReader();
       reader.onloadend = () => setFotoPreview(reader.result as string);
