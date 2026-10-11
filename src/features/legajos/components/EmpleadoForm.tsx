@@ -143,16 +143,17 @@ export function EmpleadoForm({
     onDirtyChange?.(isDirty || Boolean(fotoFile));
   }, [isDirty, fotoFile, onDirtyChange]);
 
-  const isInitializedRef = useRef(false);
+  const initializedEmpleadoIdRef = useRef<number | null>(null);
 
+  // Pre-llenar campos en modo edición únicamente cuando se inicializa el empleadoId actual
   useEffect(() => {
-    isInitializedRef.current = false;
-  }, [empleadoId]);
-
-  // Pre-llenar campos en modo edición únicamente en la carga inicial
-  useEffect(() => {
-    if (isEdit && empleadoData && !isInitializedRef.current) {
-      isInitializedRef.current = true;
+    if (
+      isEdit &&
+      empleadoData &&
+      empleadoId &&
+      initializedEmpleadoIdRef.current !== empleadoId
+    ) {
+      initializedEmpleadoIdRef.current = empleadoId;
       reset({
         dni: empleadoData.dni || "",
         cuil: empleadoData.cuil || "",
@@ -177,7 +178,7 @@ export function EmpleadoForm({
         },
       });
     }
-  }, [isEdit, empleadoData, reset]);
+  }, [isEdit, empleadoData, empleadoId, reset]);
 
   const handleFotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] ?? null;
