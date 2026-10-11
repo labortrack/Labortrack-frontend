@@ -49,6 +49,9 @@ function mapDocumentoFilters(filter: DocumentoFilterDto) {
   if (filter.visibilidad) {
     params.visibilidad = filter.visibilidad;
   }
+  if (filter.estado && filter.estado !== "ACTIVOS") {
+    params.estado = filter.estado;
+  }
   return params;
 }
 

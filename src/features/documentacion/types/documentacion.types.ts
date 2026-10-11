@@ -70,6 +70,8 @@ export interface DocumentoRespuestaDto {
   hashSha256: string;
   /** ISO-8601 timestamp devuelto por el backend. */
   fechaSubida: string;
+  /** ISO-8601 timestamp si fue dado de baja, o null/undefined si está activo. */
+  fechaBaja?: string | null;
   contentType: string;
   visibilidad: string;
   esIndexadoRag: boolean;
@@ -97,10 +99,13 @@ export interface DocumentoVisualizacionResponseDto {
 
 // ─── Filtros de listado ───────────────────────────────────────────────────────
 
+export type EstadoDocumentoFiltro = "ACTIVOS" | "INACTIVOS" | "TODOS";
+
 export interface DocumentoFilterDto {
   nombreDocumento?: string;
   tipoDocumentoId?: number;
   empleadoId?: number;
   visibilidad?: string;
   esIndexadoRag?: boolean;
+  estado?: EstadoDocumentoFiltro;
 }

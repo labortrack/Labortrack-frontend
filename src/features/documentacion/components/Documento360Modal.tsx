@@ -103,8 +103,7 @@ export function Documento360Modal({
   const user = useSessionStore((state) => state.user);
   const esOperario = user?.rol === "ROLE_OPERARIO";
   const esAdmin = user?.rol === "ROLE_ADMIN";
-  const puedeEliminar =
-    user?.rol === "ROLE_ADMIN" || user?.rol === "ROLE_RRHH";
+  const puedeEliminar = esAdmin;
 
   // Resetear preview cuando cambia el documento o se abre/cierra el modal
   const [prevDocKey, setPrevDocKey] = useState<string | null>(null);
@@ -174,6 +173,11 @@ export function Documento360Modal({
                 <Badge variant="neutral">
                   {doc.tipoDocumentoNombre || "General"}
                 </Badge>
+                {doc.fechaBaja && (
+                  <Badge variant="error">
+                    Inactivo
+                  </Badge>
+                )}
                 {esAdmin && (
                   doc.esIndexadoRag ? (
                     <Badge variant="primary">
@@ -432,7 +436,7 @@ export function Documento360Modal({
         {/* ── Footer ── */}
         <div className="flex items-center justify-between border-t border-border bg-card px-6 py-4">
           <div>
-            {puedeEliminar && onBaja ? (
+            {puedeEliminar && onBaja && !doc?.fechaBaja ? (
               <Button
                 variant="ghost"
                 size="sm"
