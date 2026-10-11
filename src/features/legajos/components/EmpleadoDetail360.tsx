@@ -46,12 +46,14 @@ interface EmpleadoDetail360Props {
   legajo: EmpleadoResponseDto;
   historialEstados: EmpleadoEstadoResponseDto[];
   onEdit?: () => void;
+  mostrarSubBanner?: boolean;
 }
 
 export function EmpleadoDetail360({
   legajo,
   historialEstados,
   onEdit,
+  mostrarSubBanner = true,
 }: EmpleadoDetail360Props) {
   const { esAdmin, abrirHistorial, renderDialog } =
     useHistorialAuditoriaDialog();
@@ -141,46 +143,48 @@ export function EmpleadoDetail360({
       </div>
 
       {/* Header Profile Card */}
-      <div className="rounded-card border border-border bg-card p-6 shadow-soft">
-        <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-            <AvatarMinio
-              empleadoId={legajo.id}
-              nombre={legajo.nombre}
-              apellido={legajo.apellido}
-              fotoPerfilKey={legajo.fotoPerfilKey}
-              className="size-20 border-2 border-primary/20 shadow-soft"
-              size="lg"
-              allowZoom
-            />
-            <div>
-              <div className="flex items-center gap-3 flex-wrap">
-                <h2 className="text-2xl font-bold text-foreground">
-                  {legajo.nombre} {legajo.apellido}
-                </h2>
-                <Badge
-                  variant={
-                    legajo.estadoActual === "ACTIVO" ||
-                    legajo.estadoActual === "EN_OBRA"
-                      ? "success"
-                      : "warning"
-                  }
-                >
-                  {ESTADO_LABELS[legajo.estadoActual] || legajo.estadoActual}
-                </Badge>
+      {mostrarSubBanner && (
+        <div className="rounded-card border border-border bg-card p-6 shadow-soft">
+          <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+              <AvatarMinio
+                empleadoId={legajo.id}
+                nombre={legajo.nombre}
+                apellido={legajo.apellido}
+                fotoPerfilKey={legajo.fotoPerfilKey}
+                className="size-20 border-2 border-primary/20 shadow-soft"
+                size="lg"
+                allowZoom
+              />
+              <div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-bold text-foreground">
+                    {legajo.nombre} {legajo.apellido}
+                  </h2>
+                  <Badge
+                    variant={
+                      legajo.estadoActual === "ACTIVO" ||
+                      legajo.estadoActual === "EN_OBRA"
+                        ? "success"
+                        : "warning"
+                    }
+                  >
+                    {ESTADO_LABELS[legajo.estadoActual] || legajo.estadoActual}
+                  </Badge>
+                </div>
+                <p className="mt-1 text-sm text-foreground-muted">
+                  DNI: <strong className="text-foreground">{legajo.dni}</strong> ·
+                  CUIL: <strong className="text-foreground">{legajo.cuil}</strong> ·
+                  N° IERIC:{" "}
+                  <strong className="text-foreground">
+                    {legajo.numeroIeric || "-"}
+                  </strong>
+                </p>
               </div>
-              <p className="mt-1 text-sm text-foreground-muted">
-                DNI: <strong className="text-foreground">{legajo.dni}</strong> ·
-                CUIL: <strong className="text-foreground">{legajo.cuil}</strong> ·
-                N° IERIC:{" "}
-                <strong className="text-foreground">
-                  {legajo.numeroIeric || "-"}
-                </strong>
-              </p>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Grid de Datos Personales y Operativos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

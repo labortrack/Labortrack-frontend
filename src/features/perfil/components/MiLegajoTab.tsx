@@ -83,6 +83,7 @@ export function MiLegajoTab({
       legajo={legajo}
       historialEstados={historialEstadosData || []}
       onEdit={onStartEditing}
+      mostrarSubBanner={false}
     />
   );
 }
