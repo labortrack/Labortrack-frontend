@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useBlocker, useSearchParams } from "react-router-dom";
 import { FileUser, ShieldCheck, UserRound } from "lucide-react";
-import { PageHeader } from "@/shared/components";
+import { ConfirmDialog, PageHeader } from "@/shared/components";
 import { Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
@@ -16,6 +16,7 @@ export default function MisDatosPage() {
   const user = useSessionStore((state) => state.user)!;
   const [searchParams, setSearchParams] = useSearchParams();
   const [isEditing, setIsEditing] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const { data: empresa } = useEmpresa();
   const {
@@ -38,6 +39,27 @@ export default function MisDatosPage() {
     (rawTab === "legajo" && (isLoadingLegajo || puedeMostrarTabLegajo));
 
   const activeTab = tabEsValido ? (rawTab as string) : "cuenta";
+
+  const shouldBlock = isEditing && hasUnsavedChanges;
+
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      shouldBlock && currentLocation.pathname !== nextLocation.pathname,
+  );
+
+  useEffect(() => {
+    if (!shouldBlock) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [shouldBlock]);
 
   useEffect(() => {
     if (isLoadingLegajo) return;
@@ -67,6 +89,16 @@ export default function MisDatosPage() {
       },
       { replace: true },
     );
+  };
+
+  const handleSaveSuccess = () => {
+    setHasUnsavedChanges(false);
+    setIsEditing(false);
+  };
+
+  const handleCancelEditing = () => {
+    setHasUnsavedChanges(false);
+    setIsEditing(false);
   };
 
   return (
@@ -133,8 +165,9 @@ export default function MisDatosPage() {
               onRetry={() => void refetchLegajo()}
               isEditing={isEditing}
               onStartEditing={() => setIsEditing(true)}
-              onCancelEditing={() => setIsEditing(false)}
-              onSaveSuccess={() => setIsEditing(false)}
+              onCancelEditing={handleCancelEditing}
+              onSaveSuccess={handleSaveSuccess}
+              onDirtyChange={setHasUnsavedChanges}
             />
           </TabsContent>
         ) : null}
@@ -143,6 +176,24 @@ export default function MisDatosPage() {
           <PoliticaPrivacidad />
         </TabsContent>
       </Tabs>
+
+      <ConfirmDialog
+        open={blocker.state === "blocked"}
+        title="Cambios sin guardar"
+        description="Tenés modificaciones sin guardar en tu legajo. Si salís ahora, perderás todos los cambios realizados."
+        confirmLabel="Salir sin guardar"
+        destructive
+        onOpenChange={(open) => {
+          if (!open && blocker.state === "blocked") {
+            blocker.reset?.();
+          }
+        }}
+        onConfirm={() => {
+          setHasUnsavedChanges(false);
+          blocker.proceed?.();
+        }}
+      />
     </div>
   );
 }
+
