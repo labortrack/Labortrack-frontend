@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useForm, useWatch } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
@@ -15,7 +15,7 @@ import {
   type NuevaEntregaForm,
 } from "../../schemas/epp.schemas";
 import { useAsignarEpp, useEpps } from "../../hooks/useEpp";
-import { useEmpleadosActivos } from "@/features/estructuraLaboral/hooks/useEstructuraLaboral";
+import { EppEmpleadoCombobox } from "./EppEmpleadoCombobox";
 import { FormField } from "@/shared/components";
 import {
   Alert,
@@ -49,10 +49,6 @@ export function EppDeliveryModal({
   // Catálogos
   const { data: epps = [], isLoading: isLoadingEpps } = useEpps();
   const activeEpps = epps.filter((epp) => epp.activo);
-
-  const { data: empleadosData, isLoading: isLoadingEmpleados } =
-    useEmpleadosActivos();
-  const empleados = empleadosData?.content ?? [];
 
   const todayStr = new Date().toISOString().split("T")[0];
 
@@ -115,15 +111,10 @@ export function EppDeliveryModal({
         fechaEntrega: values.fechaEntrega,
       });
 
-      const empleadoNombre =
-        empleados.find((e) => e.id === Number(values.empleadoId))
-          ? `${empleados.find((e) => e.id === Number(values.empleadoId))?.apellido}, ${empleados.find((e) => e.id === Number(values.empleadoId))?.nombre}`
-          : `Empleado #${values.empleadoId}`;
-
       const eppNombre = selectedEpp?.nombreEPP ?? `EPP #${values.eppId}`;
 
       toast.success("Entrega registrada correctamente", {
-        description: `Se entregaron ${values.cantidadEntregada}x ${eppNombre} a ${empleadoNombre}.`,
+        description: `Se entregaron ${values.cantidadEntregada}x ${eppNombre} al empleado seleccionado.`,
       });
       handleClose(false);
     } catch (err) {
@@ -156,35 +147,27 @@ export function EppDeliveryModal({
             </Alert>
           ) : null}
 
-          {/* Selector de Empleado */}
+          {/* Selector de Empleado con Combobox Popover */}
           <FormField
             id="empleadoId"
             label="Empleado Destinatario"
             icon={User}
             required
-            hint={
-              isLoadingEmpleados
-                ? "Cargando nómina de empleados..."
-                : empleados.length === 0
-                  ? "No se encontraron empleados activos."
-                  : undefined
-            }
             error={errors.empleadoId?.message}
           >
-            <select
-              id="empleadoId"
-              disabled={isPending || isLoadingEmpleados}
-              aria-invalid={Boolean(errors.empleadoId)}
-              className="h-10 w-full rounded-control border border-border-strong bg-card px-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:bg-subtle disabled:text-foreground-muted aria-invalid:border-error aria-invalid:ring-2 aria-invalid:ring-error/15"
-              {...register("empleadoId", { valueAsNumber: true })}
-            >
-              <option value="0">-- Seleccioná un empleado --</option>
-              {empleados.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.apellido}, {emp.nombre} (DNI: {emp.dni})
-                </option>
-              ))}
-            </select>
+            <Controller
+              control={control}
+              name="empleadoId"
+              render={({ field }) => (
+                <EppEmpleadoCombobox
+                  id="empleadoId"
+                  value={field.value}
+                  onChange={field.onChange}
+                  disabled={isPending}
+                  error={errors.empleadoId?.message}
+                />
+              )}
+            />
           </FormField>
 
           {/* Selector de EPP */}

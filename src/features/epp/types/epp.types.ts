@@ -47,7 +47,6 @@ export interface AltaEppDto {
 
 export interface ModificarEppDto {
   nombreEPP: string;
-  stockEPP?: number;
 }
 
 export interface ReponerEppDto {

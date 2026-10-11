@@ -22,6 +22,9 @@ interface EppTableProps {
   onRestock: (epp: Epp) => void;
   onToggleStatus: (epp: Epp) => void;
   isTogglingId?: number | null;
+  emptyTitle?: string;
+  emptyDescription?: string;
+  onClearFilters?: () => void;
 }
 
 export function EppTable({
@@ -30,6 +33,9 @@ export function EppTable({
   onRestock,
   onToggleStatus,
   isTogglingId,
+  emptyTitle = "No hay elementos de protección personal",
+  emptyDescription = "Aún no se han registrado EPPs en el inventario. Podés agregar uno nuevo haciendo clic en 'Nuevo EPP'.",
+  onClearFilters,
 }: EppTableProps) {
   const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
@@ -37,8 +43,15 @@ export function EppTable({
     return (
       <div className="rounded-card border border-border bg-card p-6 shadow-soft">
         <EmptyState
-          title="No hay elementos de protección personal"
-          description="Aún no se han registrado EPPs en el inventario. Podés agregar uno nuevo haciendo clic en 'Nuevo EPP'."
+          title={emptyTitle}
+          description={emptyDescription}
+          action={
+            onClearFilters ? (
+              <Button variant="outline" size="sm" onClick={onClearFilters}>
+                Limpiar filtros
+              </Button>
+            ) : undefined
+          }
         />
       </div>
     );
