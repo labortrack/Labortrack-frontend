@@ -131,10 +131,10 @@ export function CuentaTab({
               Usá una contraseña que no utilices en otros servicios y cambiala si
               creés que alguien más la conoce.
             </p>
-            <p className="text-xs text-foreground-muted">
-              Si ingresás con Google no tenés contraseña local: usá
-              &apos;Recuperar contraseña&apos; desde la pantalla de inicio.
-            </p>
+            <div className="rounded-md border border-border/60 bg-muted/50 p-2.5 text-xs text-foreground-muted">
+              <strong className="font-semibold text-foreground">Aviso: </strong>
+              Si ingresás con Google no tenés contraseña local: usá &apos;Recuperar contraseña&apos; desde la pantalla de inicio.
+            </div>
             <Button
               variant="outline"
               onClick={() => setChangePasswordOpen(true)}
