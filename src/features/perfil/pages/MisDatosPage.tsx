@@ -5,7 +5,6 @@ import {
   FileUser,
   Hash,
   KeyRound,
-  Mail,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
@@ -14,7 +13,7 @@ import {
   LoadingState,
   PageHeader,
 } from "@/shared/components";
-import { Avatar, Badge, Button, Card, CardContent, CardHeader } from "@/shared/ui";
+import { Badge, Button, Card, CardContent, CardHeader } from "@/shared/ui";
 import { formatCuit } from "@/shared/utils/cuit";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { rolLabels } from "@/features/auth/types/auth.types";
@@ -24,6 +23,7 @@ import { RUBRO_LABELS } from "@/features/empresa/utils/rubroLabels";
 import { useHistorialEstados, useMiLegajo } from "@/features/legajos/hooks/useLegajos";
 import { EmpleadoDetail360 } from "@/features/legajos/components/EmpleadoDetail360";
 import { EmpleadoForm } from "@/features/legajos/components/EmpleadoForm";
+import { MisDatosBanner } from "../components/MisDatosBanner";
 import { PoliticaPrivacidad } from "../components/PoliticaPrivacidad";
 
 function SectionTitle({
@@ -70,9 +70,6 @@ export default function MisDatosPage() {
   const { data: legajo, isLoading, isError } = useMiLegajo();
   const { data: historialEstadosData } = useHistorialEstados(legajo?.id);
   const esOperario = user.rol === "ROLE_OPERARIO";
-  const nombreCompleto = `${user.nombre} ${user.apellido}`;
-  const initials =
-    `${user.nombre.at(0) ?? ""}${user.apellido.at(0) ?? ""}`.toUpperCase();
   const nombreEmpresa = empresa?.nombreEmpresa || empresa?.razonSocial;
 
   if (isEditing && legajo) {
@@ -98,35 +95,12 @@ export default function MisDatosPage() {
         description="Tu cuenta, tu información laboral y cómo se tratan tus datos personales."
       />
 
-      {/* ── Encabezado de perfil ───────────────────────────────── */}
-      <Card className="overflow-hidden">
-        <div className="h-20 bg-gradient-to-r from-primary to-primary/70" />
-        <div className="flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end">
-          <Avatar className="-mt-10 size-20 border-4 border-card text-2xl shadow-soft">
-            {initials || "US"}
-          </Avatar>
-          <div className="min-w-0 flex-1 space-y-1">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="truncate text-xl font-bold text-foreground">
-                {nombreCompleto}
-              </h2>
-              <Badge variant="primary">{rolLabels[user.rol]}</Badge>
-            </div>
-            <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-foreground-muted">
-              <span className="flex min-w-0 items-center gap-1.5">
-                <Mail className="size-4 shrink-0" />
-                <span className="truncate">{user.email}</span>
-              </span>
-              {nombreEmpresa ? (
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <Building2 className="size-4 shrink-0" />
-                  <span className="truncate">{nombreEmpresa}</span>
-                </span>
-              ) : null}
-            </p>
-          </div>
-        </div>
-      </Card>
+      {/* ── Banner fijo de perfil ────────────────────────────── */}
+      <MisDatosBanner
+        user={user}
+        legajo={legajo}
+        nombreEmpresa={nombreEmpresa}
+      />
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* ── Información de la cuenta ─────────────────────────── */}
