@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { cn } from "@/shared/utils/cn";
 import { InitialsAvatar } from "@/shared/components";
 import { Skeleton } from "@/shared/ui";
@@ -30,18 +30,30 @@ export function AvatarMinio({
   size = "md",
   allowZoom = false,
 }: AvatarMinioProps) {
-  const [imgError, setImgError] = useState(false);
+  const [errorFotoKey, setErrorFotoKey] = useState<string | null>(null);
   const [isZoomed, setIsZoomed] = useState(false);
   const fullName = `${nombre} ${apellido}`;
 
+  const isCurrentKeyInError = Boolean(
+    fotoPerfilKey && errorFotoKey === fotoPerfilKey,
+  );
+
   const { data, isLoading, isError } = useFotoPresignedUrl(
     empleadoId,
-    Boolean(fotoPerfilKey && !imgError),
+    Boolean(fotoPerfilKey && !isCurrentKeyInError),
   );
 
   const imageUrl = typeof data === "string" ? data : data?.url;
 
-  if (!fotoPerfilKey || imgError || isError || (!isLoading && !imageUrl)) {
+  const finalImageUrl = useMemo(() => {
+    if (!imageUrl) return "";
+    const versionParam = fotoPerfilKey ? encodeURIComponent(fotoPerfilKey) : undefined;
+    return versionParam
+      ? `${imageUrl}${imageUrl.includes("?") ? "&" : "?"}v=${versionParam}`
+      : imageUrl;
+  }, [imageUrl, fotoPerfilKey]);
+
+  if (!fotoPerfilKey || isCurrentKeyInError || isError || (!isLoading && !finalImageUrl)) {
     return (
       <InitialsAvatar
         name={fullName}
@@ -51,7 +63,7 @@ export function AvatarMinio({
     );
   }
 
-  if (isLoading || !imageUrl) {
+  if (isLoading || !finalImageUrl) {
     return (
       <Skeleton
         className={cn(sizeClasses[size], "rounded-full shrink-0", className)}
@@ -62,7 +74,7 @@ export function AvatarMinio({
   return (
     <>
       <img
-        src={imageUrl}
+        src={finalImageUrl}
         alt={`Foto de perfil de ${fullName}`}
         className={cn(
           sizeClasses[size],
@@ -76,7 +88,7 @@ export function AvatarMinio({
             setIsZoomed(true);
           }
         }}
-        onError={() => setImgError(true)}
+        onError={() => setErrorFotoKey(fotoPerfilKey ?? "")}
       />
 
       {isZoomed && (
@@ -88,7 +100,7 @@ export function AvatarMinio({
           }}
         >
           <img
-            src={imageUrl}
+            src={finalImageUrl}
             alt={`Foto de perfil ampliada de ${fullName}`}
             className="max-w-full max-h-[90vh] object-contain rounded-lg shadow-2xl"
             onClick={(e) => e.stopPropagation()}

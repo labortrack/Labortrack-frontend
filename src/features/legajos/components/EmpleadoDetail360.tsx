@@ -15,7 +15,6 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { toast } from "sonner";
 import type {
   EmpleadoEstadoResponseDto,
   EmpleadoResponseDto,
@@ -26,7 +25,7 @@ import { formatDate } from "./EmpleadoTable";
 import { EmpleadoTimeline } from "./EmpleadoTimeline";
 import { EmpleadoCategoriaTimeline } from "./EmpleadoCategoriaTimeline";
 import { AvatarMinio } from "./AvatarMinio";
-import { useActualizarFotoPerfil } from "../hooks/useLegajos";
+import { useSubirFotoPerfil } from "../hooks/useSubirFotoPerfil";
 import { useHistorialCategoria } from "../hooks/useEmpleadoCategoria";
 import {
   Badge,
@@ -60,7 +59,7 @@ export function EmpleadoDetail360({
   const { esAdmin, abrirHistorial, renderDialog } =
     useHistorialAuditoriaDialog();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const actualizarFotoMutation = useActualizarFotoPerfil();
+  const { subirFoto, isSubiendo: isSubiendoFoto } = useSubirFotoPerfil(legajo.id);
   const historialCategoriaQuery = useHistorialCategoria(legajo.id);
   const categoriaVigente = historialCategoriaQuery.data?.find(
     (item) => !item.fechaHasta,
@@ -70,13 +69,7 @@ export function EmpleadoDetail360({
     const file = e.target.files?.[0];
     if (!file) return;
     try {
-      await actualizarFotoMutation.mutateAsync({
-        id: legajo.id,
-        foto: file,
-      });
-      toast.success("Foto de perfil actualizada exitosamente.");
-    } catch {
-      toast.error("No se pudo actualizar la foto de perfil.");
+      await subirFoto(file);
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -103,17 +96,15 @@ export function EmpleadoDetail360({
               <Button
                 variant="outline"
                 onClick={() => fileInputRef.current?.click()}
-                disabled={actualizarFotoMutation.isPending}
+                disabled={isSubiendoFoto}
                 className="gap-2"
               >
-                {actualizarFotoMutation.isPending ? (
+                {isSubiendoFoto ? (
                   <Spinner className="size-4" />
                 ) : (
                   <Camera className="size-4" />
                 )}
-                {actualizarFotoMutation.isPending
-                  ? "Subiendo..."
-                  : "Cambiar Foto"}
+                {isSubiendoFoto ? "Subiendo..." : "Cambiar Foto"}
               </Button>
               <input
                 ref={fileInputRef}
