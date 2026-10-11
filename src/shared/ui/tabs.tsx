@@ -25,7 +25,7 @@ export function TabsTrigger({
   return (
     <TabsPrimitive.Trigger
       className={cn(
-        "-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-foreground-muted transition-colors hover:text-foreground data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:font-semibold",
+        "-mb-px flex items-center gap-2 whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-medium text-foreground-muted transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-xs data-[state=active]:border-primary data-[state=active]:text-primary data-[state=active]:font-semibold",
         className,
       )}
       {...props}
@@ -39,7 +39,7 @@ export function TabsContent({
 }: ComponentProps<typeof TabsPrimitive.Content>) {
   return (
     <TabsPrimitive.Content
-      className={cn("mt-4 outline-none", className)}
+      className={cn("mt-4 outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded-md", className)}
       {...props}
     />
   );
