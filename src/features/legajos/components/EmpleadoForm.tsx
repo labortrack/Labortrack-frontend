@@ -81,12 +81,14 @@ export interface EmpleadoFormProps {
   empleadoId?: number;
   onSuccess?: () => void;
   onCancel?: () => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }
 
 export function EmpleadoForm({
   empleadoId,
   onSuccess,
   onCancel,
+  onDirtyChange,
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
   const rolActor = useSessionStore((state) => state.user?.rol);
@@ -112,7 +114,7 @@ export function EmpleadoForm({
     control,
     handleSubmit,
     reset,
-    formState: { errors },
+    formState: { errors, isDirty },
   } = useForm<EmpleadoFormValues>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -139,6 +141,10 @@ export function EmpleadoForm({
       },
     },
   });
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty || Boolean(fotoFile));
+  }, [isDirty, fotoFile, onDirtyChange]);
 
   // Pre-llenar campos en modo edición
   useEffect(() => {
