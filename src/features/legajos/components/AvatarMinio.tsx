@@ -30,22 +30,42 @@ export function AvatarMinio({
   size = "md",
   allowZoom = false,
 }: AvatarMinioProps) {
-  const [errorFotoKey, setErrorFotoKey] = useState<string | null>(null);
+  const [urlFallida, setUrlFallida] = useState<string | null>(null);
+  const [reintentoHecho, setReintentoHecho] = useState(false);
+  const [prevImageUrl, setPrevImageUrl] = useState<string | undefined>(undefined);
   const [isZoomed, setIsZoomed] = useState(false);
   const fullName = `${nombre} ${apellido}`;
 
-  const isCurrentKeyInError = Boolean(
-    fotoPerfilKey && errorFotoKey === fotoPerfilKey,
-  );
-
-  const { data, isLoading, isError } = useFotoPresignedUrl(
+  const { data, isLoading, isError, refetch } = useFotoPresignedUrl(
     empleadoId,
-    Boolean(fotoPerfilKey && !isCurrentKeyInError),
+    Boolean(fotoPerfilKey),
   );
 
   const imageUrl = typeof data === "string" ? data : data?.url;
 
-  if (!fotoPerfilKey || isCurrentKeyInError || isError || (!isLoading && !imageUrl)) {
+  // Limpiar error y contador de reintentos únicamente al cambiar la URL resuelta
+  if (imageUrl !== prevImageUrl) {
+    setPrevImageUrl(imageUrl);
+    setUrlFallida(null);
+    setReintentoHecho(false);
+  }
+
+  const tieneError = Boolean(imageUrl && urlFallida === imageUrl);
+
+  const handleImageError = () => {
+    if (!imageUrl) return;
+
+    if (!reintentoHecho) {
+      // Reintentar UNA sola vez solicitando una nueva URL firmada (por si había expirado)
+      setReintentoHecho(true);
+      void refetch();
+    } else {
+      // Si ya se reintentó y persiste el fallo, marcar error definitivo para esta URL y mostrar iniciales
+      setUrlFallida(imageUrl);
+    }
+  };
+
+  if (!fotoPerfilKey || tieneError || isError || (!isLoading && !imageUrl)) {
     return (
       <InitialsAvatar
         name={fullName}
@@ -80,7 +100,7 @@ export function AvatarMinio({
             setIsZoomed(true);
           }
         }}
-        onError={() => setErrorFotoKey(fotoPerfilKey ?? "")}
+        onError={handleImageError}
       />
 
       {isZoomed && (
