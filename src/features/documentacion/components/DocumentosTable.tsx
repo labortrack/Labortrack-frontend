@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Eye, Loader2, RefreshCw, RotateCcw, Trash2 } from "lucide-react";
+import { Eye, Loader2, RefreshCw, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import {
   EmptyState,
   ErrorState,
@@ -9,6 +10,11 @@ import {
 import {
   Badge,
   Button,
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
   Table,
   TableBody,
   TableCell,
@@ -26,7 +32,9 @@ import {
   useHistorialAuditoriaDialog,
   HistorialAuditoriaIconButton,
 } from "@/features/auditoria";
+import { documentacionApi } from "../api/documentacionApi";
 import { useListarDocumentos } from "../hooks/useDocumentacion";
+import { useRagIndexingPolling } from "../hooks/useRagIndexingPolling";
 import type { DocumentoFilterDto, DocumentoRespuestaDto } from "../types/documentacion.types";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -48,6 +56,7 @@ interface DocumentosTableProps {
   onPrevisualizar: (doc: DocumentoRespuestaDto) => void;
   onBaja: (doc: DocumentoRespuestaDto) => void;
   onReactivar?: (doc: DocumentoRespuestaDto) => void;
+  onReindexar?: (doc: DocumentoRespuestaDto) => void;
 }
 
 // ─── Componente ───────────────────────────────────────────────────────────────
@@ -57,6 +66,7 @@ export function DocumentosTable({
   onPrevisualizar,
   onBaja,
   onReactivar,
+  onReindexar,
 }: DocumentosTableProps) {
   const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
   const [page, setPage] = useState(0);
@@ -76,6 +86,27 @@ export function DocumentosTable({
   const esAdmin = user?.rol === "ROLE_ADMIN";
   const puedeEliminar = esAdmin;
   const puedeReactivar = esAdmin;
+
+  const [reindexarDoc, setReindexarDoc] = useState<DocumentoRespuestaDto | null>(null);
+  const [isReindexando, setIsReindexando] = useState(false);
+  const { iniciarPolling } = useRagIndexingPolling();
+
+  const handleConfirmarReindexar = async () => {
+    if (!reindexarDoc) return;
+    setIsReindexando(true);
+    try {
+      await documentacionApi.reindexarDocumento(reindexarDoc.idDocumento);
+      iniciarPolling(reindexarDoc);
+      onReindexar?.(reindexarDoc);
+      setReindexarDoc(null);
+    } catch (error) {
+      toast.error(
+        normalizeApiError(error, "No se pudo iniciar la reindexación.").message,
+      );
+    } finally {
+      setIsReindexando(false);
+    }
+  };
 
   const query = useListarDocumentos(filters, page, PAGE_SIZE);
 
@@ -204,9 +235,8 @@ export function DocumentosTable({
         <TableBody>
           {query.data.content.map((doc) => {
             const isDadoDeBaja = Boolean(doc.fechaBaja);
-            const esProcesableIa =
-              doc.esIndexadoRag ||
-              (doc.indexadoEnRag && doc.indexadoEnRag !== "NO_APLICA");
+            const estadoRagEfectivo =
+              doc.estadoRag ?? (doc.esIndexadoRag ? "INDEXADO" : "SIN_INDEXAR");
 
             return (
               <TableRow
@@ -232,18 +262,36 @@ export function DocumentosTable({
                   </p>
                 </TableCell>
 
-                {/* Tipo con badge sutil para documentos indexables con IA */}
+                {/* Tipo con badge/chip según estado IA */}
                 <TableCell className="hidden md:table-cell">
                   <div className="inline-flex items-center gap-1.5 flex-wrap">
                     <Badge variant="neutral">{doc.tipoDocumentoNombre}</Badge>
-                    {esProcesableIa ? (
+                    {estadoRagEfectivo === "INDEXADO" && (
                       <span
                         className="inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20"
-                        title="Documento procesable con Inteligencia Artificial (RAG)"
+                        title="Documento procesado con Inteligencia Artificial (RAG)"
                       >
                         IA
                       </span>
-                    ) : null}
+                    )}
+                    {estadoRagEfectivo === "INDEXANDO" && (
+                      <span
+                        className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20"
+                        title="Indexación en segundo plano en curso"
+                      >
+                        <Loader2 className="size-3 animate-spin text-primary" />
+                        Indexando…
+                      </span>
+                    )}
+                    {estadoRagEfectivo === "SIN_INDEXAR" && esAdmin && !isDadoDeBaja && (
+                      <Badge
+                        variant="warning"
+                        className="text-[11px] py-0 px-2 font-medium"
+                        title="Este documento no cuenta con vectores en la IA. Puede indexarse."
+                      >
+                        Sin indexar
+                      </Badge>
+                    )}
                   </div>
                 </TableCell>
 
@@ -275,6 +323,27 @@ export function DocumentosTable({
                     </TooltipTrigger>
                     <TooltipContent>Ver Vista 360°</TooltipContent>
                   </Tooltip>
+
+                  {/* ── Indexar para la IA — SOLO ADMIN (documentos activos SIN_INDEXAR) ── */}
+                  {!isDadoDeBaja && esAdmin && estadoRagEfectivo === "SIN_INDEXAR" ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-primary hover:bg-primary-soft hover:text-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setReindexarDoc(doc);
+                          }}
+                          aria-label={`Indexar para la IA ${doc.nombreDocumento}`}
+                        >
+                          <Sparkles className="size-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Indexar para la IA</TooltipContent>
+                    </Tooltip>
+                  ) : null}
 
                   {/* ── Reactivar — SOLO ADMIN (documentos inactivos) ── */}
                   {isDadoDeBaja && puedeReactivar && onReactivar ? (
@@ -343,6 +412,43 @@ export function DocumentosTable({
         disabled={query.isFetching}
         onPageChange={setPage}
       />
+
+      {/* ── Diálogo de confirmación para Reindexar ── */}
+      <Dialog
+        open={Boolean(reindexarDoc)}
+        onOpenChange={(open) => {
+          if (!open && !isReindexando) setReindexarDoc(null);
+        }}
+      >
+        <DialogContent onClick={(e) => e.stopPropagation()}>
+          <DialogHeader>
+            <DialogTitle>Indexar documento para IA</DialogTitle>
+            <DialogDescription>
+              ¿Confirmás que querés enviar el documento{" "}
+              <strong className="text-foreground">
+                {reindexarDoc?.nombreDocumento}
+              </strong>{" "}
+              a procesar en el motor de Inteligencia Artificial (RAG)?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              variant="ghost"
+              onClick={() => setReindexarDoc(null)}
+              disabled={isReindexando}
+            >
+              Cancelar
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmarReindexar}
+              disabled={isReindexando}
+            >
+              {isReindexando ? "Iniciando..." : "Confirmar indexación"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {renderDialog()}
     </>
