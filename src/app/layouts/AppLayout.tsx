@@ -1,5 +1,6 @@
 import { useState } from "react";
 import {
+  Bell,
   Bot,
   Building2,
   ChartColumn,
@@ -36,6 +37,7 @@ import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
 import { useMiCuadrillaNavegacionStore } from "@/features/cuadrilla/store/miCuadrillaNavegacionStore";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import { useMiLegajo } from "@/features/legajos/hooks/useLegajos";
+import { NotificacionesBell } from "@/features/notificaciones/components/NotificacionesBell";
 import { esErrorSinLegajo } from "@/features/perfil/utils/legajoError";
 import {
   Avatar,
@@ -129,6 +131,7 @@ export function AppLayout() {
         { to: "/mi-empresa", label: "Mi Empresa", icon: Building2 },
         { to: "/recibos", label: "Recibos", icon: Receipt },
         { to: "/auditoria", label: "Auditoría", icon: History },
+        { to: "/notificaciones/administracion", label: "Notificaciones", icon: Bell },
       ]
       : []),
     { to: "/documentacion", label: "Documentación", icon: FileText },
@@ -345,13 +348,16 @@ export function AppLayout() {
           >
             <Menu className="size-6" />
           </button>
-          <div className="ml-auto text-right">
-            <p className="text-sm font-semibold text-foreground">
-              {user.nombre} {user.apellido}
-            </p>
-            <p className="text-xs text-foreground-muted">
-              {rolLabels[user.rol]}
-            </p>
+          <div className="ml-auto flex items-center gap-4">
+            <NotificacionesBell />
+            <div className="text-right">
+              <p className="text-sm font-semibold text-foreground">
+                {user.nombre} {user.apellido}
+              </p>
+              <p className="text-xs text-foreground-muted">
+                {rolLabels[user.rol]}
+              </p>
+            </div>
           </div>
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto">

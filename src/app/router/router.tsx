@@ -46,6 +46,8 @@ import {
   MisEppsPage,
   AuditoriaGlobalPage,
   ReportesPage,
+  NotificacionesPage,
+  AdministracionNotificacionesPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -93,6 +95,15 @@ export const router = createBrowserRouter([
                   { path: "/ausencias/solicitudes", element: <RoleRoute allowed={["ROLE_RRHH"]}>{suspense(<SolicitudesAusenciaPage />)}</RoleRoute> },
                   { path: "/ausencias/solicitudes/:solicitudId", element: <RoleRoute allowed={["ROLE_RRHH"]}>{suspense(<SolicitudAusenciaAdministrativaDetailPage />)}</RoleRoute> },
                   { path: "/mis-datos", element: suspense(<MisDatosPage />) },
+                  { path: "/notificaciones", element: suspense(<NotificacionesPage />) },
+                  {
+                    path: "/notificaciones/administracion",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN"]}>
+                        {suspense(<AdministracionNotificacionesPage />)}
+                      </RoleRoute>
+                    ),
+                  },
                   {
                     path: "/ausencias/tipos-solicitud",
                     element: (

@@ -106,5 +106,9 @@ export const AuditoriaGlobalPage = lazy(
 export const ReportesPage = lazy(
   () => import("@/features/reportes/pages/ReportesPage"),
 );
-
-
+export const NotificacionesPage = lazy(
+  () => import("@/features/notificaciones/pages/NotificacionesPage"),
+);
+export const AdministracionNotificacionesPage = lazy(
+  () => import("@/features/notificaciones/pages/AdministracionNotificacionesPage"),
+);
