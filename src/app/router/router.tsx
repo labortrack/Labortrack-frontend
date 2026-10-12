@@ -45,6 +45,7 @@ import {
   EppDeliveriesHistoryPage,
   MisEppsPage,
   AuditoriaGlobalPage,
+  ReportesPage,
 } from "./lazyPages";
 
 const suspense = (element: ReactNode) => (
@@ -245,6 +246,14 @@ export const router = createBrowserRouter([
                     element: (
                       <RoleRoute allowed={["ROLE_ADMIN"]}>
                         {suspense(<RecibosPage />)}
+                      </RoleRoute>
+                    ),
+                  },
+                  {
+                    path: "/reportes",
+                    element: (
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH"]}>
+                        {suspense(<ReportesPage />)}
                       </RoleRoute>
                     ),
                   },

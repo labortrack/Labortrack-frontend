@@ -103,5 +103,8 @@ export const MisEppsPage = lazy(
 export const AuditoriaGlobalPage = lazy(
   () => import("@/features/auditoria/pages/AuditoriaGlobalPage"),
 );
+export const ReportesPage = lazy(
+  () => import("@/features/reportes/pages/ReportesPage"),
+);
 
 
