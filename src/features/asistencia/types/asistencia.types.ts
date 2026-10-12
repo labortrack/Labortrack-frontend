@@ -42,6 +42,7 @@ export interface ParteDiarioCapacidadResponseDto {
   puedeConsultar: boolean;
   alcance: AlcanceParteDiario | null;
   obraIdPredeterminada: number | null;
+  obraNombrePredeterminado: string | null;
   cuadrillaIdPredeterminada: number | null;
 }
 

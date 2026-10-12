@@ -1,4 +1,4 @@
-import { RotateCcw } from "lucide-react";
+import { Lock, RotateCcw } from "lucide-react";
 import type {
   EstadoAsistencia,
   OpcionesFiltroAsistenciaResponseDto,
@@ -12,6 +12,7 @@ const TODOS = "todos";
 interface FiltrosParteDiarioProps {
   fecha: string;
   obraId?: number;
+  obraNombreFija?: string;
   cuadrillaId?: number;
   estado?: EstadoAsistencia;
   trabajador: string;
@@ -30,6 +31,7 @@ interface FiltrosParteDiarioProps {
 export function FiltrosParteDiario({
   fecha,
   obraId,
+  obraNombreFija,
   cuadrillaId,
   estado,
   trabajador,
@@ -47,6 +49,7 @@ export function FiltrosParteDiario({
   const cuadrillas = (opciones?.cuadrillas ?? []).filter(
     (cuadrilla) => !obraId || cuadrilla.obraId === obraId,
   );
+  const obraAsignada = opciones?.obras.find((obra) => obra.id === obraId);
 
   return (
     <Card>
@@ -81,25 +84,38 @@ export function FiltrosParteDiario({
             <Label htmlFor="obra-parte" className="mb-1.5 block">
               Obra
             </Label>
-            <Select
-              value={obraId ? String(obraId) : TODOS}
-              disabled={opcionesCargando || !puedeFiltrarObra}
-              onValueChange={(value) =>
-                onObraChange(value === TODOS ? undefined : Number(value))
-              }
-            >
-              <SelectTrigger id="obra-parte">
-                <SelectValue placeholder="Todas las obras" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={TODOS}>Todas las obras</SelectItem>
-                {(opciones?.obras ?? []).map((obra) => (
-                  <SelectItem key={obra.id} value={String(obra.id)}>
-                    {obra.nombre}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {puedeFiltrarObra ? (
+              <Select
+                value={obraId ? String(obraId) : TODOS}
+                disabled={opcionesCargando}
+                onValueChange={(value) =>
+                  onObraChange(value === TODOS ? undefined : Number(value))
+                }
+              >
+                <SelectTrigger id="obra-parte">
+                  <SelectValue placeholder="Todas las obras" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={TODOS}>Todas las obras</SelectItem>
+                  {(opciones?.obras ?? []).map((obra) => (
+                    <SelectItem key={obra.id} value={String(obra.id)}>
+                      {obra.nombre}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="relative">
+                <Input
+                  id="obra-parte"
+                  value={obraNombreFija ?? obraAsignada?.nombre ?? (opcionesCargando ? "Cargando obra..." : "Obra no disponible")}
+                  disabled
+                  title={obraNombreFija ?? obraAsignada?.nombre}
+                  className="cursor-not-allowed bg-subtle pr-8 text-foreground-muted"
+                />
+                <Lock aria-hidden="true" className="absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-foreground-muted" />
+              </div>
+            )}
           </div>
 
           <div>

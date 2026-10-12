@@ -127,7 +127,7 @@ export default function AsistenciasPage() {
   const trabajador = filtrosSeleccionados.trabajador ?? "";
   const trabajadorDiferido = useDeferredValue(trabajador.trim());
   const capacidadesQuery = useCapacidadesAsistencia();
-  const opcionesQuery = useOpcionesFiltroAsistencia(fecha);
+  const opcionesQuery = useOpcionesFiltroAsistencia();
   const capacidadParteDiario = capacidadesQuery.data?.parteDiario;
   const puedeFiltrarObra = capacidadParteDiario?.alcance === "GLOBAL";
   const puedeFiltrarCuadrilla =
@@ -188,8 +188,6 @@ export default function AsistenciasPage() {
     aplicarFiltros({
       ...filtrosSeleccionados,
       fecha: nuevaFecha === hoy ? undefined : nuevaFecha,
-      obraId: undefined,
-      cuadrillaId: undefined,
       jornadaId: undefined,
     });
   };
@@ -249,11 +247,12 @@ export default function AsistenciasPage() {
       <FiltrosParteDiario
         fecha={fecha}
         obraId={obraIdEfectiva}
+        obraNombreFija={capacidadParteDiario?.obraNombrePredeterminado ?? undefined}
         cuadrillaId={cuadrillaIdEfectiva}
         estado={estado}
         trabajador={trabajador}
         opciones={opcionesQuery.data}
-        opcionesCargando={opcionesQuery.isPending}
+        opcionesCargando={opcionesQuery.isPending || capacidadesQuery.isPending}
         puedeFiltrarObra={puedeFiltrarObra}
         puedeFiltrarCuadrilla={puedeFiltrarCuadrilla}
         onFechaChange={cambiarFecha}

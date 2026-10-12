@@ -65,8 +65,8 @@ export const asistenciaKeys = {
     [...asistenciaKeys.propias(), "detalle", asistenciaId] as const,
   parteDiario: (filtros: ParteDiarioFiltros) =>
     [...asistenciaKeys.all, "parte-diario", filtros] as const,
-  opcionesFiltro: (fecha: string) =>
-    [...asistenciaKeys.all, "opciones-filtro", fecha] as const,
+  opcionesFiltro: () =>
+    [...asistenciaKeys.all, "opciones-filtro"] as const,
   detalleOperativo: (asistenciaId: number) =>
     [...asistenciaKeys.all, "detalle-operativo", asistenciaId] as const,
 };
@@ -152,10 +152,10 @@ export function useParteDiarioAsistencia(filtros: ParteDiarioFiltros) {
   });
 }
 
-export function useOpcionesFiltroAsistencia(fecha: string) {
+export function useOpcionesFiltroAsistencia() {
   return useQuery({
-    queryKey: asistenciaKeys.opcionesFiltro(fecha),
-    queryFn: () => asistenciaApi.getOpcionesFiltro(fecha),
+    queryKey: asistenciaKeys.opcionesFiltro(),
+    queryFn: asistenciaApi.getOpcionesFiltro,
   });
 }
 
