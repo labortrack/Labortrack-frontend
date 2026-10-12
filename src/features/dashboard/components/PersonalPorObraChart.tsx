@@ -18,6 +18,7 @@ const MAX_OBRAS = 5;
 const ANCHO_EJE_MAX = 180;
 const ANCHO_EJE_MIN = 48;
 const MARGEN_TICK = 12;
+const MARGEN_IZQUIERDO = 0;
 const FUENTE_TICK = '12px "Manrope Variable", "Manrope", system-ui, sans-serif';
 
 let contextoMedicion: CanvasRenderingContext2D | null | undefined;
@@ -68,12 +69,14 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
     ),
   );
 
-  const renderTick = ({ x, y, payload }: YAxisTickContentProps) => (
+  // Alineado a la izquierda: todas las nomenclaturas arrancan en el borde del
+  // grafico (margen izquierdo 0), no pegadas a las barras.
+  const renderTick = ({ y, payload }: YAxisTickContentProps) => (
     <text
-      x={x}
+      x={MARGEN_IZQUIERDO}
       y={y}
       dy={4}
-      textAnchor="end"
+      textAnchor="start"
       fontSize={12}
       fill="var(--color-foreground)"
       className="cursor-default"
@@ -87,7 +90,7 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={altura}>
-      <BarChart data={topObras} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+      <BarChart data={topObras} layout="vertical" margin={{ top: 0, right: 24, left: MARGEN_IZQUIERDO, bottom: 0 }}>
         <XAxis type="number" hide allowDecimals={false} />
         <YAxis
           type="category"
