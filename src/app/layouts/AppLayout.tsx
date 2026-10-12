@@ -4,10 +4,12 @@ import {
   Building2,
   ChevronLeft,
   ChevronRight,
+  CircleHelp,
   ClipboardCheck,
   ClipboardList,
   CalendarDays,
   FileText,
+  FileUser,
   HardHat,
   History,
   LayoutDashboard,
@@ -18,6 +20,7 @@ import {
   User,
   UserCheck,
   UserCog,
+  UserRound,
   UsersRound,
   X,
 } from "lucide-react";
@@ -31,9 +34,15 @@ import { useEmpresa } from "@/features/empresa/hooks/useEmpresa";
 import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
 import { useMiCuadrillaNavegacionStore } from "@/features/cuadrilla/store/miCuadrillaNavegacionStore";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
+import { useMiLegajo } from "@/features/legajos/hooks/useLegajos";
+import { esErrorSinLegajo } from "@/features/perfil/utils/legajoError";
 import {
   Avatar,
   Button,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -64,6 +73,18 @@ export function AppLayout() {
     isOperario &&
     dashboardQuery.data?.tipoAlcance === "CUADRILLA" &&
     (dashboardQuery.data.cuadrilla?.misCuadrillas.length ?? 0) > 0;
+  const miLegajoQuery = useMiLegajo();
+  const puedeVerMiLegajo = !(
+    miLegajoQuery.isError && esErrorSinLegajo(miLegajoQuery.error)
+  );
+  const perfilItems = [
+    { tab: "cuenta", label: "Mi cuenta", icon: UserRound },
+    ...(puedeVerMiLegajo
+      ? [{ tab: "legajo", label: "Mi Legajo", icon: FileUser }]
+      : []),
+    { tab: "terminos", label: "Términos y condiciones", icon: ShieldCheck },
+    { tab: "faq", label: "Preguntas frecuentes", icon: CircleHelp },
+  ];
   const capacidades = capacidadesQuery.isError
     ? undefined
     : capacidadesQuery.data;
@@ -240,35 +261,51 @@ export function AppLayout() {
             collapsed && !mobileOpen && "justify-center",
           )}
         >
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <NavLink
-                to="/mis-datos"
-                onClick={() => setMobileOpen(false)}
-                aria-label="Ver Mis Datos"
-                className={({ isActive }) =>
-                  cn(
-                    "group flex min-w-0 items-center gap-3 rounded-control p-1 transition-colors hover:bg-border",
-                    (!collapsed || mobileOpen) && "flex-1",
-                    isActive && "ring-2 ring-primary/30",
-                  )
-                }
-              >
-                <Avatar>{initials || "US"}</Avatar>
-                {!collapsed || mobileOpen ? (
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-bold group-hover:text-primary">
-                      {user.nombre} {user.apellido}
-                    </p>
-                    <p className="truncate text-xs text-foreground-muted">
-                      {rolLabels[user.rol]}
-                    </p>
-                  </div>
-                ) : null}
-              </NavLink>
-            </TooltipTrigger>
-            <TooltipContent side="top">Mis Datos</TooltipContent>
-          </Tooltip>
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    aria-label="Abrir menú de perfil"
+                    className={cn(
+                      "group flex min-w-0 items-center gap-3 rounded-control p-1 text-left transition-colors hover:bg-border data-[state=open]:bg-border",
+                      (!collapsed || mobileOpen) && "flex-1",
+                      location.pathname === "/mis-datos" && "ring-2 ring-primary/30",
+                    )}
+                  >
+                    <Avatar>{initials || "US"}</Avatar>
+                    {!collapsed || mobileOpen ? (
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-bold group-hover:text-primary">
+                          {user.nombre} {user.apellido}
+                        </p>
+                        <p className="truncate text-xs text-foreground-muted">
+                          {rolLabels[user.rol]}
+                        </p>
+                      </div>
+                    ) : null}
+                  </button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent side="top">Mi perfil</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent side="top" align="start" className="w-60">
+              {perfilItems.map(({ tab, label, icon: Icon }) => (
+                <DropdownMenuItem
+                  key={tab}
+                  className="cursor-pointer"
+                  onSelect={() => {
+                    setMobileOpen(false);
+                    navigate(`/mis-datos?tab=${tab}`);
+                  }}
+                >
+                  <Icon className="size-4 text-foreground-muted" />
+                  {label}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {!collapsed || mobileOpen ? (
             <button
               className="rounded-control border border-border bg-card p-2 text-foreground shadow-xs hover:bg-error-soft hover:text-error"

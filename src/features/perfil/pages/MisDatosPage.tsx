@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useBlocker, useSearchParams } from "react-router-dom";
-import { FileUser, ShieldCheck, UserRound } from "lucide-react";
+import { CircleHelp, FileUser, ShieldCheck, UserRound } from "lucide-react";
 import { ConfirmDialog, PageHeader } from "@/shared/components";
 import { Spinner, Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
@@ -10,7 +10,10 @@ import { MisDatosBanner } from "../components/MisDatosBanner";
 import { CuentaTab } from "../components/CuentaTab";
 import { MiLegajoTab } from "../components/MiLegajoTab";
 import { PoliticaPrivacidad } from "../components/PoliticaPrivacidad";
+import { PreguntasFrecuentes } from "../components/PreguntasFrecuentes";
 import { esErrorSinLegajo } from "../utils/legajoError";
+
+const TABS_SIEMPRE_VISIBLES = ["cuenta", "terminos", "faq"];
 
 export default function MisDatosPage() {
   const user = useSessionStore((state) => state.user)!;
@@ -34,8 +37,7 @@ export default function MisDatosPage() {
 
   const rawTab = searchParams.get("tab");
   const tabEsValido =
-    rawTab === "cuenta" ||
-    rawTab === "terminos" ||
+    (rawTab !== null && TABS_SIEMPRE_VISIBLES.includes(rawTab)) ||
     (rawTab === "legajo" && (isLoadingLegajo || puedeMostrarTabLegajo));
 
   const activeTab = tabEsValido ? (rawTab as string) : "cuenta";
@@ -65,8 +67,7 @@ export default function MisDatosPage() {
     if (isLoadingLegajo) return;
     if (
       rawTab &&
-      rawTab !== "cuenta" &&
-      rawTab !== "terminos" &&
+      !TABS_SIEMPRE_VISIBLES.includes(rawTab) &&
       (rawTab !== "legajo" || !puedeMostrarTabLegajo)
     ) {
       setSearchParams(
@@ -105,7 +106,7 @@ export default function MisDatosPage() {
     <div className="space-y-6">
       <PageHeader
         title="Mis Datos"
-        description="Tu cuenta, tu información laboral y cómo se tratan tus datos personales."
+        description="Tu cuenta, tu información laboral, cómo se tratan tus datos personales y respuestas a dudas frecuentes."
       />
 
       {/* ── Banner fijo de perfil ────────────────────────────── */}
@@ -125,7 +126,7 @@ export default function MisDatosPage() {
           >
             <TabsTrigger value="cuenta" className="gap-1.5 shrink-0 whitespace-nowrap">
               <UserRound className="size-4" />
-              Cuenta
+              Mi cuenta
             </TabsTrigger>
 
             {isLoadingLegajo ? (
@@ -143,6 +144,11 @@ export default function MisDatosPage() {
             <TabsTrigger value="terminos" className="gap-1.5 shrink-0 whitespace-nowrap">
               <ShieldCheck className="size-4" />
               Términos y condiciones
+            </TabsTrigger>
+
+            <TabsTrigger value="faq" className="gap-1.5 shrink-0 whitespace-nowrap">
+              <CircleHelp className="size-4" />
+              Preguntas frecuentes
             </TabsTrigger>
           </TabsList>
         </div>
@@ -178,6 +184,10 @@ export default function MisDatosPage() {
 
         <TabsContent value="terminos">
           <PoliticaPrivacidad />
+        </TabsContent>
+
+        <TabsContent value="faq">
+          <PreguntasFrecuentes />
         </TabsContent>
       </Tabs>
 
