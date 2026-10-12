@@ -19,6 +19,7 @@ import type {
   EmpleadoGrupoResponseDto,
   GrupoResponseDto,
 } from "../types/estructuraLaboral.types";
+import { normalizeSearchText } from "@/shared/utils/normalizeText";
 
 interface AsignacionesTableProps {
   asignaciones: EmpleadoGrupoResponseDto[];
@@ -48,8 +49,10 @@ export function AsignacionesTable({
   isLoading,
 }: AsignacionesTableProps) {
   const filas = asignaciones.filter((a) => {
-    const q = busqueda.toLowerCase().trim();
-    const fullName = `${a.apellidoEmpleado} ${a.nombreEmpleado}`.toLowerCase();
+    const q = normalizeSearchText(busqueda);
+    const fullName = normalizeSearchText(
+      `${a.apellidoEmpleado} ${a.nombreEmpleado}`,
+    );
     const matchSearch =
       !q ||
       fullName.includes(q) ||

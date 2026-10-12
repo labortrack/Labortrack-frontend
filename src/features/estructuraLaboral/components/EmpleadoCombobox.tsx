@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import type { EmpleadoResumenResponseDto } from "@/features/legajos/types/legajo.types";
+import { normalizeSearchText } from "@/shared/utils/normalizeText";
 
 interface EmpleadoComboboxProps {
   empleados: EmpleadoResumenResponseDto[];
@@ -37,11 +38,11 @@ export function EmpleadoCombobox({
       : "";
 
   const filtrados = useMemo(() => {
-    const q = query.trim().toLowerCase();
+    const q = normalizeSearchText(query);
     if (!q) return empleados;
     return empleados.filter((emp) => {
-      const nombreCompleto = `${emp.apellido} ${emp.nombre}`.toLowerCase();
-      return nombreCompleto.includes(q) || emp.dni.toLowerCase().includes(q);
+      const nombreCompleto = normalizeSearchText(`${emp.apellido} ${emp.nombre}`);
+      return nombreCompleto.includes(q) || normalizeSearchText(emp.dni).includes(q);
     });
   }, [empleados, query]);
 
