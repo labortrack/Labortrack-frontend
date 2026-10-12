@@ -1,5 +1,7 @@
-import { HardHat, Users } from "lucide-react";
+import { Clock, HardHat, Users } from "lucide-react";
+import { formatHora } from "@/features/asistencia/utils/asistenciaFormatters";
 import { CuadrillaStatusBadge } from "@/features/cuadrilla/components/CuadrillaStatusBadge";
+import { JornadaStatusBadge } from "@/features/jornada/components/JornadaStatusBadge";
 import type { CuadrillaLideradaDto } from "../types/dashboard.types";
 
 interface MisCuadrillasListProps {
@@ -31,6 +33,18 @@ export function MisCuadrillasList({ data }: MisCuadrillasListProps) {
                 {cuadrilla.nombreCuadrilla}
               </p>
               <p className="truncate text-xs text-foreground-muted">{cuadrilla.nombreObra}</p>
+              {cuadrilla.jornadaHoy ? (
+                <p className="mt-1.5 flex flex-wrap items-center gap-2 text-xs text-foreground">
+                  <span className="flex items-center gap-1 tabular-nums">
+                    <Clock className="size-3.5 text-foreground-muted" />
+                    Hoy {formatHora(cuadrilla.jornadaHoy.horaInicio)}–{formatHora(cuadrilla.jornadaHoy.horaFin)}
+                    {cuadrilla.jornadaHoy.extraordinaria ? " · Extraordinaria" : ""}
+                  </span>
+                  <JornadaStatusBadge estado={cuadrilla.jornadaHoy.estado} />
+                </p>
+              ) : (
+                <p className="mt-1.5 text-xs text-foreground-muted">Sin jornada hoy</p>
+              )}
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3">

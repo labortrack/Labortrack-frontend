@@ -1,3 +1,6 @@
+import type { EstadoAsistencia, EstadoJornadaTrabajo } from "@/features/asistencia/types/asistencia.types";
+import type { SolicitudAusenciaResumen } from "@/features/ausentismo/types/solicitudAusencia.types";
+
 export type TipoAlcanceDashboard = "GLOBAL" | "OBRA" | "CUADRILLA" | "PERSONAL";
 
 export interface ConteoEstadoCuadrillaDto {
@@ -21,12 +24,29 @@ export interface ResumenOrganizacionalDto {
   personalPorObra: ConteoPersonalObraDto[];
 }
 
+export interface JornadaResumenDto {
+  jornadaId: number;
+  fecha: string;
+  horaInicio: string;
+  horaFin: string;
+  estado: EstadoJornadaTrabajo;
+  extraordinaria: boolean;
+}
+
 export interface CuadrillaLideradaDto {
   cuadrillaId: number;
   nombreCuadrilla: string;
   nombreObra: string;
   estadoActual: string | null;
   personalVigente: number;
+  jornadaHoy: JornadaResumenDto | null;
+}
+
+export interface PendienteFicharDto {
+  asistenciaId: number;
+  nombreEmpleado: string;
+  nombreCuadrilla: string;
+  estado: EstadoAsistencia;
 }
 
 export interface ResumenCuadrillaDto {
@@ -34,6 +54,7 @@ export interface ResumenCuadrillaDto {
   asistenciaHoyPorcentaje: number;
   ausentesHoy: number;
   totalPersonalVigente: number;
+  pendientesHoy: PendienteFicharDto[];
 }
 
 export interface MiAsignacionActualDto {
@@ -43,11 +64,41 @@ export interface MiAsignacionActualDto {
   desde: string;
 }
 
+export interface MiJornadaDto {
+  jornada: JornadaResumenDto;
+  nombreCuadrilla: string;
+  estadoAsistencia: EstadoAsistencia | null;
+  ingreso: string | null;
+  egreso: string | null;
+}
+
+export interface DiaAsistenciaDto {
+  fecha: string;
+  estado: EstadoAsistencia;
+}
+
+export interface ReciboResumenDto {
+  documentoId: number;
+  nombreDocumento: string;
+  fechaSubida: string;
+}
+
+export interface EppEntregadoDto {
+  nombreEpp: string;
+  cantidad: number | null;
+  fechaEntrega: string;
+}
+
 export interface ResumenPersonalDto {
   asignacionActual: MiAsignacionActualDto | null;
   presentesMes: number;
   ausentesMes: number;
   solicitudesAusenciaPendientes: number;
+  miJornada: MiJornadaDto | null;
+  asistenciasMes: DiaAsistenciaDto[];
+  solicitudesRecientes: SolicitudAusenciaResumen[];
+  ultimoRecibo: ReciboResumenDto | null;
+  ultimosEpp: EppEntregadoDto[];
 }
 
 export interface DashboardResumenResponseDto {

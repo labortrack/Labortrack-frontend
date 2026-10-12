@@ -1,8 +1,10 @@
-import { CalendarX2, HardHat, Percent, Users } from "lucide-react";
-import { Card, CardContent } from "@/shared/ui";
+import { CalendarX2, HardHat, Percent, UserRoundX, Users } from "lucide-react";
 import type { ResumenCuadrillaDto } from "../types/dashboard.types";
+import { AccesosRapidosLider } from "./AccesosRapidosLider";
+import { DashboardSectionCard } from "./DashboardSectionCard";
 import { KpiTile } from "./KpiTile";
 import { MisCuadrillasList } from "./MisCuadrillasList";
+import { PendientesFicharList } from "./PendientesFicharList";
 import { TendenciaAsistenciaSection } from "./TendenciaAsistenciaSection";
 
 interface DashboardLiderCuadrillaProps {
@@ -32,20 +34,31 @@ export function DashboardLiderCuadrilla({ data }: DashboardLiderCuadrillaProps) 
         />
       </div>
 
-      <Card>
-        <CardContent className="p-5">
-          <h3 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-            <HardHat className="size-4 text-primary" />
-            Mis cuadrillas
-          </h3>
-          <p className="mt-0.5 text-xs text-foreground-muted">
-            Cuadrillas donde tenés responsabilidad vigente de líder.
-          </p>
-          <div className="mt-4">
-            <MisCuadrillasList data={data.misCuadrillas} />
-          </div>
-        </CardContent>
-      </Card>
+      <AccesosRapidosLider />
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-5">
+        <DashboardSectionCard
+          icon={HardHat}
+          title="Mis cuadrillas"
+          subtitle="Cuadrillas a tu cargo y su jornada de hoy."
+          className="lg:col-span-3"
+        >
+          <MisCuadrillasList data={data.misCuadrillas} />
+        </DashboardSectionCard>
+
+        <DashboardSectionCard
+          icon={UserRoundX}
+          title="Pendientes de fichar"
+          subtitle="Sin ingreso registrado o ausentes hoy."
+          action={{ label: "Ver parte diario", to: "/asistencias" }}
+          className="lg:col-span-2"
+        >
+          <PendientesFicharList
+            data={data.pendientesHoy}
+            mostrarCuadrilla={data.misCuadrillas.length > 1}
+          />
+        </DashboardSectionCard>
+      </div>
 
       <TendenciaAsistenciaSection />
     </div>
