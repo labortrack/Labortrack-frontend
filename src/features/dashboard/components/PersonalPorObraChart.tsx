@@ -1,4 +1,13 @@
-import { Bar, BarChart, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  Bar,
+  BarChart,
+  LabelList,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+  type YAxisTickContentProps,
+} from "recharts";
 import type { ConteoPersonalObraDto } from "../types/dashboard.types";
 
 interface PersonalPorObraChartProps {
@@ -16,6 +25,22 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
 
   const alturaFila = 34;
   const altura = Math.max(120, data.length * alturaFila);
+  const nombrePorNomenclatura = new Map(data.map((d) => [d.nomenclatura, d.nombreObra]));
+
+  const renderTick = ({ x, y, payload }: YAxisTickContentProps) => (
+    <text
+      x={x}
+      y={y}
+      dy={4}
+      textAnchor="end"
+      fontSize={12}
+      fill="var(--color-foreground)"
+      className="cursor-default"
+    >
+      <title>{nombrePorNomenclatura.get(payload.value) ?? payload.value}</title>
+      {payload.value}
+    </text>
+  );
 
   return (
     <ResponsiveContainer width="100%" height={altura}>
@@ -23,14 +48,19 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
         <XAxis type="number" hide allowDecimals={false} />
         <YAxis
           type="category"
-          dataKey="nombreObra"
-          width={120}
+          dataKey="nomenclatura"
+          width={96}
           axisLine={false}
           tickLine={false}
-          tick={{ fontSize: 12, fill: "var(--color-foreground)" }}
+          tick={renderTick}
         />
+        {/* El eje muestra la nomenclatura (corta); el nombre completo va en el tooltip. */}
         <Tooltip
           cursor={{ fill: "var(--color-subtle)" }}
+          labelFormatter={(_, payload) => {
+            const obra = payload?.[0]?.payload as ConteoPersonalObraDto | undefined;
+            return obra ? `${obra.nomenclatura} · ${obra.nombreObra}` : "";
+          }}
           formatter={(value) => [`${value} operarios`, ""]}
         />
         <Bar dataKey="cantidad" fill="var(--color-primary)" radius={[0, 3, 3, 0]} maxBarSize={14}>
