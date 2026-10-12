@@ -52,6 +52,7 @@ export function MisDatosBanner({
               apellido={user.apellido}
               fotoPerfilKey={legajo.fotoPerfilKey}
               size="lg"
+              ampliable
               className="size-20 border-4 border-card text-2xl shadow-soft"
             />
           ) : (
@@ -62,7 +63,7 @@ export function MisDatosBanner({
 
           {/* Spinner superpuesto durante la subida */}
           {isSubiendo && (
-            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-full bg-black/60 text-white">
+            <div className="absolute inset-0 z-10 flex items-center justify-center rounded-full bg-black/60 text-white pointer-events-none">
               <Spinner className="size-6 text-white" />
             </div>
           )}
@@ -72,7 +73,10 @@ export function MisDatosBanner({
             <>
               <button
                 type="button"
-                onClick={() => fileInputRef.current?.click()}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  fileInputRef.current?.click();
+                }}
                 disabled={isSubiendo}
                 aria-label="Cambiar foto de perfil"
                 className="absolute -bottom-1 -right-1 z-20 flex size-11 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
