@@ -102,24 +102,10 @@ export function AvatarMinio({
   if (isLoading || !imageUrl) {
     return (
       <Skeleton
-        className={cn(sizeClasses[size], "rounded-full shrink-0", className)}
+        className={cn(sizeClasses[size], "aspect-square rounded-full shrink-0", className)}
       />
     );
   }
-
-  const imageElement = (
-    <img
-      src={imageUrl}
-      alt={`Foto de perfil de ${fullName}`}
-      className={cn(
-        sizeClasses[size],
-        "rounded-full object-cover border border-border shrink-0",
-        esAmpliable && "hover:opacity-90 transition-opacity",
-        className,
-      )}
-      onError={handleImageError}
-    />
-  );
 
   if (esAmpliable) {
     return (
@@ -129,11 +115,17 @@ export function AvatarMinio({
           onClick={() => setVisorAbierto(true)}
           aria-label={`Ver foto de perfil de ${fullName}`}
           className={cn(
-            "group inline-flex shrink-0 items-center justify-center rounded-full border-0 bg-transparent p-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
+            "group inline-flex aspect-square shrink-0 items-center justify-center rounded-full border border-border bg-transparent p-0 cursor-pointer overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2",
             sizeClasses[size],
+            className,
           )}
         >
-          {imageElement}
+          <img
+            src={imageUrl}
+            alt={`Foto de perfil de ${fullName}`}
+            className="size-full aspect-square rounded-full object-cover transition-opacity group-hover:opacity-90"
+            onError={handleImageError}
+          />
         </button>
         <FotoPerfilDialog
           open={visorAbierto}
@@ -148,7 +140,18 @@ export function AvatarMinio({
     );
   }
 
-  return imageElement;
+  return (
+    <img
+      src={imageUrl}
+      alt={`Foto de perfil de ${fullName}`}
+      className={cn(
+        sizeClasses[size],
+        "aspect-square rounded-full object-cover border border-border shrink-0",
+        className,
+      )}
+      onError={handleImageError}
+    />
+  );
 }
 
 

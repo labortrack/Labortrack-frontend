@@ -53,10 +53,10 @@ export function MisDatosBanner({
               fotoPerfilKey={legajo.fotoPerfilKey}
               size="lg"
               ampliable
-              className="size-20 border-4 border-card text-2xl shadow-soft"
+              className="size-20 aspect-square rounded-full border-4 border-card text-2xl shadow-soft"
             />
           ) : (
-            <Avatar className="size-20 border-4 border-card text-2xl shadow-soft">
+            <Avatar className="size-20 aspect-square rounded-full border-4 border-card text-2xl shadow-soft">
               {initials || "US"}
             </Avatar>
           )}
