@@ -24,6 +24,7 @@ import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { cn } from "@/shared/utils/cn";
 import { useMiDocumentacion } from "../hooks/useDocumentacion";
 import type { DocumentoRespuestaDto } from "../types/documentacion.types";
+import { normalizeSearchText } from "@/shared/utils/normalizeText";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,13 +76,13 @@ export function MiDocumentacionTable({
   // Filtrado local por término de búsqueda (en memoria)
   const filteredDocs = useMemo(() => {
     const list = query.data ?? [];
-    const term = searchTerm.trim().toLowerCase();
+    const term = normalizeSearchText(searchTerm);
     if (!term) return list;
     return list.filter(
       (doc) =>
-        doc.nombreDocumento?.toLowerCase().includes(term) ||
-        doc.nombreArchivoOriginal?.toLowerCase().includes(term) ||
-        doc.tipoDocumentoNombre?.toLowerCase().includes(term),
+        normalizeSearchText(doc.nombreDocumento).includes(term) ||
+        normalizeSearchText(doc.nombreArchivoOriginal).includes(term) ||
+        normalizeSearchText(doc.tipoDocumentoNombre).includes(term),
     );
   }, [query.data, searchTerm]);
 

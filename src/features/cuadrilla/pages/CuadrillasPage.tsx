@@ -20,22 +20,22 @@ import { ReactivarCuadrillaDialog } from "../components/dialogs/ReactivarCuadril
 import { AsignarLiderDialog } from "../components/dialogs/AsignarLiderDialog";
 import type { CuadrillaResponseDto } from "../types/cuadrilla.types";
 import { useHistorialAuditoriaDialog } from "@/features/auditoria";
+import { normalizeSearchText } from "@/shared/utils/normalizeText";
 
 function matchesCuadrillaFilters(
   cuadrilla: CuadrillaResponseDto,
   searchTerm: string,
   statusFilter: string,
 ) {
-  const term = searchTerm.toLowerCase().trim();
+  const term = normalizeSearchText(searchTerm);
   const matchesSearch =
     !term ||
-    cuadrilla.nombre.toLowerCase().includes(term) ||
-    (cuadrilla.grupo?.tipoActividad &&
-      cuadrilla.grupo.tipoActividad.toLowerCase().includes(term)) ||
+    normalizeSearchText(cuadrilla.nombre).includes(term) ||
+    normalizeSearchText(cuadrilla.grupo?.tipoActividad).includes(term) ||
     (cuadrilla.lider &&
-      `${cuadrilla.lider.nombre} ${cuadrilla.lider.apellido}`
-        .toLowerCase()
-        .includes(term));
+      normalizeSearchText(
+        `${cuadrilla.lider.nombre} ${cuadrilla.lider.apellido}`,
+      ).includes(term));
   const matchesStatus =
     statusFilter === "TODAS" || cuadrilla.estadoActual === statusFilter;
 

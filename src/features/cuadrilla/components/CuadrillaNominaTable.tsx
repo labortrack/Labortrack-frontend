@@ -29,6 +29,7 @@ import type {
   CuadrillaResponseDto,
   EmpleadoGrupoCuadrillaResponseDto,
 } from "../types/cuadrilla.types";
+import { normalizeSearchText } from "@/shared/utils/normalizeText";
 
 interface CuadrillaNominaTableProps {
   cuadrilla: CuadrillaResponseDto;
@@ -64,11 +65,12 @@ export function CuadrillaNominaTable({
   const setSearchTerm = onSearchTermChange ?? setInternalSearchTerm;
 
   const filteredOperarios = operarios.filter((op) => {
-    const term = searchTerm.toLowerCase().trim();
+    const term = normalizeSearchText(searchTerm);
     if (!term) return true;
-    const fullName =
-      `${op.nombreEmpleado || ""} ${op.apellidoEmpleado || ""}`.toLowerCase();
-    const actividad = (op.descripcionActividad || "").toLowerCase();
+    const fullName = normalizeSearchText(
+      `${op.nombreEmpleado || ""} ${op.apellidoEmpleado || ""}`,
+    );
+    const actividad = normalizeSearchText(op.descripcionActividad);
     return fullName.includes(term) || actividad.includes(term);
   });
 
