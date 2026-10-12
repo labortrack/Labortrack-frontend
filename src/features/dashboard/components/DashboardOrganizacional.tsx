@@ -19,8 +19,8 @@ export function DashboardOrganizacional({ data }: DashboardOrganizacionalProps) 
         ausenciasHoy={data.ausenciasHoy}
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card>
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        <Card className="lg:col-span-2">
           <CardContent className="p-5">
             <h3 className="text-sm font-semibold text-foreground">
               Cuadrillas por frente
@@ -33,7 +33,7 @@ export function DashboardOrganizacional({ data }: DashboardOrganizacionalProps) 
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="lg:col-span-3">
           <CardContent className="p-5">
             <h3 className="text-sm font-semibold text-foreground">Personal por obra</h3>
             <p className="mt-0.5 text-xs text-foreground-muted">

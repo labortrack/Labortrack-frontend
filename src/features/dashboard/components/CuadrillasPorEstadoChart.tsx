@@ -45,7 +45,7 @@ export function CuadrillasPorEstadoChart({ data }: CuadrillasPorEstadoChartProps
     }));
 
   return (
-    <div className="flex flex-col items-center gap-6 sm:flex-row">
+    <div className="flex flex-col items-center gap-6 sm:flex-row lg:flex-col xl:flex-row">
       <div className="h-44 w-44 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
