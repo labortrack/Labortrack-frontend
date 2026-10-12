@@ -19,16 +19,20 @@ import {
 interface ListadoParteDiarioProps {
   asistencias: AsistenciaParteDiarioResponseDto[];
   fechaLabel: string;
-  filtrosBusqueda: string;
+  filtrosBusqueda?: string;
+  detallePath?: (asistenciaId: number) => string;
+  ocultarContexto?: boolean;
 }
 
 export function ListadoParteDiario({
   asistencias,
   fechaLabel,
-  filtrosBusqueda,
+  filtrosBusqueda = "",
+  detallePath,
+  ocultarContexto = false,
 }: ListadoParteDiarioProps) {
   const detalleUrl = (asistenciaId: number) =>
-    `/asistencias/${asistenciaId}${filtrosBusqueda}`;
+    detallePath?.(asistenciaId) ?? `/asistencias/${asistenciaId}${filtrosBusqueda}`;
 
   return (
     <section aria-labelledby="listado-parte-diario" className="space-y-3">
@@ -48,8 +52,8 @@ export function ListadoParteDiario({
           <TableHeader>
             <TableRow>
               <TableHead>Trabajador</TableHead>
-              <TableHead>Obra</TableHead>
-              <TableHead>Cuadrilla</TableHead>
+              {!ocultarContexto ? <TableHead>Obra</TableHead> : null}
+              {!ocultarContexto ? <TableHead>Cuadrilla</TableHead> : null}
               <TableHead className="text-center">Ingreso</TableHead>
               <TableHead className="text-center">Egreso</TableHead>
               <TableHead>Estado</TableHead>
@@ -70,10 +74,8 @@ export function ListadoParteDiario({
                     </span>
                   </div>
                 </TableCell>
-                <TableCell>{asistencia.obra.nombre}</TableCell>
-                <TableCell className="text-foreground-muted">
-                  {asistencia.cuadrilla}
-                </TableCell>
+                {!ocultarContexto ? <TableCell>{asistencia.obra.nombre}</TableCell> : null}
+                {!ocultarContexto ? <TableCell className="text-foreground-muted">{asistencia.cuadrilla}</TableCell> : null}
                 <TableCell className="text-center">
                   {formatHora(asistencia.fechaHoraIngreso)}
                 </TableCell>
@@ -112,14 +114,16 @@ export function ListadoParteDiario({
               </div>
 
               <div className="grid gap-2 text-sm sm:grid-cols-2">
-                <div className="flex items-center gap-2">
-                  <Building2 className="size-4 shrink-0 text-foreground-muted" />
-                  <span>{asistencia.obra.nombre}</span>
-                </div>
-                <div className="flex items-center gap-2 text-foreground-muted">
-                  <Users className="size-4 shrink-0" />
-                  <span>{asistencia.cuadrilla}</span>
-                </div>
+                {!ocultarContexto ? <>
+                  <div className="flex items-center gap-2">
+                    <Building2 className="size-4 shrink-0 text-foreground-muted" />
+                    <span>{asistencia.obra.nombre}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-foreground-muted">
+                    <Users className="size-4 shrink-0" />
+                    <span>{asistencia.cuadrilla}</span>
+                  </div>
+                </> : null}
                 <div className="flex items-center gap-2 text-foreground-muted sm:col-span-2">
                   <Clock3 className="size-4 shrink-0" />
                   <span>

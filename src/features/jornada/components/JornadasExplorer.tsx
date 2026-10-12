@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight, FilterX, List, Rows3 } from "lucide-react";
 import { Button, Card, Input, Select, SelectContent, SelectItem, SelectTrigger, SelectValue, Spinner, Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/shared/ui";
 import { EmptyState, ErrorState, LoadingState, Pagination } from "@/shared/components";
+import { cn } from "@/shared/utils/cn";
 import { cuadrillaApi } from "@/features/cuadrilla/api/cuadrillaApi";
 import type { CuadrillaResponseDto } from "@/features/cuadrilla/types/cuadrilla.types";
 import { useObras } from "@/features/obra/hooks/useObras";
@@ -13,6 +14,7 @@ import type { EstadoJornadaTrabajo, TipoJornada } from "../types/planTrabajo.typ
 import { decisionLabels, formatDate, formatTime, estadoJornadaLabels, tipoJornadaLabels } from "../utils/planTrabajoFormatters";
 import { fechaLocal, inicioSemana, rutaDetalleJornada, sumarDias } from "../utils/jornadaNavigation";
 import { JornadaStatusBadge } from "./JornadaStatusBadge";
+import { SelectorSemana } from "./SelectorSemana";
 
 const ALL = "TODOS";
 const tipos = Object.keys(tipoJornadaLabels) as TipoJornada[];
@@ -42,8 +44,8 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
   const vista = searchParams.get("jornadaVista") === "listado" ? "listado" : "agenda";
   const semana = inicioSemana(searchParams.get("jornadaSemana") || fechaLocal());
   const semanaHasta = sumarDias(semana, 6);
-  const fechaDesde = searchParams.get("jornadaDesde") || "";
-  const fechaHasta = searchParams.get("jornadaHasta") || "";
+  const fechaDesde = searchParams.get("jornadaDesde") ?? "";
+  const fechaHasta = searchParams.get("jornadaHasta") ?? "";
   const obraId = cuadrillaId || !rrhh ? undefined : idParam(searchParams.get("jornadaObra"));
   const cuadrillaFiltro = cuadrillaId ? undefined : idParam(searchParams.get("jornadaCuadrilla"));
   const tipoParam = searchParams.get("jornadaTipo");
@@ -56,15 +58,12 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
   const pageParam = Number(searchParams.get("jornadaPagina") ?? 0);
   const page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 0;
   const rangoInvalido = Boolean(fechaDesde && fechaHasta && fechaDesde > fechaHasta);
-  const rangoSemanaDesde = fechaDesde && fechaDesde > semana ? fechaDesde : semana;
-  const rangoSemanaHasta = fechaHasta && fechaHasta < semanaHasta ? fechaHasta : semanaHasta;
-  const sinInterseccion = rangoSemanaDesde > rangoSemanaHasta;
   const filtrosBase: JornadaFiltros = useMemo(() => ({
     obraId, cuadrillaId: cuadrillaFiltro, tipo, estado, extraordinaria,
   }), [obraId, cuadrillaFiltro, tipo, estado, extraordinaria]);
-  const filtrosSemana: JornadaFiltros = useMemo(() => ({ ...filtrosBase, fechaDesde: rangoSemanaDesde, fechaHasta: rangoSemanaHasta }), [filtrosBase, rangoSemanaDesde, rangoSemanaHasta]);
-  const filtrosListado: JornadaFiltros = useMemo(() => ({ ...filtrosBase, fechaDesde: fechaDesde || semana, fechaHasta: fechaHasta || semanaHasta, page, size: 20 }), [filtrosBase, fechaDesde, fechaHasta, semana, semanaHasta, page]);
-  const weekQuery = useJornadasSemana(filtrosSemana, cuadrillaId, active && vista === "agenda" && !rangoInvalido && !sinInterseccion);
+  const filtrosSemana: JornadaFiltros = useMemo(() => ({ ...filtrosBase, fechaDesde: semana, fechaHasta: semanaHasta }), [filtrosBase, semana, semanaHasta]);
+  const filtrosListado: JornadaFiltros = useMemo(() => ({ ...filtrosBase, fechaDesde: fechaDesde || undefined, fechaHasta: fechaHasta || undefined, page, size: 20 }), [filtrosBase, fechaDesde, fechaHasta, page]);
+  const weekQuery = useJornadasSemana(filtrosSemana, cuadrillaId, active && vista === "agenda");
   const listQuery = useJornadas(filtrosListado, cuadrillaId, active && vista === "listado" && !rangoInvalido);
   const obrasQuery = useObras(undefined, active && !cuadrillaId);
   const opcionesObraId = obraId ?? (!rrhh ? obrasQuery.data?.[0]?.id : undefined);
@@ -89,23 +88,38 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
   const isError = vista === "agenda" ? weekQuery.isError : listQuery.isError;
   const isFetching = vista === "agenda" ? weekQuery.isFetching : listQuery.isFetching;
   const jornadas = vista === "agenda" ? (weekQuery.data ?? []) : (listQuery.data?.jornadas.content ?? []);
-  const hayFiltros = Boolean(fechaDesde || fechaHasta || obraId || cuadrillaFiltro || tipo || estado || condicion);
+  const hayFiltros = Boolean((vista === "listado" && (fechaDesde || fechaHasta)) || obraId || cuadrillaFiltro || tipo || estado || condicion);
 
   const update = (key: string, value: string, resetPage = true) => {
     setSearchParams((current) => {
       const next = new URLSearchParams(current);
-      if (value && value !== ALL) next.set(key, value); else next.delete(key);
+      if (key === "jornadaDesde" || key === "jornadaHasta") next.set(key, value);
+      else if (value && value !== ALL) next.set(key, value);
+      else next.delete(key);
       if (key === "jornadaObra") next.delete("jornadaCuadrilla");
-      if ((key === "jornadaDesde" || key === "jornadaHasta") && value) {
-        next.set("jornadaSemana", inicioSemana(next.get("jornadaDesde") || value));
-      }
       if (resetPage) next.delete("jornadaPagina");
+      return next;
+    });
+  };
+  const cambiarVista = (siguienteVista: "agenda" | "listado") => {
+    setSearchParams((current) => {
+      const next = new URLSearchParams(current);
+      if (vista !== "listado" && siguienteVista === "listado" && !next.has("jornadaDesde") && !next.has("jornadaHasta")) {
+        next.set("jornadaDesde", semana);
+        next.set("jornadaHasta", semanaHasta);
+      }
+      next.set("jornadaVista", siguienteVista);
+      next.delete("jornadaPagina");
       return next;
     });
   };
   const clear = () => setSearchParams((current) => {
     const next = new URLSearchParams(current);
-    for (const key of ["jornadaDesde", "jornadaHasta", "jornadaObra", "jornadaCuadrilla", "jornadaTipo", "jornadaEstado", "jornadaCondicion", "jornadaPagina"]) next.delete(key);
+    for (const key of ["jornadaObra", "jornadaCuadrilla", "jornadaTipo", "jornadaEstado", "jornadaCondicion", "jornadaPagina"]) next.delete(key);
+    if (vista === "listado") {
+      next.set("jornadaDesde", "");
+      next.set("jornadaHasta", "");
+    }
     return next;
   });
   const openDetail = (id: number) => navigate(rutaDetalleJornada(id, `${location.pathname}${location.search}`));
@@ -113,18 +127,20 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
   const controls = (
     <div className="space-y-4 border-b border-border bg-muted/20 p-4 sm:p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => update("jornadaSemana", sumarDias(semana, -7))} aria-label="Semana anterior"><ChevronLeft className="size-4" />Anterior</Button>
-          <span className="rounded-lg bg-primary-soft px-3 py-2 text-xs font-semibold text-primary">{formatDate(semana)} al {formatDate(semanaHasta)}</span>
-          <Button variant="outline" size="sm" onClick={() => update("jornadaSemana", inicioSemana(fechaLocal()))}>Hoy</Button>
-          <Button variant="outline" size="sm" onClick={() => update("jornadaSemana", sumarDias(semana, 7))} aria-label="Semana siguiente">Siguiente<ChevronRight className="size-4" /></Button>
-        </div>
+        {vista === "agenda" ? (
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => update("jornadaSemana", sumarDias(semana, -7))} aria-label="Semana anterior"><ChevronLeft className="size-4" />Anterior</Button>
+            <SelectorSemana semana={semana} onSelect={(seleccionada) => update("jornadaSemana", seleccionada)} />
+            <Button variant="outline" size="sm" onClick={() => update("jornadaSemana", inicioSemana(fechaLocal()))}>Hoy</Button>
+            <Button variant="outline" size="sm" onClick={() => update("jornadaSemana", sumarDias(semana, 7))} aria-label="Semana siguiente">Siguiente<ChevronRight className="size-4" /></Button>
+          </div>
+        ) : <p className="text-sm text-foreground-muted">Consultá jornadas por período y criterios.</p>}
         <div className="flex gap-1 rounded-lg border border-border bg-card p-1" role="group" aria-label="Vista de jornadas">
-          <Button size="sm" variant={vista === "agenda" ? "primary" : "ghost"} aria-pressed={vista === "agenda"} onClick={() => update("jornadaVista", "agenda")}><Rows3 className="size-4" />Agenda</Button>
-          <Button size="sm" variant={vista === "listado" ? "primary" : "ghost"} aria-pressed={vista === "listado"} onClick={() => update("jornadaVista", "listado")}><List className="size-4" />Listado</Button>
+          <Button size="sm" variant={vista === "agenda" ? "primary" : "ghost"} aria-pressed={vista === "agenda"} onClick={() => cambiarVista("agenda")}><Rows3 className="size-4" />Agenda</Button>
+          <Button size="sm" variant={vista === "listado" ? "primary" : "ghost"} aria-pressed={vista === "listado"} onClick={() => cambiarVista("listado")}><List className="size-4" />Listado</Button>
         </div>
       </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
+      <div className={cn("grid gap-3 sm:grid-cols-2 lg:grid-cols-4", vista === "agenda" ? "xl:grid-cols-5" : "xl:grid-cols-7")}>
         {!cuadrillaId && rrhh ? (
           <label className="space-y-1 text-xs font-semibold text-foreground-muted">Obra
             <Select value={obraId ? String(obraId) : ALL} onValueChange={(value) => update("jornadaObra", value)} disabled={obrasQuery.isPending}>
@@ -141,8 +157,10 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
             </Select>
           </label>
         ) : null}
-        <label className="space-y-1 text-xs font-semibold text-foreground-muted">Desde<Input type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={(event) => update("jornadaDesde", event.target.value)} className="h-9 bg-card text-xs" /></label>
-        <label className="space-y-1 text-xs font-semibold text-foreground-muted">Hasta<Input type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(event) => update("jornadaHasta", event.target.value)} className="h-9 bg-card text-xs" /></label>
+        {vista === "listado" ? <>
+          <label className="space-y-1 text-xs font-semibold text-foreground-muted">Desde<Input type="date" value={fechaDesde} max={fechaHasta || undefined} onChange={(event) => update("jornadaDesde", event.target.value)} className="h-9 bg-card text-xs" /></label>
+          <label className="space-y-1 text-xs font-semibold text-foreground-muted">Hasta<Input type="date" value={fechaHasta} min={fechaDesde || undefined} onChange={(event) => update("jornadaHasta", event.target.value)} className="h-9 bg-card text-xs" /></label>
+        </> : null}
         <label className="space-y-1 text-xs font-semibold text-foreground-muted">Tipo
           <Select value={tipo ?? ALL} onValueChange={(value) => update("jornadaTipo", value)}><SelectTrigger className="h-9 bg-card text-xs"><SelectValue /></SelectTrigger><SelectContent><SelectItem value={ALL}>Todos</SelectItem>{tipos.map((value) => <SelectItem key={value} value={value}>{tipoJornadaLabels[value]}</SelectItem>)}</SelectContent></Select>
         </label>
@@ -163,7 +181,7 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
     <Card className={embedded ? "overflow-hidden rounded-none border-0 shadow-none" : "overflow-hidden"} aria-busy={isFetching}>
       {controls}
       {isFetching && !isPending ? <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs text-foreground-muted" role="status"><Spinner className="size-4" />Actualizando jornadas…</div> : null}
-      {rangoInvalido ? <div className="p-5 text-sm text-error">La fecha desde no puede ser posterior a la fecha hasta.</div> : isPending && !sinInterseccion ? <LoadingState label="Cargando jornadas…" /> : isError ? <ErrorState message="No se pudieron cargar las jornadas." onRetry={() => void (vista === "agenda" ? weekQuery.refetch() : listQuery.refetch())} /> : jornadas.length === 0 ? <EmptyState title="No se encontraron jornadas de trabajo" description="Probá con otra semana o ajustá los filtros." action={hayFiltros ? <Button variant="outline" size="sm" onClick={clear}>Limpiar filtros</Button> : undefined} /> : vista === "agenda" ? (
+      {vista === "listado" && rangoInvalido ? <div className="p-5 text-sm text-error">La fecha desde no puede ser posterior a la fecha hasta.</div> : isPending ? <LoadingState label="Cargando jornadas…" /> : isError ? <ErrorState message="No se pudieron cargar las jornadas." onRetry={() => void (vista === "agenda" ? weekQuery.refetch() : listQuery.refetch())} /> : jornadas.length === 0 ? <EmptyState title="No se encontraron jornadas de trabajo" description={vista === "agenda" ? "Probá con otra semana o ajustá los filtros." : "Probá con otro período o ajustá los filtros."} action={hayFiltros ? <Button variant="outline" size="sm" onClick={clear}>Limpiar filtros</Button> : undefined} /> : vista === "agenda" ? (
         <div className="overflow-x-auto">
           <div className="grid min-w-[900px] grid-cols-7 divide-x divide-border">
             {Array.from({ length: 7 }, (_, index) => {
