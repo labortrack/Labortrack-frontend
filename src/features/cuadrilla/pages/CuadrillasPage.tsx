@@ -173,8 +173,8 @@ export default function CuadrillasPage() {
                 onClick={() => setStatusFilter(st)}
                 className={`px-3 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer ${
                   statusFilter === st
-                    ? "bg-primary text-primary-foreground shadow-xs"
-                    : "bg-muted/60 hover:bg-muted text-muted-foreground hover:text-foreground"
+                    ? "bg-primary-soft text-primary ring-1 ring-primary/30"
+                    : "bg-muted/60 hover:bg-muted text-foreground-muted hover:text-foreground"
                 }`}
               >
                 {st === "TODAS"
