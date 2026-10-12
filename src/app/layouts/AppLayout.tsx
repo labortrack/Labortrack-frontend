@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Bot,
   Building2,
+  ChartColumn,
   ChevronLeft,
   ChevronRight,
   CircleHelp,
@@ -120,6 +121,7 @@ export function AppLayout() {
         { to: "/obras", label: "Obras", icon: HardHat },
         { to: "/higiene-seguridad", label: "Higiene y Seguridad", icon: ShieldCheck },
         { to: "/usuarios", label: "Usuarios", icon: UserCog },
+        { to: "/reportes", label: "Reportes", icon: ChartColumn },
       ]
       : []),
     ...(user.rol === "ROLE_ADMIN"
