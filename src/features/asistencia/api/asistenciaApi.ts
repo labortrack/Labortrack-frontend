@@ -112,11 +112,10 @@ export const asistenciaApi = {
       })
     ).data,
 
-  getOpcionesFiltro: async (fecha: string) =>
+  getOpcionesFiltro: async () =>
     (
       await httpClient.get<OpcionesFiltroAsistenciaResponseDto>(
         `${BASE_URL}/opciones-filtro`,
-        { params: { fecha } },
       )
     ).data,
 
