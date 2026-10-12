@@ -10,6 +10,9 @@ import {
 } from "recharts";
 import type { ConteoPersonalObraDto } from "../types/dashboard.types";
 
+// Solo las obras con mas operarios, para que el grafico no crezca sin limite.
+const MAX_OBRAS = 5;
+
 interface PersonalPorObraChartProps {
   data: ConteoPersonalObraDto[];
 }
@@ -23,9 +26,12 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
     );
   }
 
+  // sort es estable: ante empate se mantiene el orden por nombre que envia el backend.
+  const topObras = [...data].sort((a, b) => b.cantidad - a.cantidad).slice(0, MAX_OBRAS);
+
   const alturaFila = 34;
-  const altura = Math.max(120, data.length * alturaFila);
-  const nombrePorNomenclatura = new Map(data.map((d) => [d.nomenclatura, d.nombreObra]));
+  const altura = Math.max(120, topObras.length * alturaFila);
+  const nombrePorNomenclatura = new Map(topObras.map((d) => [d.nomenclatura, d.nombreObra]));
 
   const renderTick = ({ x, y, payload }: YAxisTickContentProps) => (
     <text
@@ -44,7 +50,7 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={altura}>
-      <BarChart data={data} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
+      <BarChart data={topObras} layout="vertical" margin={{ top: 0, right: 24, left: 0, bottom: 0 }}>
         <XAxis type="number" hide allowDecimals={false} />
         <YAxis
           type="category"
