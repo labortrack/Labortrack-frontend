@@ -61,7 +61,10 @@ const ACCION_LABELS = {
 export default function AsistenciaDetailPage() {
   const { asistenciaId } = useParams();
   const location = useLocation();
-  const volverAAsistencias = `/asistencias${location.search}`;
+  const origen = new URLSearchParams(location.search).get("volver");
+  const volverAAsistencias = origen && /^\/jornadas\/\d+(?:\?.*)?$/.test(origen)
+    ? origen
+    : `/asistencias${location.search}`;
   const id = Number(asistenciaId);
   const idValido = Number.isInteger(id) && id > 0;
   const detalleQuery = useDetalleAsistenciaOperativa(idValido ? id : null);

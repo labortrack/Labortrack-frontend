@@ -144,10 +144,11 @@ export function useConfirmarAsistenciaQr(tipo: TipoOperacionQr) {
   });
 }
 
-export function useParteDiarioAsistencia(filtros: ParteDiarioFiltros) {
+export function useParteDiarioAsistencia(filtros: ParteDiarioFiltros, enabled = true) {
   return useQuery({
     queryKey: asistenciaKeys.parteDiario(filtros),
     queryFn: () => asistenciaApi.getParteDiario(filtros),
+    enabled,
     placeholderData: keepPreviousData,
   });
 }
