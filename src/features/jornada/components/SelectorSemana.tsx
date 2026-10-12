@@ -151,11 +151,6 @@ export function SelectorSemana({ semana, onSelect }: SelectorSemanaProps) {
             );
           })}
         </div>
-        <label className="mt-3 block border-t border-border pt-3 text-xs font-medium text-foreground-muted">
-          Ir a una fecha
-          <input type="date" className="mt-1 h-9 w-full rounded-control border border-border bg-card px-2 text-sm text-foreground focus-visible:outline-2 focus-visible:outline-primary" onChange={(event) => { if (event.target.value) seleccionar(event.target.value); }} />
-        </label>
-        <p className="mt-2 text-xs text-foreground-muted">Se mostrará la semana completa de la fecha elegida.</p>
       </PopoverContent>
     </Popover>
   );
