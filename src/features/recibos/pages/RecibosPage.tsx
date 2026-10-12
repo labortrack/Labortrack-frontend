@@ -5,7 +5,10 @@ import {
   PlusCircle,
   Table2,
 } from "lucide-react";
+import { ConceptosAdicionalesTab } from "@/features/conceptoAdicional/components/ConceptosAdicionalesTab";
 import { CuadroTarifarioTab } from "@/features/cuadroTarifario/components/CuadroTarifarioTab";
+import { DeduccionesTab } from "@/features/deduccion/components/DeduccionesTab";
+import { PeriodosLiquidacionTab } from "@/features/periodoLiquidacion/components/PeriodosLiquidacionTab";
 import { ComingSoonPanel } from "../components/ComingSoonPanel";
 import { PageHeader } from "@/shared/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
@@ -54,24 +57,15 @@ export default function RecibosPage() {
         </TabsContent>
 
         <TabsContent value="periodos">
-          <ComingSoonPanel
-            title="Configuración de Períodos"
-            description="Alta y programación de períodos de liquidación."
-          />
+          <PeriodosLiquidacionTab />
         </TabsContent>
 
         <TabsContent value="conceptos">
-          <ComingSoonPanel
-            title="Conceptos Adicionales"
-            description="Catálogo de conceptos adicionales aplicables a los recibos."
-          />
+          <ConceptosAdicionalesTab />
         </TabsContent>
 
         <TabsContent value="deducciones">
-          <ComingSoonPanel
-            title="Deducciones"
-            description="Catálogo de deducciones aplicables a los recibos."
-          />
+          <DeduccionesTab />
         </TabsContent>
       </Tabs>
     </div>
