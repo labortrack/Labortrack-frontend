@@ -1,3 +1,4 @@
+import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import type { ConteoEstadoCuadrillaDto } from "../types/dashboard.types";
 
 const ESTADO_LABELS: Record<string, string> = {
@@ -36,31 +37,48 @@ export function CuadrillasPorEstadoChart({ data }: CuadrillasPorEstadoChartProps
 
   const filas = [...data]
     .filter((d) => d.cantidad > 0)
-    .sort((a, b) => ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado));
+    .sort((a, b) => ORDEN_ESTADOS.indexOf(a.estado) - ORDEN_ESTADOS.indexOf(b.estado))
+    .map((d) => ({
+      ...d,
+      label: ESTADO_LABELS[d.estado] ?? d.estado,
+      color: ESTADO_COLORS[d.estado] ?? "var(--lt-neutral-300)",
+    }));
 
   return (
-    <div>
-      <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-subtle">
-        {filas.map((fila) => (
-          <div
-            key={fila.estado}
-            style={{
-              width: `${(fila.cantidad / total) * 100}%`,
-              backgroundColor: ESTADO_COLORS[fila.estado] ?? "var(--lt-neutral-300)",
-            }}
-          />
-        ))}
+    <div className="flex flex-col items-center gap-6 sm:flex-row">
+      <div className="h-44 w-44 shrink-0">
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie
+              data={filas}
+              dataKey="cantidad"
+              nameKey="label"
+              innerRadius="55%"
+              outerRadius="100%"
+              paddingAngle={filas.length > 1 ? 2 : 0}
+              stroke="var(--color-card)"
+              isAnimationActive={false}
+            >
+              {filas.map((fila) => (
+                <Cell key={fila.estado} fill={fila.color} />
+              ))}
+            </Pie>
+            <Tooltip
+              formatter={(value, name) => [
+                `${value} ${value === 1 ? "cuadrilla" : "cuadrillas"}`,
+                name,
+              ]}
+            />
+          </PieChart>
+        </ResponsiveContainer>
       </div>
 
-      <ul className="mt-4 space-y-2.5">
+      <ul className="w-full space-y-2.5">
         {filas.map((fila) => (
           <li key={fila.estado} className="flex items-center justify-between text-sm">
             <span className="flex items-center gap-2 text-foreground">
-              <span
-                className="size-2 rounded-full"
-                style={{ backgroundColor: ESTADO_COLORS[fila.estado] ?? "var(--lt-neutral-300)" }}
-              />
-              {ESTADO_LABELS[fila.estado] ?? fila.estado}
+              <span className="size-2 rounded-full" style={{ backgroundColor: fila.color }} />
+              {fila.label}
             </span>
             <span className="tabular-nums font-semibold text-foreground">{fila.cantidad}</span>
           </li>

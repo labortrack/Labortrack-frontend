@@ -8,6 +8,7 @@ export interface ConteoEstadoCuadrillaDto {
 export interface ConteoPersonalObraDto {
   obraId: number;
   nombreObra: string;
+  nomenclatura: string;
   cantidad: number;
 }
 

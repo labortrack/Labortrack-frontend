@@ -1,22 +1,11 @@
 import { Building2, UserX, Users } from "lucide-react";
+import { Card } from "@/shared/ui";
 
 interface ResumenHeroPanelProps {
   asistenciaPorcentaje: number;
   empleadosActivos: number;
   obrasActivas: number;
   ausenciasHoy: number;
-}
-
-function CornerTicks() {
-  const arm = "absolute size-4 border-primary/25";
-  return (
-    <>
-      <span className={`${arm} left-0 top-0 border-t border-l`} />
-      <span className={`${arm} right-0 top-0 border-t border-r`} />
-      <span className={`${arm} left-0 bottom-0 border-b border-l`} />
-      <span className={`${arm} right-0 bottom-0 border-b border-r`} />
-    </>
-  );
 }
 
 function StatItem({
@@ -48,9 +37,7 @@ export function ResumenHeroPanel({
   const porcentajeAcotado = Math.min(100, Math.max(0, asistenciaPorcentaje));
 
   return (
-    <div className="relative rounded-card border border-border/70 bg-card px-6 py-7 sm:px-8 sm:py-8">
-      <CornerTicks />
-
+    <Card className="px-6 py-7 sm:px-8 sm:py-8">
       <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
         {/* Numero del dia + gauge */}
         <div className="max-w-sm">
@@ -79,6 +66,6 @@ export function ResumenHeroPanel({
           <StatItem icon={UserX} value={ausenciasHoy} label="Ausencias hoy" />
         </div>
       </div>
-    </div>
+    </Card>
   );
 }
