@@ -37,7 +37,7 @@ export function DashboardOrganizacional({ data }: DashboardOrganizacionalProps) 
           <CardContent className="p-5">
             <h3 className="text-sm font-semibold text-foreground">Personal por obra</h3>
             <p className="mt-0.5 text-xs text-foreground-muted">
-              Operarios vigentes en cada frente de trabajo.
+              Las 5 obras con más operarios vigentes.
             </p>
             <div className="mt-4">
               <PersonalPorObraChart data={data.personalPorObra} />
