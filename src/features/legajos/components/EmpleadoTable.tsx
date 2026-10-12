@@ -135,7 +135,6 @@ export function EmpleadoTable({
                       apellido={empleado.apellido}
                       fotoPerfilKey={empleado.fotoPerfilKey}
                       size="md"
-                      allowZoom
                     />
                     <div>
                       <div className="font-medium text-foreground">

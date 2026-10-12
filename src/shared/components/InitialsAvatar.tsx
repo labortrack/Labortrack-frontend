@@ -58,7 +58,7 @@ export function InitialsAvatar({
     <div
       className={cn(
         sizeClasses[size],
-        "flex shrink-0 items-center justify-center rounded-full font-bold text-white shadow-xs select-none",
+        "flex aspect-square shrink-0 items-center justify-center rounded-full font-bold text-white shadow-xs select-none",
         className,
       )}
       style={{ backgroundColor: color }}

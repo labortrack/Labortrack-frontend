@@ -155,9 +155,9 @@ export function EmpleadoDetail360({
                 nombre={legajo.nombre}
                 apellido={legajo.apellido}
                 fotoPerfilKey={legajo.fotoPerfilKey}
-                className="size-20 border-2 border-primary/20 shadow-soft"
+                className="size-20 aspect-square rounded-full border-2 border-primary/20 shadow-soft"
                 size="lg"
-                allowZoom
+                ampliable
               />
               <div>
                 <div className="flex items-center gap-3 flex-wrap">
