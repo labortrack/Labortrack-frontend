@@ -13,6 +13,33 @@ import type { ConteoPersonalObraDto } from "../types/dashboard.types";
 // Solo las obras con mas operarios, para que el grafico no crezca sin limite.
 const MAX_OBRAS = 5;
 
+// El eje se ajusta a la nomenclatura mas larga, hasta este tope; las que lo
+// superan se recortan con "…" y se leen completas en el title del tick.
+const ANCHO_EJE_MAX = 180;
+const ANCHO_EJE_MIN = 48;
+const MARGEN_TICK = 12;
+const FUENTE_TICK = '12px "Manrope Variable", "Manrope", system-ui, sans-serif';
+
+let contextoMedicion: CanvasRenderingContext2D | null | undefined;
+
+function medirTexto(texto: string): number {
+  if (contextoMedicion === undefined) {
+    contextoMedicion = document.createElement("canvas").getContext("2d");
+  }
+  if (!contextoMedicion) return texto.length * 7.5;
+  contextoMedicion.font = FUENTE_TICK;
+  return contextoMedicion.measureText(texto).width;
+}
+
+function recortarAlAncho(texto: string, anchoMax: number): string {
+  if (medirTexto(texto) <= anchoMax) return texto;
+  let recortado = texto;
+  while (recortado.length > 1 && medirTexto(`${recortado}…`) > anchoMax) {
+    recortado = recortado.slice(0, -1);
+  }
+  return `${recortado}…`;
+}
+
 interface PersonalPorObraChartProps {
   data: ConteoPersonalObraDto[];
 }
@@ -32,6 +59,14 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
   const alturaFila = 34;
   const altura = Math.max(120, topObras.length * alturaFila);
   const nombrePorNomenclatura = new Map(topObras.map((d) => [d.nomenclatura, d.nombreObra]));
+  const anchoTextoMax = ANCHO_EJE_MAX - MARGEN_TICK;
+  const anchoEje = Math.max(
+    ANCHO_EJE_MIN,
+    Math.min(
+      ANCHO_EJE_MAX,
+      Math.ceil(Math.max(...topObras.map((d) => medirTexto(d.nomenclatura)))) + MARGEN_TICK,
+    ),
+  );
 
   const renderTick = ({ x, y, payload }: YAxisTickContentProps) => (
     <text
@@ -43,8 +78,10 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
       fill="var(--color-foreground)"
       className="cursor-default"
     >
-      <title>{nombrePorNomenclatura.get(payload.value) ?? payload.value}</title>
-      {payload.value}
+      <title>
+        {`${payload.value} · ${nombrePorNomenclatura.get(payload.value) ?? ""}`}
+      </title>
+      {recortarAlAncho(String(payload.value), anchoTextoMax)}
     </text>
   );
 
@@ -55,7 +92,7 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
         <YAxis
           type="category"
           dataKey="nomenclatura"
-          width={96}
+          width={anchoEje}
           axisLine={false}
           tickLine={false}
           tick={renderTick}
