@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { misJornadasApi } from "../api/misJornadasApi";
 import type { MisJornadasRango } from "../types/misJornadas.types";
 
-const misJornadasKeys = {
+export const misJornadasKeys = {
   all: ["mis-jornadas"] as const,
   list: (rango: MisJornadasRango) => ["mis-jornadas", "list", rango] as const,
   detail: (id: number) => ["mis-jornadas", "detail", id] as const,

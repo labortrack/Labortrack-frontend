@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Navigate, useParams, useSearchParams } from "react-router-dom";
-import { Ban, Building2, CalendarCheck2, CalendarDays, Clock3, ClipboardList, MessageSquare, UserRound, Users, Zap, type LucideIcon } from "lucide-react";
+import { Ban, Building2, CalendarCheck2, CalendarDays, Clock3, ClipboardList, MessageSquare, Pencil, UserRound, Users, Zap, type LucideIcon } from "lucide-react";
 import { BackLink, ErrorState, LoadingState, PageHeader } from "@/shared/components";
-import { Card, CardContent } from "@/shared/ui";
+import { Button, Card, CardContent } from "@/shared/ui";
 import { useJornadaDetalle } from "../hooks/useJornadas";
 import { JornadaStatusBadge } from "../components/JornadaStatusBadge";
 import { AsistenciasJornada } from "../components/AsistenciasJornada";
+import { AnularJornadaDialog, DefinirDecisionJornadaDialog, ModificarHorarioJornadaDialog } from "../components/JornadaActionDialogs";
+import type { AccionJornada, JornadaDetalle } from "../types/jornada.types";
 import { decisionLabels, formatDate, formatDateTime, formatTime, tipoJornadaLabels } from "../utils/planTrabajoFormatters";
 import { rutaRetornoJornada } from "../utils/jornadaNavigation";
 
@@ -19,15 +22,22 @@ export default function JornadaDetailPage() {
   const valid = Number.isInteger(id) && id > 0;
   const backTo = rutaRetornoJornada(searchParams.get("volver"));
   const query = useJornadaDetalle(id);
+  const [accionAbierta, setAccionAbierta] = useState<{ tipo: AccionJornada; jornada: JornadaDetalle } | null>(null);
 
   if (!valid) return <Navigate to="/jornadas" replace />;
   if (query.isPending) return <Card><LoadingState label="Cargando detalle de jornada…" /></Card>;
   if (query.isError || !query.data) return <div className="space-y-4"><BackLink to={backTo} /><Card><ErrorState message="No se pudo consultar esta jornada o no está dentro de tu alcance." onRetry={() => void query.refetch()} /></Card></div>;
 
   const jornada = query.data;
+  const acciones = jornada.accionesDisponibles ?? [];
   return (
     <div className="space-y-6">
       <div className="space-y-3"><BackLink to={backTo} label="Volver a jornadas" /><div className="flex flex-wrap items-center gap-3"><PageHeader title={`Jornada del ${formatDate(jornada.fecha)}`} description={`${jornada.cuadrillaNombre} · ${jornada.obraNombre}`} /><JornadaStatusBadge estado={jornada.estado} /></div></div>
+      {acciones.length > 0 ? <div className="flex flex-wrap gap-2" role="group" aria-label="Acciones disponibles para esta jornada">
+        {acciones.includes("MODIFICAR_HORARIO") ? <Button variant="outline" onClick={() => setAccionAbierta({ tipo: "MODIFICAR_HORARIO", jornada })}><Clock3 aria-hidden="true" />Modificar horario</Button> : null}
+        {acciones.includes("DEFINIR_DECISION_DIA_NO_LABORABLE") ? <Button variant="outline" onClick={() => setAccionAbierta({ tipo: "DEFINIR_DECISION_DIA_NO_LABORABLE", jornada })}><Pencil aria-hidden="true" />Definir decisión</Button> : null}
+        {acciones.includes("ANULAR_JORNADA") ? <Button variant="destructive" onClick={() => setAccionAbierta({ tipo: "ANULAR_JORNADA", jornada })}><Ban aria-hidden="true" />Anular jornada</Button> : null}
+      </div> : null}
       <Card><dl className="grid gap-5 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <Info icon={Building2} label="Obra" value={jornada.obraNombre} />
         <Info icon={Users} label="Cuadrilla" value={jornada.cuadrillaNombre} />
@@ -42,6 +52,10 @@ export default function JornadaDetailPage() {
       {jornada.estado === "ANULADA" && jornada.anulacion ? <Card><CardContent className="space-y-4 p-5"><h2 className="flex items-center gap-2 font-semibold text-foreground"><Ban className="size-5 text-error" aria-hidden="true" />Anulación de la jornada</h2><dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><Info icon={MessageSquare} label="Motivo" value={jornada.anulacion.motivo || "—"} /><Info icon={UserRound} label="Responsable" value={jornada.anulacion.usuarioResponsable || "Sin responsable registrado"} /><Info icon={Clock3} label="Fecha y hora" value={formatDateTime(jornada.anulacion.fechaHora)} /><Info icon={Users} label="Asistencias anuladas" value={String(jornada.anulacion.totalAsistenciasAfectadas)} /></dl></CardContent></Card> : null}
 
       <AsistenciasJornada jornada={jornada} />
+
+      {accionAbierta?.tipo === "MODIFICAR_HORARIO" ? <ModificarHorarioJornadaDialog jornada={accionAbierta.jornada} onClose={() => setAccionAbierta(null)} /> : null}
+      {accionAbierta?.tipo === "DEFINIR_DECISION_DIA_NO_LABORABLE" ? <DefinirDecisionJornadaDialog jornada={accionAbierta.jornada} onClose={() => setAccionAbierta(null)} /> : null}
+      {accionAbierta?.tipo === "ANULAR_JORNADA" ? <AnularJornadaDialog jornada={accionAbierta.jornada} onClose={() => setAccionAbierta(null)} /> : null}
     </div>
   );
 }
