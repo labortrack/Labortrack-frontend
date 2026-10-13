@@ -54,6 +54,12 @@ export const JornadasPage = lazy(
 export const JornadaDetailPage = lazy(
   () => import("@/features/jornada/pages/JornadaDetailPage"),
 );
+export const MisJornadasPage = lazy(
+  () => import("@/features/jornada/pages/MisJornadasPage"),
+);
+export const MiJornadaDetailPage = lazy(
+  () => import("@/features/jornada/pages/MiJornadaDetailPage"),
+);
 export const LegajosPage = lazy(
   () => import("@/features/legajos/pages/LegajosPage"),
 );
