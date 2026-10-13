@@ -42,6 +42,12 @@ function formatFecha(iso: string) {
 
 interface MiDocumentacionTableProps {
   searchTerm?: string;
+  /** El DTO no trae el id del tipo, por eso se filtra por su nombre. */
+  tipoDocumentoNombre?: string;
+  /** Formato ISO `yyyy-MM-dd`. */
+  fechaDesde?: string;
+  /** Formato ISO `yyyy-MM-dd`. */
+  fechaHasta?: string;
   onPrevisualizar: (doc: DocumentoRespuestaDto) => void;
   onBaja: (doc: DocumentoRespuestaDto) => void;
 }
@@ -50,6 +56,9 @@ interface MiDocumentacionTableProps {
 
 export function MiDocumentacionTable({
   searchTerm = "",
+  tipoDocumentoNombre,
+  fechaDesde,
+  fechaHasta,
   onPrevisualizar,
   onBaja,
 }: MiDocumentacionTableProps) {
@@ -73,26 +82,43 @@ export function MiDocumentacionTable({
     }
   };
 
-  // Filtrado local por término de búsqueda (en memoria)
+  const hayFiltros = Boolean(
+    searchTerm.trim() || tipoDocumentoNombre || fechaDesde || fechaHasta,
+  );
+
+  // Filtrado local por término de búsqueda, tipo y rango de fechas (en memoria)
   const filteredDocs = useMemo(() => {
-    const list = query.data ?? [];
     const term = normalizeSearchText(searchTerm);
-    if (!term) return list;
-    return list.filter(
-      (doc) =>
-        normalizeSearchText(doc.nombreDocumento).includes(term) ||
-        normalizeSearchText(doc.nombreArchivoOriginal).includes(term) ||
-        normalizeSearchText(doc.tipoDocumentoNombre).includes(term),
-    );
-  }, [query.data, searchTerm]);
+    return (query.data ?? []).filter((doc) => {
+      if (
+        term &&
+        !normalizeSearchText(doc.nombreDocumento).includes(term) &&
+        !normalizeSearchText(doc.nombreArchivoOriginal).includes(term) &&
+        !normalizeSearchText(doc.tipoDocumentoNombre).includes(term)
+      ) {
+        return false;
+      }
+      if (tipoDocumentoNombre && doc.tipoDocumentoNombre !== tipoDocumentoNombre) {
+        return false;
+      }
+      // fechaSubida es un ISO local (yyyy-MM-ddTHH:mm:ss): sus 10 primeros
+      // caracteres se comparan como texto contra las fechas del filtro.
+      const fechaDoc = doc.fechaSubida?.slice(0, 10) ?? "";
+      if (fechaDesde && fechaDoc < fechaDesde) return false;
+      if (fechaHasta && fechaDoc > fechaHasta) return false;
+      return true;
+    });
+  }, [query.data, searchTerm, tipoDocumentoNombre, fechaDesde, fechaHasta]);
 
   // Paginación local en memoria si hay más de PAGE_SIZE elementos
   const totalElements = filteredDocs.length;
   const totalPages = Math.ceil(totalElements / PAGE_SIZE) || 1;
+  // Si un filtro reduce los resultados, la página actual puede quedar fuera de rango
+  const currentPage = Math.min(page, totalPages - 1);
   const paginatedDocs = useMemo(() => {
-    const start = page * PAGE_SIZE;
+    const start = currentPage * PAGE_SIZE;
     return filteredDocs.slice(start, start + PAGE_SIZE);
-  }, [filteredDocs, page, PAGE_SIZE]);
+  }, [filteredDocs, currentPage, PAGE_SIZE]);
 
   // ── Estados ────────────────────────────────────────────────────────────────
   if (query.isPending) {
@@ -118,7 +144,7 @@ export function MiDocumentacionTable({
       <EmptyState
         title="Sin documentos"
         description={
-          searchTerm.trim()
+          hayFiltros
             ? "No se encontraron documentos con el criterio de búsqueda."
             : "No tenés documentos personales registrados actualmente."
         }
@@ -284,7 +310,7 @@ export function MiDocumentacionTable({
 
       {totalPages > 1 && (
         <Pagination
-          page={page}
+          page={currentPage}
           totalPages={totalPages}
           totalElements={totalElements}
           disabled={query.isFetching}
