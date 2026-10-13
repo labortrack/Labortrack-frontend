@@ -26,9 +26,37 @@ export const ESTADO_PERIODO_LABELS: Record<EstadoPeriodoLiquidacion, string> = {
  */
 export const HORA_EJECUCION_PRE_LIQUIDACION = "03:00";
 
+export const ESTADO_PERIODO_BADGE_VARIANT = {
+  PENDIENTE: "warning",
+  PRE_LIQUIDADO: "primary",
+  CERRADO: "success",
+} as const satisfies Record<EstadoPeriodoLiquidacion, string>;
+
 /** El backend solo permite modificar o dar de baja períodos en estado PENDIENTE. */
 export function esPeriodoEditable(periodo: PeriodoLiquidacionResponseDto) {
   return periodo.estadoPeriodoLiquidacion === "PENDIENTE";
+}
+
+export function fechaLocalHoy() {
+  const hoy = new Date();
+  return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, "0")}-${String(hoy.getDate()).padStart(2, "0")}`;
+}
+
+/** El backend solo pre-liquida un período cuya fecha de fin ya pasó. */
+export function periodoYaCerro(periodo: PeriodoLiquidacionResponseDto) {
+  return periodo.fechaHasta < fechaLocalHoy();
+}
+
+/**
+ * El período más reciente que ya empezó: suele haber períodos futuros dados de alta por
+ * adelantado, y esos todavía no tienen recibos que mostrar. Espera la lista ordenada del
+ * más reciente al más antiguo.
+ */
+export function elegirPeriodoPorDefecto(
+  periodos: PeriodoLiquidacionResponseDto[],
+) {
+  const hoy = fechaLocalHoy();
+  return periodos.find((p) => p.fechaDesde <= hoy) ?? periodos[0] ?? null;
 }
 
 // ─── Calendario ─────────────────────────────────────────────────────────────

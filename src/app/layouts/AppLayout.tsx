@@ -37,6 +37,7 @@ import { useDashboardResumen } from "@/features/dashboard/hooks/useDashboard";
 import { useMiCuadrillaNavegacionStore } from "@/features/cuadrilla/store/miCuadrillaNavegacionStore";
 import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark";
 import { useMiLegajo } from "@/features/legajos/hooks/useLegajos";
+import { AvatarMinio } from "@/features/legajos/components/AvatarMinio";
 import { NotificacionesBell } from "@/features/notificaciones/components/NotificacionesBell";
 import { esErrorSinLegajo } from "@/features/perfil/utils/legajoError";
 import {
@@ -279,7 +280,17 @@ export function AppLayout() {
                       location.pathname === "/mis-datos" && "ring-2 ring-primary/30",
                     )}
                   >
-                    <Avatar>{initials || "US"}</Avatar>
+                    {miLegajoQuery.data ? (
+                      <AvatarMinio
+                        empleadoId={miLegajoQuery.data.id}
+                        nombre={user.nombre}
+                        apellido={user.apellido}
+                        fotoPerfilKey={miLegajoQuery.data.fotoPerfilKey}
+                        className="size-10"
+                      />
+                    ) : (
+                      <Avatar>{initials || "US"}</Avatar>
+                    )}
                     {!collapsed || mobileOpen ? (
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-bold group-hover:text-primary">

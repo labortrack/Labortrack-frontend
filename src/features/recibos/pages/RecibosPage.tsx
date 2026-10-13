@@ -9,7 +9,7 @@ import { ConceptosAdicionalesTab } from "@/features/conceptoAdicional/components
 import { CuadroTarifarioTab } from "@/features/cuadroTarifario/components/CuadroTarifarioTab";
 import { DeduccionesTab } from "@/features/deduccion/components/DeduccionesTab";
 import { PeriodosLiquidacionTab } from "@/features/periodoLiquidacion/components/PeriodosLiquidacionTab";
-import { ComingSoonPanel } from "../components/ComingSoonPanel";
+import { RecibosSueldoTab } from "@/features/reciboSueldo/components/RecibosSueldoTab";
 import { PageHeader } from "@/shared/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 
@@ -21,7 +21,7 @@ export default function RecibosPage() {
         description="Gestión de recibos de sueldo y liquidaciones de haberes."
       />
 
-      <Tabs defaultValue="cuadro-tarifario">
+      <Tabs defaultValue="recibos">
         <TabsList className="flex-wrap">
           <TabsTrigger value="recibos" className="gap-1.5">
             <FileText className="size-4" />
@@ -46,10 +46,7 @@ export default function RecibosPage() {
         </TabsList>
 
         <TabsContent value="recibos">
-          <ComingSoonPanel
-            title="Recibos de Sueldo"
-            description="Generación de pre-liquidación, ajuste y consulta de recibos de sueldo."
-          />
+          <RecibosSueldoTab />
         </TabsContent>
 
         <TabsContent value="cuadro-tarifario">

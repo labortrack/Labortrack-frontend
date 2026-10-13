@@ -7,11 +7,11 @@ import {
 } from "./PeriodoLiquidacionDialogs";
 import { usePeriodosLiquidacion } from "../hooks/usePeriodosLiquidacion";
 import type {
-  EstadoPeriodoLiquidacion,
   PeriodoLiquidacionResponseDto,
   TabFiltroPeriodo,
 } from "../types/periodoLiquidacion.types";
 import {
+  ESTADO_PERIODO_BADGE_VARIANT,
   ESTADO_PERIODO_LABELS,
   TIPO_PERIODO_LABELS,
   esPeriodoEditable,
@@ -41,11 +41,6 @@ import {
 
 const TABS: TabFiltroPeriodo[] = ["Todos", "Activos", "Inactivos"];
 
-const ESTADO_BADGE_VARIANT = {
-  PENDIENTE: "warning",
-  PRE_LIQUIDADO: "primary",
-  CERRADO: "success",
-} as const satisfies Record<EstadoPeriodoLiquidacion, string>;
 
 export function PeriodosLiquidacionTab() {
   const [filtro, setFiltro] = useState<TabFiltroPeriodo>("Activos");
@@ -188,7 +183,9 @@ export function PeriodosLiquidacionTab() {
                   <TableCell className="text-center">
                     <Badge
                       variant={
-                        ESTADO_BADGE_VARIANT[periodo.estadoPeriodoLiquidacion]
+                        ESTADO_PERIODO_BADGE_VARIANT[
+                          periodo.estadoPeriodoLiquidacion
+                        ]
                       }
                     >
                       {ESTADO_PERIODO_LABELS[periodo.estadoPeriodoLiquidacion]}
