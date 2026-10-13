@@ -50,6 +50,12 @@ function mapDocumentoFilters(filter: DocumentoFilterDto) {
   if (filter.visibilidad) {
     params.visibilidad = filter.visibilidad;
   }
+  if (filter.fechaDesde) {
+    params.fechaDesde = filter.fechaDesde;
+  }
+  if (filter.fechaHasta) {
+    params.fechaHasta = filter.fechaHasta;
+  }
   if (filter.estado && filter.estado !== "ACTIVOS") {
     params.estado = filter.estado;
   }

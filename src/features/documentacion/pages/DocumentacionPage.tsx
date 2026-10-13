@@ -5,16 +5,13 @@ import {
   FileText,
   FolderArchive,
   Plus,
-  Search,
-  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader, SearchInput } from "@/shared/components";
+import { PageHeader } from "@/shared/components";
 import {
   Badge,
   Button,
   Card,
-  CardContent,
   Dialog,
   DialogContent,
   DialogDescription,
@@ -33,6 +30,7 @@ import {
   useBajaTipoDocumento,
   useReactivarDocumento,
   useReactivarTipoDocumento,
+  useTiposDocumentoCompleto,
 } from "../hooks/useDocumentacion";
 import { useRagIndexingPolling } from "../hooks/useRagIndexingPolling";
 import { DocumentosTable } from "../components/DocumentosTable";
@@ -42,6 +40,13 @@ import { TiposDocumentoTable } from "../components/TiposDocumentoTable";
 import { TipoDocumentoFormModal } from "../components/TipoDocumentoFormModal";
 import { Documento360Modal } from "../components/Documento360Modal";
 import { TipoDocumento360Modal } from "../components/TipoDocumento360Modal";
+import { DocumentosFiltros } from "../components/DocumentosFiltros";
+import {
+  FILTROS_VACIOS,
+  hayFiltrosActivos,
+  validarRangoFechas,
+  type DocumentosFiltrosValores,
+} from "../utils/documentosFiltros";
 import type {
   DocumentoFilterDto,
   DocumentoRespuestaDto,
@@ -60,20 +65,39 @@ export default function DocumentacionPage() {
   const user = useSessionStore((state) => state.user);
   const esAdmin = user?.rol === "ROLE_ADMIN";
   const isOperario = user?.rol === "ROLE_OPERARIO";
+  // El filtro por empleado es exclusivo de ADMIN / RRHH
+  const puedeFiltrarPorEmpleado = esAdmin || user?.rol === "ROLE_RRHH";
 
   // ── Estado: Tab "Documentos" ────────────────────────────────────────────────
   const [uploadOpen, setUploadOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<DocumentoRespuestaDto | null>(null);
   const [bajaDoc, setBajaDoc] = useState<DocumentoRespuestaDto | null>(null);
   const [reactivarDoc, setReactivarDoc] = useState<DocumentoRespuestaDto | null>(null);
-  const [nombreFiltro, setNombreFiltro] = useState("");
-  const [filters, setFilters] = useState<DocumentoFilterDto>({});
   const [filtroEstado, setFiltroEstado] = useState<EstadoDocumentoFiltro>("ACTIVOS");
 
+  // Filtros de "Mis Documentos": se aplican en memoria a medida que cambian
+  const [filtrosMisDocs, setFiltrosMisDocs] = useState<DocumentosFiltrosValores>(FILTROS_VACIOS);
+  const { data: tiposDocumento = [] } = useTiposDocumentoCompleto();
+  const tipoMisDocsNombre = tiposDocumento.find(
+    (t) => (t.idTipoDocumento ?? t.id) === filtrosMisDocs.tipoDocumentoId,
+  )?.nombre;
+  const rangoMisDocsValido = !validarRangoFechas(filtrosMisDocs.fechaDesde, filtrosMisDocs.fechaHasta);
+
+  // Filtros de "Documentos Institucionales": se resuelven en el servidor.
+  // Tipo, fechas y empleado se aplican al cambiar; el texto, con "Buscar".
+  const [filtrosInst, setFiltrosInst] = useState<DocumentosFiltrosValores>(FILTROS_VACIOS);
+  const [nombreInstAplicado, setNombreInstAplicado] = useState("");
+  const rangoInstValido = !validarRangoFechas(filtrosInst.fechaDesde, filtrosInst.fechaHasta);
+
   const appliedFilters: DocumentoFilterDto = useMemo(() => ({
-    ...filters,
+    ...(nombreInstAplicado ? { nombreDocumento: nombreInstAplicado } : {}),
+    ...(filtrosInst.tipoDocumentoId ? { tipoDocumentoId: filtrosInst.tipoDocumentoId } : {}),
+    // Con un rango inválido no se envían fechas: el error ya se muestra en la barra
+    ...(rangoInstValido && filtrosInst.fechaDesde ? { fechaDesde: filtrosInst.fechaDesde } : {}),
+    ...(rangoInstValido && filtrosInst.fechaHasta ? { fechaHasta: filtrosInst.fechaHasta } : {}),
+    ...(puedeFiltrarPorEmpleado && filtrosInst.empleado ? { empleadoId: filtrosInst.empleado.id } : {}),
     ...(esAdmin ? { estado: filtroEstado } : {}),
-  }), [filters, esAdmin, filtroEstado]);
+  }), [nombreInstAplicado, filtrosInst, rangoInstValido, puedeFiltrarPorEmpleado, esAdmin, filtroEstado]);
 
   // ── Polling inteligente de vectorización RAG ──────────────────────────────
   const { iniciarPolling } = useRagIndexingPolling();
@@ -92,15 +116,13 @@ export default function DocumentacionPage() {
   const bajaMutation = useBajaDocumento();
   const reactivarDocMutation = useReactivarDocumento();
 
-  const applySearch = () => {
-    setFilters(
-      nombreFiltro.trim() ? { nombreDocumento: nombreFiltro.trim() } : {},
-    );
+  const applySearchInst = () => {
+    setNombreInstAplicado(filtrosInst.nombre.trim());
   };
 
-  const clearSearch = () => {
-    setNombreFiltro("");
-    setFilters({});
+  const clearFiltrosInst = () => {
+    setFiltrosInst(FILTROS_VACIOS);
+    setNombreInstAplicado("");
   };
 
   const handlePrevisualizar = (doc: DocumentoRespuestaDto) => {
@@ -215,35 +237,21 @@ export default function DocumentacionPage() {
                 </Button>
               </div>
 
-              {/* Barra de búsqueda */}
-              <Card>
-                <CardContent>
-                  <div className="flex gap-2">
-                    <SearchInput
-                      placeholder="Buscar en mis documentos..."
-                      aria-label="Buscar en mis documentos"
-                      value={nombreFiltro}
-                      onChange={(e) => setNombreFiltro(e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={clearSearch}
-                      aria-label="Limpiar búsqueda"
-                    >
-                      <RotateCcw />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              {/* Filtros: buscador, tipo y rango de fechas */}
+              <DocumentosFiltros
+                idPrefix="mis-docs"
+                placeholder="Buscar en mis documentos..."
+                valores={filtrosMisDocs}
+                onChange={setFiltrosMisDocs}
+                onLimpiar={() => setFiltrosMisDocs(FILTROS_VACIOS)}
+              />
 
               {/* Tabla de mis documentos */}
               <Card className="overflow-hidden">
                 <div className="flex items-center gap-2 border-b border-border px-5 py-4">
                   <FolderArchive className="size-5 text-primary" />
                   <h2 className="font-semibold">Mis Documentos</h2>
-                  {nombreFiltro.trim() ? (
+                  {hayFiltrosActivos(filtrosMisDocs) ? (
                     <Badge variant="neutral" className="ml-auto text-xs">
                       Filtrado
                     </Badge>
@@ -251,7 +259,10 @@ export default function DocumentacionPage() {
                 </div>
 
                 <MiDocumentacionTable
-                  searchTerm={nombreFiltro}
+                  searchTerm={filtrosMisDocs.nombre}
+                  tipoDocumentoNombre={tipoMisDocsNombre}
+                  fechaDesde={rangoMisDocsValido ? filtrosMisDocs.fechaDesde : undefined}
+                  fechaHasta={rangoMisDocsValido ? filtrosMisDocs.fechaHasta : undefined}
                   onPrevisualizar={handlePrevisualizar}
                   onBaja={setBajaDoc}
                 />
@@ -291,40 +302,23 @@ export default function DocumentacionPage() {
               </Button>
             </div>
 
-            {/* Barra de búsqueda */}
-            <Card>
-              <CardContent>
-                <div className="flex gap-2">
-                  <SearchInput
-                    placeholder="Buscar por nombre de documento..."
-                    aria-label="Buscar documento"
-                    value={nombreFiltro}
-                    onChange={(e) => setNombreFiltro(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && applySearch()}
-                    className="flex-1"
-                  />
-                  <Button onClick={applySearch}>
-                    <Search />
-                    Buscar
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={clearSearch}
-                    aria-label="Limpiar búsqueda"
-                  >
-                    <RotateCcw />
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Filtros: buscador, tipo, rango de fechas y (ADMIN / RRHH) empleado */}
+            <DocumentosFiltros
+              idPrefix="institucionales"
+              placeholder="Buscar por nombre de documento..."
+              valores={filtrosInst}
+              onChange={setFiltrosInst}
+              onBuscar={applySearchInst}
+              onLimpiar={clearFiltrosInst}
+              mostrarEmpleado={puedeFiltrarPorEmpleado}
+            />
 
             {/* Tabla de documentos institucionales */}
             <Card className="overflow-hidden">
               <div className="flex items-center gap-2 border-b border-border px-5 py-4">
                 <Files className="size-5 text-primary" />
                 <h2 className="font-semibold">Documentos Institucionales</h2>
-                {(Object.keys(filters).length > 0 || (esAdmin && filtroEstado !== "ACTIVOS")) ? (
+                {(Object.keys(appliedFilters).some((k) => k !== "estado") || (esAdmin && filtroEstado !== "ACTIVOS")) ? (
                   <Badge variant="neutral" className="ml-auto text-xs">
                     Filtrado
                   </Badge>
