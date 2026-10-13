@@ -1,5 +1,5 @@
 import { httpClient } from "@/shared/lib/http/httpClient";
-import type { ConsultaJornadasResponse, JornadaDetalle, JornadaFiltros, JornadaResumen } from "../types/jornada.types";
+import type { AnularJornadaRequest, AnularJornadaResponse, ConsultaJornadasResponse, DefinirDecisionJornadaRequest, DefinirDecisionJornadaResponse, JornadaDetalle, JornadaFiltros, JornadaResumen, ModificarHorarioJornadaRequest, ModificarHorarioJornadaResponse } from "../types/jornada.types";
 
 const params = (filtros: JornadaFiltros) => {
   const query = new URLSearchParams();
@@ -22,6 +22,15 @@ export const jornadaApi = {
   ).data,
   detalle: async (jornadaId: number, signal?: AbortSignal) => (
     await httpClient.get<JornadaDetalle>(`/api/jornadas/${jornadaId}`, { signal })
+  ).data,
+  modificarHorario: async (jornadaId: number, payload: ModificarHorarioJornadaRequest) => (
+    await httpClient.put<ModificarHorarioJornadaResponse>(`/api/jornadas/${jornadaId}/horario`, payload)
+  ).data,
+  definirDecision: async (jornadaId: number, payload: DefinirDecisionJornadaRequest) => (
+    await httpClient.put<DefinirDecisionJornadaResponse>(`/api/jornadas/${jornadaId}/decision-dia-no-laborable`, payload)
+  ).data,
+  anular: async (jornadaId: number, payload: AnularJornadaRequest) => (
+    await httpClient.post<AnularJornadaResponse>(`/api/jornadas/${jornadaId}/anular`, payload)
   ).data,
   listarSemana: async (filtros: JornadaFiltros, cuadrillaId?: number, signal?: AbortSignal): Promise<JornadaResumen[]> => {
     const jornadas: JornadaResumen[] = [];

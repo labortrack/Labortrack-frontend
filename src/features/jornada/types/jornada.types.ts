@@ -1,6 +1,8 @@
 import type { SpringPage } from "@/shared/types/pagination.types";
 import type { DecisionDiaNoLaborable, EstadoJornadaTrabajo, TipoJornada } from "./planTrabajo.types";
 
+export type AccionJornada = "MODIFICAR_HORARIO" | "DEFINIR_DECISION_DIA_NO_LABORABLE" | "ANULAR_JORNADA";
+
 export interface JornadaResumen {
   id: number;
   planTrabajoId: number;
@@ -48,7 +50,7 @@ export interface JornadaDetalle extends JornadaResumen {
   puedeConsultarParteDiario: boolean;
   puedeModificarHoraInicio: boolean;
   puedeModificarHoraFin: boolean;
-  accionesDisponibles: Array<"MODIFICAR_HORARIO" | "DEFINIR_DECISION_DIA_NO_LABORABLE" | "ANULAR_JORNADA">;
+  accionesDisponibles: AccionJornada[];
   anulacion: null | {
     motivo: string;
     fechaHora: string;
@@ -57,3 +59,45 @@ export interface JornadaDetalle extends JornadaResumen {
     totalAsistenciasAfectadas: number;
   };
 }
+
+export interface ModificarHorarioJornadaRequest {
+  estadoActual: EstadoJornadaTrabajo;
+  horaInicioActual: string;
+  horaFinActual: string;
+  nuevaHoraInicio: string;
+  nuevaHoraFin: string;
+}
+
+export interface ModificarHorarioJornadaResponse {
+  jornadaId: number;
+  horaInicioPlanificada: string;
+  horaFinPlanificada: string;
+  estado: EstadoJornadaTrabajo;
+  mensaje: string;
+}
+
+export interface DefinirDecisionJornadaRequest {
+  estadoActual: EstadoJornadaTrabajo;
+  decisionActual: DecisionDiaNoLaborable;
+  horaInicioActual: string;
+  horaFinActual: string;
+  nuevaDecision: DecisionDiaNoLaborable;
+}
+
+export interface DefinirDecisionJornadaResponse {
+  jornadaId: number;
+  decision: DecisionDiaNoLaborable;
+  estado: EstadoJornadaTrabajo;
+  asistenciasActualizadas: number;
+  mensaje: string;
+}
+
+export interface AnularJornadaRequest {
+  estadoActual: EstadoJornadaTrabajo;
+  decisionActual: DecisionDiaNoLaborable;
+  horaInicioActual: string;
+  horaFinActual: string;
+  motivo: string;
+}
+
+export type AnularJornadaResponse = NonNullable<JornadaDetalle["anulacion"]>;
