@@ -5,8 +5,11 @@ import {
   PlusCircle,
   Table2,
 } from "lucide-react";
+import { ConceptosAdicionalesTab } from "@/features/conceptoAdicional/components/ConceptosAdicionalesTab";
 import { CuadroTarifarioTab } from "@/features/cuadroTarifario/components/CuadroTarifarioTab";
-import { ComingSoonPanel } from "../components/ComingSoonPanel";
+import { DeduccionesTab } from "@/features/deduccion/components/DeduccionesTab";
+import { PeriodosLiquidacionTab } from "@/features/periodoLiquidacion/components/PeriodosLiquidacionTab";
+import { RecibosSueldoTab } from "@/features/reciboSueldo/components/RecibosSueldoTab";
 import { PageHeader } from "@/shared/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 
@@ -18,7 +21,7 @@ export default function RecibosPage() {
         description="Gestión de recibos de sueldo y liquidaciones de haberes."
       />
 
-      <Tabs defaultValue="cuadro-tarifario">
+      <Tabs defaultValue="recibos">
         <TabsList className="flex-wrap">
           <TabsTrigger value="recibos" className="gap-1.5">
             <FileText className="size-4" />
@@ -43,10 +46,7 @@ export default function RecibosPage() {
         </TabsList>
 
         <TabsContent value="recibos">
-          <ComingSoonPanel
-            title="Recibos de Sueldo"
-            description="Generación de pre-liquidación, ajuste y consulta de recibos de sueldo."
-          />
+          <RecibosSueldoTab />
         </TabsContent>
 
         <TabsContent value="cuadro-tarifario">
@@ -54,24 +54,15 @@ export default function RecibosPage() {
         </TabsContent>
 
         <TabsContent value="periodos">
-          <ComingSoonPanel
-            title="Configuración de Períodos"
-            description="Alta y programación de períodos de liquidación."
-          />
+          <PeriodosLiquidacionTab />
         </TabsContent>
 
         <TabsContent value="conceptos">
-          <ComingSoonPanel
-            title="Conceptos Adicionales"
-            description="Catálogo de conceptos adicionales aplicables a los recibos."
-          />
+          <ConceptosAdicionalesTab />
         </TabsContent>
 
         <TabsContent value="deducciones">
-          <ComingSoonPanel
-            title="Deducciones"
-            description="Catálogo de deducciones aplicables a los recibos."
-          />
+          <DeduccionesTab />
         </TabsContent>
       </Tabs>
     </div>

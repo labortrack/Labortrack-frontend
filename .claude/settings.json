@@ -15,7 +15,10 @@
       "Bash(git stash *)",
       "Bash(cd /d/ROBER/LaborTrack && ls docs; grep -rinl \"genero\\\\|género\" docs 2>/dev/null; cat Labortrack-backend/src/main/java/com/labortrack/backend/legajo/model/entity/Genero.java; grep -rn \"Genero\\\\.\\\\|NO_DECIRLO\" Labortrack-backend/src --include=*.java | grep -v \"^.*import\"; grep -rn \"NO_DECIRLO\\\\|\\\\\"OTRO\\\\\"\\\\|Genero\" Labortrack-frontend/src --include=*.ts* | head -20)",
       "PowerShell(npx tsc --noEmit -p tsconfig.app.json 2>&1)",
-      "PowerShell(npx tsc --noEmit -p tsconfig.app.json; \"tsc exit: $LASTEXITCODE\")"
+      "PowerShell(npx tsc --noEmit -p tsconfig.app.json; \"tsc exit: $LASTEXITCODE\")",
+      "Bash(cd /d/ROBER/LaborTrack/Labortrack-frontend/src/features/cuadroTarifario && cat components/ZonaTab.tsx components/ZonaDialogs.tsx api/zonaApi.ts hooks/useZonas.ts schemas/zonaSchemas.ts types/zona.types.ts; cat ../../../../Labortrack-backend/src/main/java/com/labortrack/backend/reciboSueldo/service/implementation/DeduccionServiceImpl.java)",
+      "Read(//d/Labortrack-backend/src/main/java/com/labortrack/backend/reciboSueldo/service/implementation/**)",
+      "Bash(cd /d/ROBER/LaborTrack && cat Labortrack-backend/src/main/java/com/labortrack/backend/reciboSueldo/service/implementation/ValidadorParametrosLiquidables.java Labortrack-backend/src/main/java/com/labortrack/backend/reciboSueldo/model/mapper/DeduccionMapper.java; grep -n -i -B2 -A8 \"deducci\" docs/requerimientos.md docs/casos-de-uso.md | head -150)"
     ],
     "additionalDirectories": [
       "d:\\ROBER\\LaborTrack\\Labortrack-backend\\src\\main\\java\\com\\labortrack\\backend\\legajo\\model\\entity",
