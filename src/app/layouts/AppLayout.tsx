@@ -109,6 +109,9 @@ export function AppLayout() {
     ...(user.rol === "ROLE_RRHH" || esCapatazDeAlgunaObra
       ? [{ to: "/jornadas", label: "Jornadas", icon: CalendarDays }]
       : []),
+    ...(isOperario && obrasQuery.isSuccess && !esCapatazDeAlgunaObra
+      ? [{ to: "/mis-jornadas", label: "Mis jornadas", icon: CalendarDays }]
+      : []),
     ...(esLiderDeCuadrilla
       ? [{
         to: `/mi-cuadrilla${miCuadrillaSearch ? `?${miCuadrillaSearch}` : ""}`,

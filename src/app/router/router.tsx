@@ -5,6 +5,7 @@ import { AuthLayout } from "@/app/layouts/AuthLayout";
 import { ErrorPage } from "./ErrorPage";
 import { ProtectedRoute, PublicOnlyRoute, RoleRoute } from "./guards";
 import { AsistenciaCapabilityRoute } from "@/features/asistencia/components/AsistenciaCapabilityRoute";
+import { MisJornadasAccessRoute } from "@/features/jornada/components/MisJornadasAccessRoute";
 import { EmpresaInicializacionGate } from "@/features/empresa/components/EmpresaInicializacionGate";
 import { LoadingState } from "@/shared/components";
 import {
@@ -27,6 +28,8 @@ import {
   PlanTrabajoDetailPage,
   JornadasPage,
   JornadaDetailPage,
+  MisJornadasPage,
+  MiJornadaDetailPage,
   LegajosPage,
   EstructuraLaboralPage,
   MisDatosPage,
@@ -89,6 +92,8 @@ export const router = createBrowserRouter([
                   { path: "/dashboard", element: suspense(<DashboardPage />) },
                   { path: "/jornadas", element: <RoleRoute allowed={["ROLE_RRHH", "ROLE_OPERARIO"]}>{suspense(<JornadasPage />)}</RoleRoute> },
                   { path: "/jornadas/:jornadaId", element: <RoleRoute allowed={["ROLE_RRHH", "ROLE_OPERARIO"]}>{suspense(<JornadaDetailPage />)}</RoleRoute> },
+                  { path: "/mis-jornadas", element: <MisJornadasAccessRoute>{suspense(<MisJornadasPage />)}</MisJornadasAccessRoute> },
+                  { path: "/mis-jornadas/:jornadaId", element: <MisJornadasAccessRoute>{suspense(<MiJornadaDetailPage />)}</MisJornadasAccessRoute> },
                   { path: "/mis-ausencias", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisSolicitudesAusenciaPage />)}</RoleRoute> },
                   { path: "/mis-ausencias/:solicitudId", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MiSolicitudAusenciaDetailPage />)}</RoleRoute> },
                   { path: "/mis-epps", element: <RoleRoute allowed={["ROLE_OPERARIO"]}>{suspense(<MisEppsPage />)}</RoleRoute> },
