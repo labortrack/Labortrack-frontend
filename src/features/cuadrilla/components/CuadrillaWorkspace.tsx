@@ -9,6 +9,7 @@ import type {
   EmpleadoGrupoCuadrillaResponseDto,
 } from "../types/cuadrilla.types";
 import { CuadrillaNominaTable } from "./CuadrillaNominaTable";
+import { agruparNominaPorEmpleado } from "../utils/nomina";
 import { PlanesTrabajoPanel } from "@/features/jornada/components/PlanesTrabajoPanel";
 import { JornadasExplorer } from "@/features/jornada/components/JornadasExplorer";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
@@ -86,6 +87,7 @@ export function CuadrillaWorkspace({
     onSectionChange?.(nextSection);
   };
 
+  const cantidadIntegrantes = agruparNominaPorEmpleado(operarios, cuadrilla).length;
   const isSuspended = cuadrilla.estadoActual === "SUSPENDIDA";
   const isFinalizada = cuadrilla.estadoActual === "FINALIZADA";
 
@@ -103,7 +105,7 @@ export function CuadrillaWorkspace({
                   Nómina Operativa de Cuadrilla
                 </h3>
                 <span className="shrink-0 rounded-full border border-primary/20 bg-primary-soft px-2 py-0.5 text-xs font-semibold text-primary">
-                  {operarios.length} operario{operarios.length !== 1 ? "s" : ""}
+                  {cantidadIntegrantes} operario{cantidadIntegrantes !== 1 ? "s" : ""}
                 </span>
               </div>
               <p className="mt-0.5 truncate text-xs text-foreground-muted">
