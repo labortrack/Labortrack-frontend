@@ -20,6 +20,7 @@ export interface GrupoResponseDto {
 }
 
 export interface LiderCuadrillaResponseDto {
+  idAsignacion: number;
   idEmpleado: number;
   nombre: string;
   apellido: string;
@@ -53,6 +54,8 @@ export interface ModificarCuadrillaRequestDto {
 export interface LiderCuadrillaRequestDto {
   cuadrillaId: number;
   empleadoId: number;
+  /** Requerido en true para reemplazar a un líder vigente. */
+  confirmarReemplazo?: boolean;
 }
 
 export interface EmpleadoGrupoCuadrillaResponseDto {
