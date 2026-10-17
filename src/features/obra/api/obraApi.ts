@@ -14,12 +14,12 @@ import type {
 const BASE_URL = "/labortrack/obras";
 
 export const obraApi = {
-  // Lista todas las obras o filtra por nomenclatura que coincida parcialmente
-  getAll: async (nomenclatura?: string) =>
+  // Lista todas las obras o filtra por nomenclatura o nombre que coincida parcialmente
+  getAll: async (busqueda?: string) =>
     (
       await httpClient.get<ObraResponseDto[]>(BASE_URL, {
-        params: nomenclatura?.trim()
-          ? { nomenclatura: nomenclatura.trim() }
+        params: busqueda?.trim()
+          ? { busqueda: busqueda.trim() }
           : undefined,
       })
     ).data,

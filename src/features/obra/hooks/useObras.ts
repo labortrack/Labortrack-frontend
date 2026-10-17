@@ -16,8 +16,8 @@ import type {
 export const obrasKeys = {
   all: ["obras"] as const,
   lists: () => [...obrasKeys.all, "list"] as const,
-  list: (nomenclatura?: string) =>
-    [...obrasKeys.all, "list", { nomenclatura: nomenclatura?.trim() || "" }] as const,
+  list: (busqueda?: string) =>
+    [...obrasKeys.all, "list", { busqueda: busqueda?.trim() || "" }] as const,
   byNomenclatura: (valor: string) =>
     [...obrasKeys.all, "byNomenclatura", valor.trim()] as const,
   detail: (id: number) => [...obrasKeys.all, "detail", id] as const,
@@ -28,10 +28,10 @@ export const obrasKeys = {
     [...obrasKeys.all, "capatacesDisponibles", obraIdExcluir ?? null] as const,
 };
 
-export function useObras(nomenclatura?: string, enabled = true) {
+export function useObras(busqueda?: string, enabled = true) {
   return useQuery({
-    queryKey: obrasKeys.list(nomenclatura),
-    queryFn: () => obraApi.getAll(nomenclatura),
+    queryKey: obrasKeys.list(busqueda),
+    queryFn: () => obraApi.getAll(busqueda),
     placeholderData: keepPreviousData,
     enabled,
   });

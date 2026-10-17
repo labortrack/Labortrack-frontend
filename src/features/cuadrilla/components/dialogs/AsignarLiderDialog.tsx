@@ -101,7 +101,7 @@ export function AsignarLiderDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <HardHat className="size-5" />
               </div>
               <div>
