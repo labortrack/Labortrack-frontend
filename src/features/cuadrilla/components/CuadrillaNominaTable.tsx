@@ -10,6 +10,7 @@ import {
   TableHead,
   TableCell,
   Button,
+  Badge,
 } from "@/shared/ui";
 import {
   SearchInput,
@@ -187,10 +188,10 @@ export function CuadrillaNominaTable({
                         </div>
                       ))}
                       {lider && (
-                        <span className="inline-flex w-fit items-center gap-1 rounded-full border border-purple-500/20 bg-purple-500/10 px-2 py-0.5 text-[11px] font-semibold text-purple-600 dark:text-purple-400">
+                        <Badge variant="primary">
                           <Crown className="size-3 shrink-0" />
                           Líder de cuadrilla
-                        </span>
+                        </Badge>
                       )}
                     </div>
                   </TableCell>
