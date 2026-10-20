@@ -44,6 +44,7 @@ import type {
   AuditoriaFeedItem,
   OperacionAuditoria,
 } from "@/features/auditoria";
+import { etiquetaOperacion, tonoOperacion } from "../utils/historialPresentacion";
 
 const ROLE_LABELS: Record<string, string> = {
   ROLE_ADMIN: "Administrador",
@@ -74,29 +75,13 @@ function formatFechaHora(fechaIso: string): string {
   }
 }
 
-function getOperacionBadge(operacion: OperacionAuditoria) {
-  switch (operacion) {
-    case "CREACION":
-      return {
-        label: "Creación",
-        variant: "success" as const,
-      };
-    case "MODIFICACION":
-      return {
-        label: "Modificación",
-        variant: "primary" as const,
-      };
-    case "ELIMINACION":
-      return {
-        label: "Eliminación",
-        variant: "error" as const,
-      };
-    default:
-      return {
-        label: operacion,
-        variant: "neutral" as const,
-      };
-  }
+// El feed no trae los cambios: se rotula solo por entidad y operación (por ejemplo, la
+// ELIMINACION de un Ingreso o Egreso es una "Anulación").
+function getOperacionBadge(entidad: string, operacion: OperacionAuditoria) {
+  return {
+    label: etiquetaOperacion(entidad, operacion),
+    variant: tonoOperacion(entidad, operacion),
+  };
 }
 
 /**
@@ -372,9 +357,15 @@ export default function AuditoriaGlobalPage() {
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="TODAS">Todas</SelectItem>
-                          <SelectItem value="CREACION">Creación</SelectItem>
-                          <SelectItem value="MODIFICACION">Modificación</SelectItem>
-                          <SelectItem value="ELIMINACION">Eliminación</SelectItem>
+                          <SelectItem value="CREACION">
+                            {etiquetaOperacion(selectedEntidad, "CREACION")}
+                          </SelectItem>
+                          <SelectItem value="MODIFICACION">
+                            {etiquetaOperacion(selectedEntidad, "MODIFICACION")}
+                          </SelectItem>
+                          <SelectItem value="ELIMINACION">
+                            {etiquetaOperacion(selectedEntidad, "ELIMINACION")}
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -537,7 +528,7 @@ export default function AuditoriaGlobalPage() {
                     </TableHeader>
                     <TableBody>
                       {itemsFeed.map((item) => {
-                        const op = getOperacionBadge(item.operacion);
+                        const op = getOperacionBadge(item.entidad, item.operacion);
                         return (
                           <TableRow
                             key={`${item.revision}-${item.entidad}-${item.entidadId}`}
@@ -587,7 +578,7 @@ export default function AuditoriaGlobalPage() {
                 {/* Vista Cards para Móvil */}
                 <div className="divide-y divide-border md:hidden">
                   {itemsFeed.map((item) => {
-                    const op = getOperacionBadge(item.operacion);
+                    const op = getOperacionBadge(item.entidad, item.operacion);
                     return (
                       <button
                         key={`${item.revision}-${item.entidad}-${item.entidadId}`}
