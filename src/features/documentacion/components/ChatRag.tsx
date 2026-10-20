@@ -2,6 +2,7 @@ import {
   useState,
   useRef,
   useEffect,
+  useLayoutEffect,
   type FormEvent,
   type KeyboardEvent,
 } from "react";
@@ -72,6 +73,22 @@ export function ChatRag({
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // Auto-ajuste de altura hasta un máximo. Con el campo vacío mide el placeholder,
+  // así no queda cortado en pantallas angostas.
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const ajustarAlto = () => {
+      textarea.style.height = "auto";
+      // border-box: scrollHeight no incluye el borde, sin sumarlo aparece scroll.
+      const borde = textarea.offsetHeight - textarea.clientHeight;
+      textarea.style.height = `${Math.min(textarea.scrollHeight + borde, 120)}px`;
+    };
+    ajustarAlto();
+    window.addEventListener("resize", ajustarAlto);
+    return () => window.removeEventListener("resize", ajustarAlto);
+  }, [inputVal]);
+
   // Auto-scroll al final con cada nuevo mensaje o estado de carga
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -85,9 +102,6 @@ export function ChatRag({
     if (onSendMessage) {
       onSendMessage(trimmed);
       setInputVal("");
-      if (textareaRef.current) {
-        textareaRef.current.style.height = "auto";
-      }
       return;
     }
 
@@ -100,9 +114,6 @@ export function ChatRag({
     };
     setInternalMessages((prev) => [...prev, userMsg]);
     setInputVal("");
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
 
     // 2. Consumo de API (POST /api/v1/chat/consultar)
     try {
@@ -178,9 +189,6 @@ export function ChatRag({
 
   const handleTextareaInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputVal(e.target.value);
-    // Auto-ajuste de altura hasta un máximo
-    e.target.style.height = "auto";
-    e.target.style.height = `${Math.min(e.target.scrollHeight, 120)}px`;
   };
 
   return (
@@ -255,7 +263,7 @@ export function ChatRag({
               onKeyDown={handleKeyDown}
               placeholder={placeholder}
               disabled={isLoading}
-              className="min-h-16 w-full resize-none rounded-control sm:min-h-0 border border-border-strong bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-foreground-muted/75 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-subtle disabled:opacity-60"
+              className="w-full resize-none rounded-control border border-border-strong bg-card px-3.5 py-2.5 text-sm text-foreground outline-none transition placeholder:text-foreground-muted/75 focus:border-primary focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:bg-subtle disabled:opacity-60"
             />
           </div>
 
