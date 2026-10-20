@@ -260,7 +260,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/recibos",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_OPERARIO"]}>
                         {suspense(<RecibosPage />)}
                       </RoleRoute>
                     ),

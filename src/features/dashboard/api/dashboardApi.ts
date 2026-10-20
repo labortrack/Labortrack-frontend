@@ -1,6 +1,7 @@
 import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   DashboardResumenResponseDto,
+  LecturaRecibosPeriodoDto,
   TendenciaAsistenciaPuntoDto,
 } from "../types/dashboard.types";
 
@@ -18,6 +19,14 @@ export const dashboardApi = {
     const response = await httpClient.get<TendenciaAsistenciaPuntoDto[]>(
       `${BASE_URL}/tendencia-asistencia`,
       { params: { fechaDesde, fechaHasta } }
+    );
+    return response.data;
+  },
+
+  getLecturaRecibos: async (meses: number) => {
+    const response = await httpClient.get<LecturaRecibosPeriodoDto[]>(
+      `${BASE_URL}/lectura-recibos`,
+      { params: { meses } }
     );
     return response.data;
   },

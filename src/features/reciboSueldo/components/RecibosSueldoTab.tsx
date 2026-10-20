@@ -4,7 +4,9 @@ import { EmitirLote, ImprimirLote } from "./AccionesLote";
 import { CompletarPreLiquidacion } from "./CompletarPreLiquidacion";
 import { PreLiquidacionPendiente } from "./PreLiquidacionPendiente";
 import { RecibosGrilla } from "./RecibosGrilla";
+import { ResultadoPreLiquidacionDialog } from "./ResultadoPreLiquidacionDialog";
 import { useRecibosDelPeriodo } from "../hooks/useRecibosSueldo";
+import type { ResultadoPreLiquidacion } from "../types/reciboSueldo.types";
 import { usePeriodosLiquidacion } from "@/features/periodoLiquidacion/hooks/usePeriodosLiquidacion";
 import type { PeriodoLiquidacionResponseDto } from "@/features/periodoLiquidacion/types/periodoLiquidacion.types";
 import {
@@ -30,6 +32,8 @@ export function RecibosSueldoTab() {
   const [periodoElegidoId, setPeriodoElegidoId] = useState<number | null>(
     null,
   );
+  const [resultadoPreLiquidacion, setResultadoPreLiquidacion] =
+    useState<ResultadoPreLiquidacion | null>(null);
 
   const periodo =
     periodos.find((p) => p.id === periodoElegidoId) ??
@@ -110,10 +114,18 @@ export function RecibosSueldoTab() {
       </div>
 
       {periodo.estadoPeriodoLiquidacion === "PENDIENTE" ? (
-        <PreLiquidacionPendiente periodo={periodo} />
+        <PreLiquidacionPendiente
+          periodo={periodo}
+          onEjecutada={setResultadoPreLiquidacion}
+        />
       ) : (
         <RecibosDelPeriodo key={periodo.id} periodo={periodo} />
       )}
+
+      <ResultadoPreLiquidacionDialog
+        resultado={resultadoPreLiquidacion}
+        onClose={() => setResultadoPreLiquidacion(null)}
+      />
     </div>
   );
 }

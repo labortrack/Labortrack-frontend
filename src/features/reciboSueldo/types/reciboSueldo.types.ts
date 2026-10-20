@@ -61,6 +61,8 @@ export interface ReciboSueldoDetalleDto {
   estado: EstadoReciboSueldo;
   /** yyyy-MM-ddTHH:mm:ss, solo si el empleado confirmó la lectura. */
   fechaHoraLectura: string | null;
+  /** Solo en un recibo CANCELADO. */
+  motivoCancelacion: string | null;
   documentoId: number | null;
   /** Conceptos y deducciones. El básico y la suma no remunerativa no vienen como líneas. */
   lineas: LineaRecibo[];
@@ -106,3 +108,21 @@ export interface ResultadoImpresionLote {
 }
 
 export type FiltroEstadoRecibo = "TODOS" | EstadoReciboSueldo;
+
+/**
+ * Recibo visto por su dueño en la autogestión (RF058). El backend solo devuelve los
+ * publicados: PENDIENTE_LECTURA y LEIDO.
+ */
+export interface ReciboSueldoPropioDto {
+  id: number;
+  periodoLiquidacionId: number;
+  descripcionPeriodo: string;
+  /** yyyy-MM-dd */
+  fechaDesde: string;
+  fechaHasta: string;
+  totalNeto: number;
+  estado: EstadoReciboSueldo;
+  /** yyyy-MM-ddTHH:mm:ss, solo si ya se confirmó la lectura. */
+  fechaHoraLectura: string | null;
+  documentoId: number | null;
+}

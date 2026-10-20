@@ -9,6 +9,7 @@ export const recibosSueldoKeys = {
     [...recibosSueldoKeys.all, "periodo", periodoId] as const,
   detalle: (reciboId: number) =>
     [...recibosSueldoKeys.all, "detalle", reciboId] as const,
+  propios: () => [...recibosSueldoKeys.all, "propios"] as const,
 };
 
 export function useDetalleRecibo(reciboId: number | null) {
@@ -131,6 +132,25 @@ export function useEjecutarPreLiquidacion() {
           queryKey: recibosSueldoKeys.periodo(periodoId),
         }),
       ]),
+  });
+}
+
+// ─── Autogestión del empleado ───────────────────────────────────────────────
+
+export function useMisRecibos() {
+  return useQuery({
+    queryKey: recibosSueldoKeys.propios(),
+    queryFn: () => reciboSueldoApi.listarPropios(),
+  });
+}
+
+/** PENDIENTE_LECTURA → LEIDO (RF059). Abrir el PDF no cuenta como leído. */
+export function useConfirmarLectura() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (reciboId: number) => reciboSueldoApi.confirmarLectura(reciboId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: recibosSueldoKeys.propios() }),
   });
 }
 

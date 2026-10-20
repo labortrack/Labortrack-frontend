@@ -6,6 +6,8 @@ export const dashboardKeys = {
   resumen: () => [...dashboardKeys.all, "resumen"] as const,
   tendenciaAsistencia: (fechaDesde: string, fechaHasta: string) =>
     [...dashboardKeys.all, "tendencia-asistencia", { fechaDesde, fechaHasta }] as const,
+  lecturaRecibos: (meses: number) =>
+    [...dashboardKeys.all, "lectura-recibos", { meses }] as const,
 };
 
 export function useDashboardResumen(enabled = true) {
@@ -13,6 +15,13 @@ export function useDashboardResumen(enabled = true) {
     queryKey: dashboardKeys.resumen(),
     queryFn: () => dashboardApi.getResumen(),
     enabled,
+  });
+}
+
+export function useLecturaRecibos(meses: number) {
+  return useQuery({
+    queryKey: dashboardKeys.lecturaRecibos(meses),
+    queryFn: () => dashboardApi.getLecturaRecibos(meses),
   });
 }
 

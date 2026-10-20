@@ -108,6 +108,19 @@ export interface DashboardResumenResponseDto {
   personal: ResumenPersonalDto | null;
 }
 
+/** Indicador de control de entrega de recibos de un período (US039). Solo ADMIN. */
+export interface LecturaRecibosPeriodoDto {
+  periodoLiquidacionId: number;
+  descripcionPeriodo: string;
+  /** yyyy-MM-dd */
+  fechaDesde: string;
+  fechaHasta: string;
+  /** PENDIENTE_LECTURA + LEIDO */
+  recibosPublicados: number;
+  recibosLeidos: number;
+  porcentajeLeidos: number;
+}
+
 export interface TendenciaAsistenciaPuntoDto {
   fecha: string;
   presentes: number;

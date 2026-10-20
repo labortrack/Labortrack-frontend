@@ -15,7 +15,10 @@ import {
 } from "../hooks/useCategoriaZonas";
 import { useCategoriasUocraActivas } from "../hooks/useCategoriasUocra";
 import { useZonasActivas } from "../hooks/useZonas";
-import type { CategoriaZonaResponseDto } from "../types/categoriaZona.types";
+import type {
+  CategoriaZonaRequestDto,
+  CategoriaZonaResponseDto,
+} from "../types/categoriaZona.types";
 import { esLiquidacionMensual } from "../utils/tipoLiquidacionLabels";
 import { ConfirmDialog, FormField } from "@/shared/components";
 import {
@@ -35,7 +38,10 @@ import {
   SelectValue,
   Spinner,
 } from "@/shared/ui";
-import { normalizeApiError } from "@/shared/lib/http/apiError";
+import {
+  esConfirmacionRequerida,
+  normalizeApiError,
+} from "@/shared/lib/http/apiError";
 import {
   useHistorialAuditoriaDialog,
   HistorialAuditoriaButton,
@@ -58,6 +64,11 @@ export function CategoriaZonaFormDialog({
   const modificar = useModificarCategoriaZona();
   const mutation = isEdit ? modificar : crear;
   const [submitError, setSubmitError] = useState<string>();
+  // RF045: el backend pidió confirmar porque hay un período pre-liquidado vigente.
+  const [confirmacion, setConfirmacion] = useState<{
+    payload: CategoriaZonaRequestDto;
+    mensaje: string;
+  } | null>(null);
 
   const zonasQuery = useZonasActivas();
   const categoriasQuery = useCategoriasUocraActivas();
@@ -91,9 +102,28 @@ export function CategoriaZonaFormDialog({
     if (!nextOpen) {
       reset();
       setSubmitError(undefined);
+      setConfirmacion(null);
       mutation.reset();
     }
     onOpenChange(nextOpen);
+  };
+
+  const confirmarModificacion = async () => {
+    if (!confirmacion || !celda) return;
+    try {
+      await modificar.mutateAsync({
+        id: celda.id,
+        payload: confirmacion.payload,
+        confirmar: true,
+      });
+      toast.success("Valor actualizado correctamente.");
+      handleOpenChange(false);
+    } catch (error) {
+      setConfirmacion(null);
+      setSubmitError(
+        normalizeApiError(error, "No se pudo guardar el valor.").message,
+      );
+    }
   };
 
   const onSubmit = handleSubmit(async (values) => {
@@ -108,6 +138,10 @@ export function CategoriaZonaFormDialog({
       }
       handleOpenChange(false);
     } catch (error) {
+      if (isEdit && esConfirmacionRequerida(error)) {
+        setConfirmacion({ payload: values, mensaje: normalizeApiError(error).message });
+        return;
+      }
       setSubmitError(
         normalizeApiError(error, "No se pudo guardar el valor.").message,
       );
@@ -115,6 +149,7 @@ export function CategoriaZonaFormDialog({
   });
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -283,6 +318,19 @@ export function CategoriaZonaFormDialog({
         {renderDialog()}
       </DialogContent>
     </Dialog>
+
+    <ConfirmDialog
+      open={confirmacion != null}
+      title="Hay una liquidación en curso"
+      description={confirmacion?.mensaje ?? ""}
+      confirmLabel="Guardar igual"
+      pending={modificar.isPending}
+      onOpenChange={(abierto) => {
+        if (!abierto) setConfirmacion(null);
+      }}
+      onConfirm={() => void confirmarModificacion()}
+    />
+    </>
   );
 }
 

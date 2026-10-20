@@ -1,5 +1,6 @@
 import {
   Building2,
+  Calculator,
   CalendarCheck,
   CalendarClock,
   CalendarPlus,
@@ -42,6 +43,7 @@ export const iconoPorTipo: Record<TipoNotificacion, LucideIcon> = {
   EPP_ENTREGADO: HardHat,
   RECIBO_DISPONIBLE: Receipt,
   DOCUMENTO_CARGADO: FileText,
+  PRE_LIQUIDACION_FINALIZADA: Calculator,
   BIENVENIDA: PartyPopper,
   SEGURIDAD_CUENTA: KeyRound,
   AVISO_GLOBAL: Megaphone,

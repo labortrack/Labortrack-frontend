@@ -1,8 +1,8 @@
 import { FileDown, Printer } from "lucide-react";
 import { toast } from "sonner";
+import { useAbrirPdfRecibo } from "../hooks/useAbrirPdfRecibo";
 import { useImprimirRecibo } from "../hooks/useRecibosSueldo";
 import type { ReciboSueldoDetalleDto } from "../types/reciboSueldo.types";
-import { useObtenerUrlVisor } from "@/features/documentacion/hooks/useDocumentacion";
 import { Button, Spinner } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
@@ -12,7 +12,7 @@ import { normalizeApiError } from "@/shared/lib/http/apiError";
  */
 export function DocumentoRecibo({ recibo }: { recibo: ReciboSueldoDetalleDto }) {
   const imprimir = useImprimirRecibo(recibo.id);
-  const obtenerUrl = useObtenerUrlVisor();
+  const pdf = useAbrirPdfRecibo();
 
   const puedeImprimir = recibo.estado === "GENERADO";
   const documentoId = recibo.documentoId;
@@ -31,34 +31,17 @@ export function DocumentoRecibo({ recibo }: { recibo: ReciboSueldoDetalleDto }) 
     }
   };
 
-  const handleVerPdf = async (id: number) => {
-    // La pestaña se abre en el mismo clic: si se abriera después del await, el navegador
-    // la bloquearía como popup.
-    const ventana = window.open("", "_blank");
-    try {
-      const url = await obtenerUrl.mutateAsync(id);
-      if (!url) throw new Error("URL vacía");
-      if (ventana) {
-        ventana.opener = null;
-        ventana.location.href = url;
-      } else {
-        window.open(url, "_blank", "noopener");
-      }
-    } catch {
-      ventana?.close();
-      toast.error("No se pudo abrir el PDF del recibo.");
-    }
-  };
+  const abriendoPdf = pdf.documentoIdPendiente != null;
 
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
       {documentoId != null ? (
         <Button
           variant="outline"
-          onClick={() => void handleVerPdf(documentoId)}
-          disabled={obtenerUrl.isPending}
+          onClick={() => void pdf.abrir(documentoId)}
+          disabled={abriendoPdf}
         >
-          {obtenerUrl.isPending ? (
+          {abriendoPdf ? (
             <Spinner />
           ) : (
             <FileDown className="mr-1.5 size-4" />
