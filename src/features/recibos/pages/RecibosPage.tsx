@@ -22,7 +22,7 @@ export default function RecibosPage() {
       />
 
       <Tabs defaultValue="recibos">
-        <TabsList className="flex-wrap">
+        <TabsList>
           <TabsTrigger value="recibos" className="gap-1.5">
             <FileText className="size-4" />
             Recibos de Sueldo

@@ -245,7 +245,7 @@ export function EppInventoryPage() {
         title="Elementos de Protección Personal (EPP)"
         description="Inventario, reposición de stock en pañol y registro de entregas a operarios."
         actions={
-          <div className="flex flex-wrap items-center gap-2.5">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <Button
               asChild
               variant="outline"
@@ -358,7 +358,7 @@ export function EppInventoryPage() {
               value={estadoFilter}
               onValueChange={(val) => handleEstadoFilterChange(val as EstadoFiltro)}
             >
-              <TabsList className="w-full justify-start overflow-x-auto">
+              <TabsList className="w-full justify-start">
                 <TabsTrigger value="activos">
                   Activos ({counts.activos})
                 </TabsTrigger>
@@ -378,7 +378,7 @@ export function EppInventoryPage() {
                   placeholder="Buscar por nombre o ID de EPP..."
                   value={searchTerm}
                   onChange={(e) => handleSearchChange(e.target.value)}
-                  className="w-full sm:w-72"
+                  containerClassName="w-full sm:w-72"
                 />
 
                 <select

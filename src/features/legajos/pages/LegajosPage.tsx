@@ -151,7 +151,7 @@ export default function LegajosPage() {
         title="Gestión de Legajos Digitales"
         description="Consulta de legajos, situación contractual y localización operativa de trabajadores."
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={() => navigate("/estructura-laboral")}

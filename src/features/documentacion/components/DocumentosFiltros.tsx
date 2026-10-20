@@ -200,17 +200,18 @@ export function DocumentosFiltros({
     <Card>
       <CardContent className="space-y-4">
         {/* Buscador */}
-        <div className="flex gap-2">
+        {/* En mobile el buscador ocupa su propia fila y los botones van debajo. */}
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap">
           <SearchInput
             placeholder={placeholder}
             aria-label={placeholder}
             value={valores.nombre}
             onChange={(e) => cambiar({ nombre: e.target.value })}
             onKeyDown={onBuscar ? (e) => e.key === "Enter" && onBuscar() : undefined}
-            className="flex-1"
+            containerClassName="basis-full sm:basis-auto sm:flex-1"
           />
           {onBuscar ? (
-            <Button onClick={onBuscar}>
+            <Button onClick={onBuscar} className="flex-1 sm:flex-none">
               <Search />
               Buscar
             </Button>
