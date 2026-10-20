@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { AlertCircle, CalendarClock, Hourglass, Play } from "lucide-react";
 import { toast } from "sonner";
-import { ResultadoPreLiquidacionDialog } from "./ResultadoPreLiquidacionDialog";
 import { useEjecutarPreLiquidacion } from "../hooks/useRecibosSueldo";
 import type { ResultadoPreLiquidacion } from "../types/reciboSueldo.types";
 import type { PeriodoLiquidacionResponseDto } from "@/features/periodoLiquidacion/types/periodoLiquidacion.types";
@@ -15,16 +14,19 @@ import { ConfirmDialog } from "@/shared/components";
 import { Alert, Button, Card } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
-/** Estado vacío de un período PENDIENTE: todavía no tiene recibos. */
+/**
+ * Estado vacío de un período PENDIENTE: todavía no tiene recibos. El resultado de la ejecución
+ * lo muestra el padre, porque al pre-liquidar el período deja de estar PENDIENTE y este
+ * componente se desmonta.
+ */
 export function PreLiquidacionPendiente({
   periodo,
+  onEjecutada,
 }: {
   periodo: PeriodoLiquidacionResponseDto;
+  onEjecutada: (resultado: ResultadoPreLiquidacion) => void;
 }) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [resultado, setResultado] = useState<ResultadoPreLiquidacion | null>(
-    null,
-  );
   const cerrado = periodoYaCerro(periodo);
 
   return (
@@ -59,14 +61,9 @@ export function PreLiquidacionPendiente({
         <EjecutarPreLiquidacionDialog
           periodo={periodo}
           onClose={() => setConfirmOpen(false)}
-          onEjecutada={setResultado}
+          onEjecutada={onEjecutada}
         />
       ) : null}
-
-      <ResultadoPreLiquidacionDialog
-        resultado={resultado}
-        onClose={() => setResultado(null)}
-      />
     </>
   );
 }

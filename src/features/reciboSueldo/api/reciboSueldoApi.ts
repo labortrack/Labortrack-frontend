@@ -2,6 +2,7 @@ import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   ReciboSueldoDetalleDto,
   ReciboSueldoGrillaDto,
+  ReciboSueldoPropioDto,
   ResultadoEmisionLote,
   ResultadoImpresionLote,
   ResultadoPreLiquidacion,
@@ -114,6 +115,23 @@ export const reciboSueldoApi = {
   ): Promise<ResultadoPreLiquidacion> => {
     const response = await httpClient.post<ResultadoPreLiquidacion>(
       `${BASE_URL}/periodos-liquidacion/${periodoId}/pre-liquidacion/completar`,
+    );
+    return response.data;
+  },
+
+  // ─── Autogestión del empleado (RF058-RF060) ───────────────────────────────
+  // El empleado sale del token: no se manda ningún id de empleado.
+
+  listarPropios: async (): Promise<ReciboSueldoPropioDto[]> => {
+    const response = await httpClient.get<ReciboSueldoPropioDto[]>(
+      `${BASE_URL}/mis-recibos`,
+    );
+    return response.data;
+  },
+
+  confirmarLectura: async (reciboId: number): Promise<ReciboSueldoPropioDto> => {
+    const response = await httpClient.post<ReciboSueldoPropioDto>(
+      `${BASE_URL}/mis-recibos/${reciboId}/confirmacion-lectura`,
     );
     return response.data;
   },

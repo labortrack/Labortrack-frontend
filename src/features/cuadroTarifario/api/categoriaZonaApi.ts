@@ -28,13 +28,19 @@ export const categoriaZonaApi = {
     return response.data;
   },
 
+  /**
+   * Con un período pre-liquidado vigente, cambiar la tarifa responde 409
+   * CONFIRMACION_REQUERIDA hasta que se reenvía con `confirmar` (RF045).
+   */
   modificar: async (
     id: number,
     payload: CategoriaZonaRequestDto,
+    confirmar = false,
   ): Promise<CategoriaZonaResponseDto> => {
     const response = await httpClient.put<CategoriaZonaResponseDto>(
       `${BASE_URL}/${id}`,
       payload,
+      { params: confirmar ? { confirmar } : undefined },
     );
     return response.data;
   },

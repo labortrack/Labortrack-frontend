@@ -14,6 +14,18 @@ export interface NormalizedApiError {
   isNetworkError: boolean;
 }
 
+/**
+ * 409 que pide confirmar las consecuencias antes de guardar (p. ej. RF045). Se distingue de un
+ * duplicado, que también es 409, por el campo `error`.
+ */
+export function esConfirmacionRequerida(error: unknown): boolean {
+  return (
+    axios.isAxiosError<ApiErrorPayload>(error) &&
+    error.response?.status === 409 &&
+    error.response.data?.error === "CONFIRMACION_REQUERIDA"
+  );
+}
+
 export function normalizeApiError(
   error: unknown,
   fallback = "Ocurrió un error inesperado.",

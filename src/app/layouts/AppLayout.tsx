@@ -102,6 +102,7 @@ export function AppLayout() {
         { to: "/mis-datos", label: "Mis Datos", icon: User },
         { to: "/mis-ausencias", label: "Mis Ausencias", icon: ClipboardList },
         { to: "/mis-epps", label: "Mi Equipo", icon: HardHat },
+        { to: "/recibos", label: "Mis recibos", icon: Receipt },
       ]
       : []),
     ...(esCapatazDeAlgunaObra

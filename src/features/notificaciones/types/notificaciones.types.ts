@@ -20,6 +20,7 @@ export type TipoNotificacion =
   | "EPP_ENTREGADO"
   | "RECIBO_DISPONIBLE"
   | "DOCUMENTO_CARGADO"
+  | "PRE_LIQUIDACION_FINALIZADA"
   | "BIENVENIDA"
   | "SEGURIDAD_CUENTA"
   | "AVISO_GLOBAL";
@@ -30,6 +31,7 @@ export type CategoriaNotificacion =
   | "JORNADAS"
   | "OBRAS_CUADRILLAS"
   | "LEGAJO"
+  | "LIQUIDACION"
   | "CUENTA"
   | "SISTEMA";
 

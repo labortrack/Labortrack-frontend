@@ -13,7 +13,10 @@ import {
   useCrearCategoriaUocra,
   useModificarCategoriaUocra,
 } from "../hooks/useCategoriasUocra";
-import type { CategoriaUocraResponseDto } from "../types/categoriaUocra.types";
+import type {
+  CategoriaUocraRequestDto,
+  CategoriaUocraResponseDto,
+} from "../types/categoriaUocra.types";
 import { TIPO_LIQUIDACION_OPTIONS } from "../utils/tipoLiquidacionLabels";
 import { ConfirmDialog, FormField } from "@/shared/components";
 import {
@@ -33,7 +36,10 @@ import {
   SelectValue,
   Spinner,
 } from "@/shared/ui";
-import { normalizeApiError } from "@/shared/lib/http/apiError";
+import {
+  esConfirmacionRequerida,
+  normalizeApiError,
+} from "@/shared/lib/http/apiError";
 
 // ─── Modal: Crear / Modificar Categoría UOCRA ───────────────────────────────
 
@@ -51,6 +57,11 @@ export function CategoriaUocraFormDialog({
   const modificar = useModificarCategoriaUocra();
   const mutation = isEdit ? modificar : crear;
   const [submitError, setSubmitError] = useState<string>();
+  // RF045: el backend pidió confirmar porque hay un período pre-liquidado vigente.
+  const [confirmacion, setConfirmacion] = useState<{
+    payload: CategoriaUocraRequestDto;
+    mensaje: string;
+  } | null>(null);
 
   const {
     register,
@@ -71,9 +82,33 @@ export function CategoriaUocraFormDialog({
     if (!nextOpen) {
       reset();
       setSubmitError(undefined);
+      setConfirmacion(null);
       mutation.reset();
     }
     onOpenChange(nextOpen);
+  };
+
+  const avisarModificada = (nombre: string) =>
+    toast.success("Categoría UOCRA actualizada correctamente.", {
+      description: `"${nombre}" ha sido modificada.`,
+    });
+
+  const confirmarModificacion = async () => {
+    if (!confirmacion || !categoria) return;
+    try {
+      await modificar.mutateAsync({
+        id: categoria.id,
+        payload: confirmacion.payload,
+        confirmar: true,
+      });
+      avisarModificada(confirmacion.payload.nombreCategoria);
+      handleOpenChange(false);
+    } catch (error) {
+      setConfirmacion(null);
+      setSubmitError(
+        normalizeApiError(error, "No se pudo guardar la categoría.").message,
+      );
+    }
   };
 
   const onSubmit = handleSubmit(async (values) => {
@@ -86,9 +121,7 @@ export function CategoriaUocraFormDialog({
     try {
       if (isEdit && categoria) {
         await modificar.mutateAsync({ id: categoria.id, payload });
-        toast.success("Categoría UOCRA actualizada correctamente.", {
-          description: `"${payload.nombreCategoria}" ha sido modificada.`,
-        });
+        avisarModificada(payload.nombreCategoria);
       } else {
         await crear.mutateAsync(payload);
         toast.success("Categoría UOCRA creada correctamente.", {
@@ -97,6 +130,10 @@ export function CategoriaUocraFormDialog({
       }
       handleOpenChange(false);
     } catch (error) {
+      if (isEdit && esConfirmacionRequerida(error)) {
+        setConfirmacion({ payload, mensaje: normalizeApiError(error).message });
+        return;
+      }
       setSubmitError(
         normalizeApiError(error, "No se pudo guardar la categoría.").message,
       );
@@ -104,6 +141,7 @@ export function CategoriaUocraFormDialog({
   });
 
   return (
+    <>
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -213,6 +251,19 @@ export function CategoriaUocraFormDialog({
         </form>
       </DialogContent>
     </Dialog>
+
+    <ConfirmDialog
+      open={confirmacion != null}
+      title="Hay una liquidación en curso"
+      description={confirmacion?.mensaje ?? ""}
+      confirmLabel="Guardar igual"
+      pending={modificar.isPending}
+      onOpenChange={(abierto) => {
+        if (!abierto) setConfirmacion(null);
+      }}
+      onConfirm={() => void confirmarModificacion()}
+    />
+    </>
   );
 }
 

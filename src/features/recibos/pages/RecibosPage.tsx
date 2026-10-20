@@ -9,11 +9,28 @@ import { ConceptosAdicionalesTab } from "@/features/conceptoAdicional/components
 import { CuadroTarifarioTab } from "@/features/cuadroTarifario/components/CuadroTarifarioTab";
 import { DeduccionesTab } from "@/features/deduccion/components/DeduccionesTab";
 import { PeriodosLiquidacionTab } from "@/features/periodoLiquidacion/components/PeriodosLiquidacionTab";
+import { MisRecibos } from "@/features/reciboSueldo/components/MisRecibos";
 import { RecibosSueldoTab } from "@/features/reciboSueldo/components/RecibosSueldoTab";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { PageHeader } from "@/shared/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 
 export default function RecibosPage() {
+  const rol = useSessionStore((state) => state.user?.rol);
+
+  // Misma ruta para los dos, como el link de las notificaciones: el operario ve sus recibos.
+  if (rol === "ROLE_OPERARIO") {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Mis recibos"
+          description="Tus recibos de sueldo. Abrí el PDF y confirmá la lectura."
+        />
+        <MisRecibos />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader

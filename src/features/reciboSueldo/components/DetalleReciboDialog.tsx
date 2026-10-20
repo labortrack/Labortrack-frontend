@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Ban } from "lucide-react";
 import { useDetalleRecibo } from "../hooks/useRecibosSueldo";
 import type {
   ColumnaRecibo,
@@ -25,6 +26,7 @@ import { DocumentoRecibo } from "./DocumentoRecibo";
 import { EmpleadoReciboAvatar } from "./EmpleadoReciboAvatar";
 import { ErrorState, LoadingState } from "@/shared/components";
 import {
+  Alert,
   Badge,
   Dialog,
   DialogContent,
@@ -153,6 +155,16 @@ function DetalleRecibo({ recibo }: { recibo: ReciboSueldoDetalleDto }) {
             : "—"}
         </Dato>
       </dl>
+
+      {recibo.motivoCancelacion ? (
+        <Alert variant="error">
+          <Ban className="mt-0.5 size-4 shrink-0" />
+          <div className="min-w-0">
+            <p className="font-medium">Motivo de la cancelación</p>
+            <p className="mt-0.5 break-words">{recibo.motivoCancelacion}</p>
+          </div>
+        </Alert>
+      ) : null}
 
       <Table>
         <TableHeader>

@@ -79,7 +79,7 @@ export function EmitirLote({
       <ConfirmDialog
         open={confirmOpen}
         title="¿Emitir el lote de recibos?"
-        description={`Los ${borradores} recibos en borrador de "${periodo.descripcionPeriodoLiquidacion}" pasan a Generado y el período se cierra. Después de emitir ya no se pueden ajustar, regenerar ni cancelar, y no se pueden agregar los empleados que hayan quedado omitidos.`}
+        description={`${borradores === 1 ? "El recibo en borrador" : `Los ${borradores} recibos en borrador`} de "${periodo.descripcionPeriodoLiquidacion}" ${borradores === 1 ? "pasa" : "pasan"} a Generado y el período se cierra. Después de emitir ya no se pueden ajustar, regenerar ni cancelar, y no se pueden agregar los empleados que hayan quedado omitidos.`}
         confirmLabel="Emitir lote"
         pending={mutation.isPending}
         onOpenChange={(open) => {
@@ -176,7 +176,11 @@ export function ImprimirLote({
       <ConfirmDialog
         open={confirmOpen}
         title="¿Imprimir el lote de recibos?"
-        description={`Se generará el PDF de los ${generados} recibos generados de "${periodo.descripcionPeriodoLiquidacion}", se vinculará al legajo de cada empleado y los recibos quedarán pendientes de lectura. Puede tardar unos segundos.`}
+        description={
+          generados === 1
+            ? `Se generará el PDF del recibo generado de "${periodo.descripcionPeriodoLiquidacion}", se vinculará al legajo del empleado y el recibo quedará pendiente de lectura. Puede tardar unos segundos.`
+            : `Se generará el PDF de los ${generados} recibos generados de "${periodo.descripcionPeriodoLiquidacion}", se vinculará al legajo de cada empleado y los recibos quedarán pendientes de lectura. Puede tardar unos segundos.`
+        }
         confirmLabel="Imprimir"
         pending={mutation.isPending}
         onOpenChange={(open) => {
