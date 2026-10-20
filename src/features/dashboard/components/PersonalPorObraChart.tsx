@@ -103,6 +103,9 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
         {/* El eje muestra la nomenclatura (corta); el nombre completo va en el tooltip. */}
         <Tooltip
           cursor={{ fill: "var(--color-subtle)" }}
+          // Nombres de obra largos: que el tooltip haga salto de linea en vez de salirse en mobile.
+          wrapperStyle={{ maxWidth: "min(260px, 80vw)" }}
+          contentStyle={{ whiteSpace: "normal" }}
           labelFormatter={(_, payload) => {
             const obra = payload?.[0]?.payload as ConteoPersonalObraDto | undefined;
             return obra ? `${obra.nomenclatura} · ${obra.nombreObra}` : "";

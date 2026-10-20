@@ -33,7 +33,7 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: -16, bottom: 0 }}>
+      <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
         <defs>
           <linearGradient id="presentesFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.18} />
@@ -51,13 +51,13 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
           allowDecimals={false}
           axisLine={false}
           tickLine={false}
-          width={28}
+          width={32}
           tick={{ fontSize: 11, fill: "var(--color-foreground-muted)" }}
         />
         <Tooltip />
         <Legend verticalAlign="top" align="right" height={28} iconSize={8} wrapperStyle={{ fontSize: 12 }} />
         <Area
-          type="monotone"
+          type="linear"
           dataKey="presentes"
           name="Presentes"
           stroke="var(--color-primary)"
@@ -66,7 +66,7 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
           dot={false}
         />
         <Line
-          type="monotone"
+          type="linear"
           dataKey="ausentes"
           name="Ausentes"
           stroke="var(--color-error)"
