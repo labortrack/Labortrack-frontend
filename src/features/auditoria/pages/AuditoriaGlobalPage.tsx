@@ -76,7 +76,8 @@ function formatFechaHora(fechaIso: string): string {
 }
 
 // El feed no trae los cambios: se rotula solo por entidad y operación (por ejemplo, la
-// ELIMINACION de un Ingreso o Egreso es una "Anulación").
+// ELIMINACION de un Ingreso o Egreso es una "Anulación" y la MODIFICACION de una tabla
+// *_estado es un "Cierre de vigencia" del estado anterior).
 function getOperacionBadge(entidad: string, operacion: OperacionAuditoria) {
   return {
     label: etiquetaOperacion(entidad, operacion),

@@ -91,7 +91,7 @@ describe("etiquetaOperacion", () => {
     expect(etiquetaOperacion("egreso", "ELIMINACION")).toBe("Anulación");
   });
 
-  it("tablas de estado: nuevo estado y cierre de vigencia", () => {
+  it("tablas de estado: nuevo estado y cierre de vigencia detectado por campos", () => {
     expect(etiquetaOperacion("asistencia_estado", "CREACION")).toBe("Nuevo estado");
     expect(etiquetaOperacion("cuadrilla_estado", "MODIFICACION", {
       cambios: [cambio("fechaHasta", "2026-10-20")],
@@ -99,8 +99,20 @@ describe("etiquetaOperacion", () => {
     expect(etiquetaOperacion("solicitud_ausencia_estado", "MODIFICACION", {
       cambios: [cambio("fechaHoraHasta", "2026-10-20T10:00"), cambio("motivo", "x")],
     })).toBe("Modificación");
-    // Sin cambios conocidos (feed global) no se afirma un cierre
-    expect(etiquetaOperacion("cuadrilla_estado", "MODIFICACION")).toBe("Modificación");
+    // Historial por registro con revisión vacía (previa a la auditoría o solo relaciones)
+    expect(etiquetaOperacion("cuadrilla_estado", "MODIFICACION", { cambios: [] })).toBe("Modificación");
+  });
+
+  it.each([
+    "asistencia_estado",
+    "jornada_trabajo_estado",
+    "solicitud_ausencia_estado",
+    "empleado_estado",
+    "cuadrilla_estado",
+    "recibo_sueldo_estado",
+    "obra_estado",
+  ])("%s: sin cambios disponibles (feed global) la MODIFICACION es un cierre de vigencia", (entidad) => {
+    expect(etiquetaOperacion(entidad, "MODIFICACION")).toBe("Cierre de vigencia");
   });
 
   it("resto de las entidades", () => {
