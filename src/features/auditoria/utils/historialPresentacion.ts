@@ -128,9 +128,10 @@ export function etiquetaOperacion(
       case "CREACION":
         return "Nuevo estado";
       case "MODIFICACION":
-        return contexto.cambios && esCierreDeVigencia(contexto.cambios)
-          ? "Cierre de vigencia"
-          : "Modificación";
+        // Sin cambios disponibles (feed global): en estas tablas la única modificación
+        // posterior al alta es el cierre de vigencia del estado anterior.
+        if (contexto.cambios === undefined) return "Cierre de vigencia";
+        return esCierreDeVigencia(contexto.cambios) ? "Cierre de vigencia" : "Modificación";
       case "ELIMINACION":
         return "Eliminación";
     }
