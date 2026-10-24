@@ -24,6 +24,7 @@ import { ChatBubble, ChatSkeleton } from "./ChatBubble";
 import { TrackyAvatar } from "./TrackyAvatar";
 import { useTrackyChatStore } from "../store/trackyChatStore";
 import type { ChatMessage, RagFuenteCitada } from "../types/ragChat.types";
+import { estadoAvatarTracky } from "../utils/trackyAvatar";
 
 interface ChatRagProps {
   messages?: ChatMessage[];
@@ -156,7 +157,13 @@ export function ChatRag({
       {/* ── Header del Chat ── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border bg-subtle px-5 py-3.5">
         <div className="flex items-center gap-3">
-          <TrackyAvatar />
+          <TrackyAvatar
+            estado={estadoAvatarTracky({
+              visible: true,
+              enVuelo: isLoading,
+              escribiendo: latestBotMessageId !== null,
+            })}
+          />
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-foreground">{botName}</h3>
