@@ -7,7 +7,6 @@ import {
   type KeyboardEvent,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
   SendHorizontal,
   Bot,
@@ -17,13 +16,12 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
-import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { setAccessToken } from "@/shared/lib/http/tokenManager";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { ChatBubble, ChatSkeleton } from "./ChatBubble";
-import { useConsultarChat } from "../hooks/useDocumentacion";
+import { useTrackyChatStore } from "../store/trackyChatStore";
 import type { ChatMessage, RagFuenteCitada } from "../types/ragChat.types";
 
 interface ChatRagProps {
@@ -50,26 +48,35 @@ export function ChatRag({
   const navigate = useNavigate();
   const clearSession = useSessionStore((state) => state.clearSession);
 
-  // Estado local para mensajería
-  const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome-msg",
-      sender: "bot",
-      content:
-        "¡Hola! Soy Tracky. Podés hacerme consultas sobre normativas, convenios colectivos o procedimientos internos de LaborTrack. ¿En qué te ayudo hoy?",
-      timestamp: new Date(),
-    },
-  ]);
-
-  const [inputVal, setInputVal] = useState("");
-  const [latestBotMessageId, setLatestBotMessageId] = useState<string | null>(
-    null,
+  const internalMessages = useTrackyChatStore((state) => state.mensajes);
+  const enVuelo = useTrackyChatStore((state) => state.enVuelo);
+  const enviarPregunta = useTrackyChatStore((state) => state.enviarPregunta);
+  const verificarVencimiento = useTrackyChatStore(
+    (state) => state.verificarVencimiento,
   );
 
-  const consultarMutation = useConsultarChat();
-  const isLoading = externalIsLoading ?? consultarMutation.isPending;
+  const [inputVal, setInputVal] = useState("");
+  const [tipeoCompletoId, setTipeoCompletoId] = useState<string | null>(null);
+
+  const isLoading = externalIsLoading ?? enVuelo;
 
   const messages = externalMessages ?? internalMessages;
+  // Solo se anima una respuesta que llega con el chat a la vista; las que ya estaban
+  // al montar (o llegaron estando en otra pantalla) se muestran completas.
+  const [idsAlMontar] = useState(() => new Set(messages.map((m) => m.id)));
+  const ultimoBot = messages.findLast((m) => m.sender === "bot");
+  const latestBotMessageId =
+    ultimoBot &&
+    !ultimoBot.isError &&
+    !idsAlMontar.has(ultimoBot.id) &&
+    ultimoBot.id !== tipeoCompletoId
+      ? ultimoBot.id
+      : null;
+
+  useEffect(() => {
+    verificarVencimiento();
+  }, [verificarVencimiento]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -105,78 +112,22 @@ export function ChatRag({
       return;
     }
 
-    // 1. Añadir el mensaje del usuario al historial
-    const userMsg: ChatMessage = {
-      id: `user-${Date.now()}`,
-      sender: "user",
-      content: trimmed,
-      timestamp: new Date(),
-    };
-    setInternalMessages((prev) => [...prev, userMsg]);
     setInputVal("");
 
-    // 2. Consumo de API (POST /api/v1/chat/consultar)
-    try {
-      const res = await consultarMutation.mutateAsync(trimmed);
-      const botId = `bot-${Date.now()}`;
-      setLatestBotMessageId(botId);
+    // POST /api/v1/chat/consultar. La consulta vive en el store: si el usuario cambia
+    // de pantalla, la respuesta se agrega igual y no se reenvía al volver.
+    const resultado = await enviarPregunta(trimmed);
 
-      const botMsg: ChatMessage = {
-        id: botId,
-        sender: "bot",
-        content:
-          res.respuesta ||
-          "No se recibió una respuesta del motor de Inteligencia Artificial.",
-        timestamp: new Date(),
-        fuentes: res.fuentes,
-      };
-
-      setInternalMessages((prev) => [...prev, botMsg]);
-    } catch (error) {
-      const apiErr = normalizeApiError(
-        error,
-        "No fue posible comunicarse con el asistente virtual Tracky.",
-      );
-
-      const isAuthError =
-        apiErr.status === 401 ||
-        apiErr.status === 403 ||
-        (axios.isAxiosError(error) &&
-          (error.response?.status === 401 || error.response?.status === 403));
-
-      if (isAuthError) {
-        const sessionExpiredMsg =
-          "Tu sesión ha expirado por seguridad. Por favor, vuelve a iniciar sesión para continuar usando Tracky.";
-        toast.error(sessionExpiredMsg);
-
-        const errorMsg: ChatMessage = {
-          id: `err-${Date.now()}`,
-          sender: "bot",
-          content: sessionExpiredMsg,
-          timestamp: new Date(),
-          isError: true,
-        };
-        setInternalMessages((prev) => [...prev, errorMsg]);
-
-        // Limpiar estado de autenticación y redirigir al login
-        setAccessToken(null);
-        clearSession();
-        setTimeout(() => {
-          navigate("/login", { replace: true });
-        }, 1500);
-        return;
-      }
-
-      toast.error(apiErr.message);
-
-      const errorMsg: ChatMessage = {
-        id: `err-${Date.now()}`,
-        sender: "bot",
-        content: `Ocurrió un error al procesar tu consulta: ${apiErr.message}. Por favor verificá tu conexión o intentá nuevamente en unos instantes.`,
-        timestamp: new Date(),
-        isError: true,
-      };
-      setInternalMessages((prev) => [...prev, errorMsg]);
+    if (resultado.tipo === "auth") {
+      toast.error(resultado.mensaje);
+      // Limpiar estado de autenticación y redirigir al login
+      setAccessToken(null);
+      clearSession();
+      setTimeout(() => {
+        navigate("/login", { replace: true });
+      }, 1500);
+    } else if (resultado.tipo === "error") {
+      toast.error(resultado.mensaje);
     }
   };
 
@@ -240,7 +191,7 @@ export function ChatRag({
             key={msg.id}
             message={msg}
             enableTypewriter={msg.id === latestBotMessageId}
-            onTypewriterComplete={() => setLatestBotMessageId(null)}
+            onTypewriterComplete={() => setTipeoCompletoId(msg.id)}
             onFuenteClick={onFuenteClick}
           />
         ))}
