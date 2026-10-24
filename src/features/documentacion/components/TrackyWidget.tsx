@@ -10,6 +10,7 @@ import {
   indicadorWidgetTracky,
   type IndicadorTracky,
 } from "../utils/trackyWidget";
+import { estadoAvatarBoton } from "../utils/trackyAvatar";
 import { TrackyAvatar } from "./TrackyAvatar";
 
 const cargarPanel = () => import("./TrackyWidgetPanel");
@@ -73,11 +74,12 @@ function WidgetFlotante() {
           aria-label={etiqueta}
           onPointerEnter={() => void cargarPanel()}
           onFocus={() => void cargarPanel()}
-          className="group fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-30 rounded-full focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-primary/20"
+          // El foco con teclado usa el outline global de globals.css.
+          className="group fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-30 rounded-full"
         >
           <TrackyAvatar
-            className="size-14 rounded-full shadow-floating transition-colors group-hover:bg-primary-hover"
-            iconClassName="size-7"
+            estado={estadoAvatarBoton(enVuelo)}
+            className="size-14 shadow-floating transition-shadow group-hover:ring-primary"
           />
           {indicador !== "inactivo" && (
             <span
