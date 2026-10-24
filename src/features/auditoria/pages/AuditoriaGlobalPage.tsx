@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import {
   FilterX,
+  Info,
   Layers,
   RotateCcw,
   ShieldAlert,
@@ -20,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
   Spinner,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -37,14 +39,20 @@ import { normalizeApiError } from "@/shared/lib/http/apiError";
 import {
   useEntidadesAuditables,
   useCambiosAuditoria,
+  useCambiosGlobalesAuditoria,
   useHistorialAuditoriaDialog,
   formatNombreEntidad,
+  ENTIDAD_TODAS,
+  EXCLUIDAS_POR_DEFECTO,
 } from "@/features/auditoria";
 import type {
   AuditoriaFeedItem,
   OperacionAuditoria,
 } from "@/features/auditoria";
 import { etiquetaOperacion, tonoOperacion } from "../utils/historialPresentacion";
+import { aplanarSinRepetidos, claveFilaFeed } from "../utils/feedAuditoria";
+
+const NOMBRES_EXCLUIDAS = EXCLUIDAS_POR_DEFECTO.map((e) => e.nombre).join(", ");
 
 const ROLE_LABELS: Record<string, string> = {
   ROLE_ADMIN: "Administrador",
@@ -132,6 +140,10 @@ export default function AuditoriaGlobalPage() {
   const [debouncedUsuario, setDebouncedUsuario] = useState<string>("");
   const [desdeInput, setDesdeInput] = useState<string>("");
   const [hastaInput, setHastaInput] = useState<string>("");
+  // Solo en "Todos": quita las exclusiones por defecto del backend
+  const [incluirRuido, setIncluirRuido] = useState<boolean>(false);
+
+  const esTodas = selectedEntidad === ENTIDAD_TODAS;
 
   // Debounce de ~400ms para el campo de texto usuario
   useEffect(() => {
@@ -150,6 +162,7 @@ export default function AuditoriaGlobalPage() {
     setDebouncedUsuario("");
     setDesdeInput("");
     setHastaInput("");
+    setIncluirRuido(false);
   };
 
   const handleLimpiarFiltros = () => {
@@ -158,6 +171,7 @@ export default function AuditoriaGlobalPage() {
     setDebouncedUsuario("");
     setDesdeInput("");
     setHastaInput("");
+    setIncluirRuido(false);
   };
 
   // Validación de rango de fechas
@@ -200,10 +214,17 @@ export default function AuditoriaGlobalPage() {
     return filtros;
   }, [operacionFilter, debouncedUsuario, desdeInput, hastaInput, errorRangoFechas]);
 
-  // Hook infinito de cambios
+  // Hooks infinitos de cambios: por entidad (paginado por número) o de todas (por cursor).
+  // Solo uno queda habilitado según la entidad elegida.
   const isEnabledCambios = Boolean(selectedEntidad) && !errorRangoFechas;
+  const feedPorEntidad = useCambiosAuditoria(esTodas ? "" : selectedEntidad, queryFiltros, {
+    enabled: isEnabledCambios && !esTodas,
+  });
+  const feedTodas = useCambiosGlobalesAuditoria(
+    { ...queryFiltros, incluirRuido },
+    { enabled: isEnabledCambios && esTodas },
+  );
   const {
-    data: feedData,
     isLoading: loadingFeed,
     isError: errorFeed,
     error: errFeedObj,
@@ -211,21 +232,21 @@ export default function AuditoriaGlobalPage() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useCambiosAuditoria(selectedEntidad, queryFiltros, {
-    enabled: isEnabledCambios,
-  });
+  } = esTodas ? feedTodas : feedPorEntidad;
 
-  // Aplanar items paginados
-  const itemsFeed = useMemo<AuditoriaFeedItem[]>(() => {
-    if (!feedData?.pages) return [];
-    return feedData.pages.flatMap((page) => page.items);
-  }, [feedData]);
+  // Aplanar items paginados sin repetir filas
+  const pagesFeed = esTodas ? feedTodas.data?.pages : feedPorEntidad.data?.pages;
+  const itemsFeed = useMemo<AuditoriaFeedItem[]>(
+    () => aplanarSinRepetidos(pagesFeed ?? []),
+    [pagesFeed],
+  );
 
   const hayFiltrosActivos = Boolean(
     operacionFilter !== "TODAS" ||
       usuarioInput.trim() !== "" ||
       desdeInput !== "" ||
-      hastaInput !== "",
+      hastaInput !== "" ||
+      incluirRuido,
   );
 
   // Parsear error del feed
@@ -313,6 +334,7 @@ export default function AuditoriaGlobalPage() {
                     />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value={ENTIDAD_TODAS}>Todos</SelectItem>
                     {(entidades ?? []).map((entidadClave) => (
                       <SelectItem key={entidadClave} value={entidadClave}>
                         {formatNombreEntidad(entidadClave)}
@@ -415,6 +437,33 @@ export default function AuditoriaGlobalPage() {
                     </div>
                   </div>
 
+                  {/* Exclusiones por defecto del feed de todas las entidades */}
+                  {esTodas && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <Switch
+                          id="filtro-incluir-ruido"
+                          checked={incluirRuido}
+                          onCheckedChange={setIncluirRuido}
+                        />
+                        <Label htmlFor="filtro-incluir-ruido" className="text-xs font-medium">
+                          Incluir ruido operativo y SISTEMA
+                        </Label>
+                      </div>
+                      {!incluirRuido && (
+                        <div className="flex items-start gap-2 rounded-md bg-subtle px-3 py-2 text-xs text-foreground-muted">
+                          <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+                          <span>
+                            Filtros aplicados: se ocultan {NOMBRES_EXCLUIDAS}
+                            {debouncedUsuario
+                              ? ". El filtro por usuario es exacto, así que con él no se ocultan los cambios de SISTEMA."
+                              : " y los cambios automáticos de SISTEMA."}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Aviso de validación de rango de fechas */}
                   {errorRangoFechas && (
                     <div className="flex items-center gap-2 rounded-md bg-error-soft/70 px-3 py-2 text-xs font-medium text-error-strong">
@@ -474,12 +523,16 @@ export default function AuditoriaGlobalPage() {
                 title={
                   hayFiltrosActivos
                     ? "No hay cambios que coincidan con los filtros"
-                    : "No se registran cambios para esta entidad"
+                    : esTodas
+                      ? "No se registran cambios"
+                      : "No se registran cambios para esta entidad"
                 }
                 description={
                   hayFiltrosActivos
                     ? "Probá modificando o limpiando los filtros seleccionados para ampliar la búsqueda."
-                    : "Esta entidad todavía no tiene eventos de auditoría almacenados."
+                    : esTodas
+                      ? "Todavía no hay eventos de auditoría almacenados."
+                      : "Esta entidad todavía no tiene eventos de auditoría almacenados."
                 }
                 action={
                   hayFiltrosActivos ? (
@@ -522,6 +575,7 @@ export default function AuditoriaGlobalPage() {
                       <TableRow>
                         <TableHead className="w-[180px]">Fecha y Hora</TableHead>
                         <TableHead className="w-[140px]">Operación</TableHead>
+                        {esTodas && <TableHead>Entidad</TableHead>}
                         <TableHead>Registro / Etiqueta</TableHead>
                         <TableHead>Usuario</TableHead>
                         <TableHead className="w-[140px]">Rol</TableHead>
@@ -532,7 +586,7 @@ export default function AuditoriaGlobalPage() {
                         const op = getOperacionBadge(item.entidad, item.operacion);
                         return (
                           <TableRow
-                            key={`${item.revision}-${item.entidad}-${item.entidadId}`}
+                            key={claveFilaFeed(item)}
                             tabIndex={0}
                             role="button"
                             onClick={() =>
@@ -560,6 +614,11 @@ export default function AuditoriaGlobalPage() {
                             <TableCell>
                               <Badge variant={op.variant}>{op.label}</Badge>
                             </TableCell>
+                            {esTodas && (
+                              <TableCell className="text-xs text-foreground">
+                                {item.entidadNombre || formatNombreEntidad(item.entidad)}
+                              </TableCell>
+                            )}
                             <TableCell className="font-medium text-foreground">
                               {item.etiqueta}
                             </TableCell>
@@ -582,7 +641,7 @@ export default function AuditoriaGlobalPage() {
                     const op = getOperacionBadge(item.entidad, item.operacion);
                     return (
                       <button
-                        key={`${item.revision}-${item.entidad}-${item.entidadId}`}
+                        key={claveFilaFeed(item)}
                         type="button"
                         onClick={() =>
                           abrirHistorial(
@@ -600,6 +659,14 @@ export default function AuditoriaGlobalPage() {
                           <Badge variant={op.variant}>{op.label}</Badge>
                         </div>
                         <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-foreground-muted">
+                          {esTodas && (
+                            <>
+                              <span className="text-foreground">
+                                {item.entidadNombre || formatNombreEntidad(item.entidad)}
+                              </span>
+                              <span>•</span>
+                            </>
+                          )}
                           <span>{formatFechaHora(item.fecha)}</span>
                           <span>•</span>
                           <span className="truncate max-w-[200px]">{item.usuario}</span>
@@ -627,7 +694,7 @@ export default function AuditoriaGlobalPage() {
                           Cargando más...
                         </>
                       ) : (
-                        "Cargar más"
+                        "Ver más"
                       )}
                     </Button>
                   </div>
