@@ -50,5 +50,23 @@ export const CAMPOS_OCULTOS: readonly string[] = [
   "id_usuario",
 ] as const;
 
+/**
+ * Valor de la opción "Todos" del selector de entidad. Radix Select no admite "" como valor y
+ * ninguna clave auditable empieza con "__".
+ */
+export const ENTIDAD_TODAS = "__todas__";
+
+/**
+ * Entidades que el feed global oculta si no se envía `excluir`. Copia de
+ * FiltrosCambios.EXCLUIDAS_POR_DEFECTO del backend (claves) y de AuditoriaService.NOMBRES
+ * (nombres, los mismos que llegan en entidadNombre): si allá cambian, actualizar acá a mano.
+ * Solo se usa para el texto del aviso; la exclusión la aplica el backend.
+ */
+export const EXCLUIDAS_POR_DEFECTO: readonly { clave: string; nombre: string }[] = [
+  { clave: "asistencia_estado", nombre: "Estado de asistencia" },
+  { clave: "ingreso", nombre: "Ingreso" },
+  { clave: "egreso", nombre: "Egreso" },
+] as const;
+
 // Tipos de compatibilidad
 export type EntidadAuditable = string;

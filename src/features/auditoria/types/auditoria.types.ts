@@ -24,6 +24,7 @@ export interface AuditoriaFeedItem {
   usuario: string;
   rol: string;
   entidad: string;
+  entidadNombre: string; // "Solicitud de ausencia"
   entidadId: number;
   etiqueta: string;
 }
@@ -42,4 +43,22 @@ export interface AuditoriaFeedFiltros {
   desde?: string; // ISO-8601 UTC
   hasta?: string; // ISO-8601 UTC
   operacion?: OperacionAuditoria;
+}
+
+/** Página del feed de todas las entidades (GET /api/auditoria/cambios). */
+export interface AuditoriaCambiosPage {
+  items: AuditoriaFeedItem[];
+  size: number;
+  siguienteCursor: string | null; // "revision:entidad:id"; null si no hay más
+}
+
+export interface AuditoriaCambiosFiltros {
+  antesDe?: string | null;
+  size?: number;
+  usuario?: string;
+  desde?: string; // ISO-8601 UTC
+  hasta?: string; // ISO-8601 UTC
+  operacion?: OperacionAuditoria;
+  /** true quita las exclusiones por defecto del backend (ruido operativo y SISTEMA). */
+  incluirRuido?: boolean;
 }

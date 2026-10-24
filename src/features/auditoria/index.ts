@@ -25,6 +25,8 @@ export type {
   AuditoriaFeedItem,
   AuditoriaFeedPage,
   AuditoriaFeedFiltros,
+  AuditoriaCambiosPage,
+  AuditoriaCambiosFiltros,
 } from "./types/auditoria.types";
 
 // Constantes y Utilidades de Entidades
@@ -32,6 +34,8 @@ export {
   DICCIONARIO_ENTIDADES_OVERRIDE,
   formatNombreEntidad,
   CAMPOS_OCULTOS,
+  ENTIDAD_TODAS,
+  EXCLUIDAS_POR_DEFECTO,
 } from "./constants/entidades.constants";
 export type { EntidadAuditable } from "./constants/entidades.constants";
 
@@ -48,13 +52,18 @@ export {
   obtenerEntidadesAuditables,
   obtenerHistorial,
   obtenerCambios,
+  obtenerCambiosGlobales,
 } from "./api/auditoria.api";
 export {
   useAuditoria,
   useHistorialAuditoria,
   useEntidadesAuditables,
   useCambiosAuditoria,
+  useCambiosGlobalesAuditoria,
   auditoriaKeys,
 } from "./hooks/useAuditoria";
-export type { UseCambiosAuditoriaFiltros } from "./hooks/useAuditoria";
+export type {
+  UseCambiosAuditoriaFiltros,
+  UseCambiosGlobalesAuditoriaFiltros,
+} from "./hooks/useAuditoria";
 
