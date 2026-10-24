@@ -39,6 +39,7 @@ import { EmpresaBrandMark } from "@/features/empresa/components/EmpresaBrandMark
 import { useMiLegajo } from "@/features/legajos/hooks/useLegajos";
 import { AvatarMinio } from "@/features/legajos/components/AvatarMinio";
 import { NotificacionesBell } from "@/features/notificaciones/components/NotificacionesBell";
+import { TrackyWidget } from "@/features/documentacion/components/TrackyWidget";
 import { esErrorSinLegajo } from "@/features/perfil/utils/legajoError";
 import {
   Avatar,
@@ -381,6 +382,7 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+      <TrackyWidget />
     </div>
   );
 }

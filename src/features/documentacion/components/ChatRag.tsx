@@ -9,10 +9,10 @@ import {
 import { useNavigate } from "react-router-dom";
 import {
   SendHorizontal,
-  Bot,
   RotateCcw,
   Sparkles,
   Loader2,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/shared/utils/cn";
@@ -21,6 +21,7 @@ import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
 import { ChatBubble, ChatSkeleton } from "./ChatBubble";
+import { TrackyAvatar } from "./TrackyAvatar";
 import { useTrackyChatStore } from "../store/trackyChatStore";
 import type { ChatMessage, RagFuenteCitada } from "../types/ragChat.types";
 
@@ -29,6 +30,8 @@ interface ChatRagProps {
   isLoading?: boolean;
   onSendMessage?: (content: string) => void;
   onResetChat?: () => void;
+  /** Muestra una X en el encabezado; la usa el panel flotante. */
+  onClose?: () => void;
   onFuenteClick?: (fuente: RagFuenteCitada) => void;
   placeholder?: string;
   botName?: string;
@@ -40,6 +43,7 @@ export function ChatRag({
   isLoading: externalIsLoading,
   onSendMessage,
   onResetChat,
+  onClose,
   onFuenteClick,
   placeholder = "Preguntale a Tracky sobre convenios, normativas o documentación...",
   botName = "Tracky",
@@ -152,9 +156,7 @@ export function ChatRag({
       {/* ── Header del Chat ── */}
       <div className="flex shrink-0 items-center justify-between border-b border-border bg-subtle px-5 py-3.5">
         <div className="flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-lg bg-primary text-white shadow-soft">
-            <Bot className="size-5" />
-          </div>
+          <TrackyAvatar />
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-foreground">{botName}</h3>
@@ -169,18 +171,31 @@ export function ChatRag({
           </div>
         </div>
 
-        {onResetChat && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onResetChat}
-            className="text-xs"
-            title="Reiniciar conversación"
-          >
-            <RotateCcw className="size-3.5" />
-            <span className="hidden sm:inline">Reiniciar</span>
-          </Button>
-        )}
+        <div className="flex items-center gap-1">
+          {onResetChat && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onResetChat}
+              className="text-xs"
+              title="Reiniciar conversación"
+            >
+              <RotateCcw className="size-3.5" />
+              <span className="hidden sm:inline">Reiniciar</span>
+            </Button>
+          )}
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onClose}
+              aria-label="Cerrar Tracky"
+              title="Cerrar Tracky"
+            >
+              <X className="size-4" />
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* ── Contenedor de Mensajes (Scrollable) ── */}
