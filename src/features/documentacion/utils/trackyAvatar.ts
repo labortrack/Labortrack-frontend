@@ -3,7 +3,7 @@
  *
  * DTE del avatar (estado de interfaz, no es una entidad del modelo):
  *
- *   Encabezado del chat (ChatRag):
+ *   Chat (ChatRag: vista vacía y burbuja en curso):
  *     inactivo    → atento       se abre el panel o se entra a /asistente-virtual
  *     atento      → pensando     se envía una consulta
  *     pensando    → escribiendo  llega la respuesta y empieza el tipeo
@@ -13,9 +13,14 @@
  *     escribiendo → pensando     se envía otra consulta durante el tipeo
  *     atento      → inactivo     se cierra el panel o se sale de la pantalla
  *
- *   Botón flotante (solo usa inactivo y pensando):
+ *   Botón flotante (usa inactivo, atento y pensando):
+ *     inactivo    → atento       el cursor entra al botón con el panel cerrado
+ *     atento      → inactivo     el cursor sale o se abre el panel
  *     inactivo    → pensando     hay una consulta en vuelo
+ *     atento      → pensando     hay una consulta en vuelo con el cursor encima
  *     pensando    → inactivo     llega la respuesta o se limpia la conversación
+ *     pensando    → atento       llega la respuesta con el cursor encima y el panel cerrado
+ *   El foco con teclado no cambia el estado: solo agranda el botón y muestra el outline.
  *
  * Prioridad al calcularlo: pensando > escribiendo > atento > inactivo.
  */
@@ -45,7 +50,16 @@ export function estadoAvatarTracky({
   return "inactivo";
 }
 
-/** El botón flotante solo distingue inactivo y pensando. */
-export function estadoAvatarBoton(enVuelo: boolean): EstadoAvatarTracky {
-  return estadoAvatarTracky({ visible: false, enVuelo, escribiendo: false });
+/**
+ * Estado del botón flotante. hover es el cursor sobre el botón con el panel cerrado;
+ * ni el toque ni el foco con teclado cuentan.
+ */
+export function estadoAvatarBoton({
+  enVuelo,
+  hover,
+}: {
+  enVuelo: boolean;
+  hover: boolean;
+}): EstadoAvatarTracky {
+  return estadoAvatarTracky({ visible: hover, enVuelo, escribiendo: false });
 }

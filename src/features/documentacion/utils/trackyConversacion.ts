@@ -24,7 +24,7 @@ export function mensajeBienvenida(ahora: Date = new Date()): ChatMessage {
     id: "welcome-msg",
     sender: "bot",
     content:
-      "¡Hola! Soy Tracky. Podés hacerme consultas sobre normativas, convenios colectivos o procedimientos internos de LaborTrack. ¿En qué te ayudo hoy?",
+      "¡Hola! Soy Tracky. Te ayudo con normativas, protocolos y documentación institucional de LaborTrack.",
     timestamp: ahora,
   };
 }

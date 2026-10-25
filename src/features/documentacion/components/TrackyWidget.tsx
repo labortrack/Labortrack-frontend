@@ -2,7 +2,7 @@ import { lazy, Suspense, useRef, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { useLocation } from "react-router-dom";
 import { useMediaQuery } from "@/shared/hooks/useMediaQuery";
-import { Spinner } from "@/shared/ui";
+import { Spinner, Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
 import { useTrackyChatStore } from "../store/trackyChatStore";
 import {
@@ -38,6 +38,9 @@ function WidgetFlotante() {
   const enVuelo = useTrackyChatStore((state) => state.enVuelo);
   const ultimoMensaje = useTrackyChatStore((state) => state.mensajes.at(-1));
   const [abierto, setAbierto] = useState(false);
+  // Cursor sobre el botón (no toque): el avatar pasa a atento.
+  const [hover, setHover] = useState(false);
+  const [tooltipAbierto, setTooltipAbierto] = useState(false);
   const [ultimoIdVisto, setUltimoIdVisto] = useState(() => ultimoMensaje?.id);
   const contenidoRef = useRef<HTMLDivElement>(null);
 
@@ -53,14 +56,16 @@ function WidgetFlotante() {
     setUltimoIdVisto(useTrackyChatStore.getState().mensajes.at(-1)?.id);
   };
 
+  // Empieza con el texto del tooltip, así quien usa control por voz puede nombrar el
+  // botón por lo que ve (WCAG 2.5.3).
   const etiqueta =
     indicador === "pensando"
-      ? "Abrir asistente Tracky (respondiendo…)"
+      ? "Preguntale a Tracky (respondiendo…)"
       : indicador === "nueva"
-        ? "Abrir asistente Tracky (respuesta nueva)"
+        ? "Preguntale a Tracky (respuesta nueva)"
         : abierto
           ? "Cerrar asistente Tracky"
-          : "Abrir asistente Tracky";
+          : "Preguntale a Tracky";
 
   return (
     <DialogPrimitive.Root
@@ -68,32 +73,50 @@ function WidgetFlotante() {
       onOpenChange={cambiarAbierto}
       modal={!esEscritorio}
     >
-      <DialogPrimitive.Trigger asChild>
-        <button
-          type="button"
-          aria-label={etiqueta}
-          onPointerEnter={() => void cargarPanel()}
-          onFocus={() => void cargarPanel()}
-          // El foco con teclado usa el outline global de globals.css.
-          className="group fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-30 rounded-full"
+      {/* Tooltip solo con el panel cerrado. */}
+      <Tooltip open={tooltipAbierto && !abierto} onOpenChange={setTooltipAbierto}>
+        <TooltipTrigger
+          asChild
+          // El aria-label ya empieza con el texto del tooltip: sin descripción repetida.
+          aria-describedby={undefined}
         >
-          <TrackyAvatar
-            estado={estadoAvatarBoton(enVuelo)}
-            className="size-14 shadow-floating transition-shadow group-hover:ring-primary"
-          />
-          {indicador !== "inactivo" && (
-            <span
-              aria-hidden="true"
-              className={cn(
-                "absolute right-0 top-0 size-3.5 rounded-full border-2 border-card",
-                indicador === "pensando"
-                  ? "bg-accent motion-safe:animate-pulse"
-                  : "bg-error",
+          <DialogPrimitive.Trigger asChild>
+            <button
+              type="button"
+              aria-label={etiqueta}
+              onPointerEnter={(event) => {
+                void cargarPanel();
+                if (event.pointerType !== "touch") setHover(true);
+              }}
+              onPointerLeave={() => setHover(false)}
+              onFocus={() => void cargarPanel()}
+              // Crece el botón entero (avatar y punto) solo con movimiento permitido y en
+              // dispositivos con hover; hover: de Tailwind v4 ya incluye @media (hover: hover).
+              // El foco con teclado usa el outline global de globals.css.
+              className="group fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-[max(1.5rem,env(safe-area-inset-right))] z-30 rounded-full motion-safe:transition-transform motion-safe:duration-150 motion-safe:hover:scale-110 motion-safe:[@media(hover:hover)]:focus-visible:scale-110"
+            >
+              <TrackyAvatar
+                estado={estadoAvatarBoton({ enVuelo, hover: hover && !abierto })}
+                // Con el panel abierto, la animación protagonista está en la conversación.
+                animado={!abierto}
+                className="size-14 shadow-floating transition-shadow group-hover:ring-primary"
+              />
+              {indicador !== "inactivo" && (
+                <span
+                  aria-hidden="true"
+                  className={cn(
+                    "absolute right-0 top-0 size-3.5 rounded-full border-2 border-card",
+                    indicador === "pensando"
+                      ? "bg-accent motion-safe:animate-pulse"
+                      : "bg-error",
+                  )}
+                />
               )}
-            />
-          )}
-        </button>
-      </DialogPrimitive.Trigger>
+            </button>
+          </DialogPrimitive.Trigger>
+        </TooltipTrigger>
+        <TooltipContent side="left">Preguntale a Tracky</TooltipContent>
+      </Tooltip>
 
       <p role="status" className="sr-only">
         {ANUNCIOS[indicador]}
