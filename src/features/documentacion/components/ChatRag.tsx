@@ -1,4 +1,5 @@
 import {
+  useId,
   useState,
   useRef,
   useEffect,
@@ -11,7 +12,6 @@ import {
   SendHorizontal,
   RotateCcw,
   Sparkles,
-  Loader2,
   X,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -20,11 +20,32 @@ import { setAccessToken } from "@/shared/lib/http/tokenManager";
 import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { Button } from "@/shared/ui/button";
 import { Card } from "@/shared/ui/card";
-import { ChatBubble, ChatSkeleton } from "./ChatBubble";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/shared/ui/tooltip";
+import { BurbujaPensando, ChatBubble } from "./ChatBubble";
 import { TrackyAvatar } from "./TrackyAvatar";
 import { useTrackyChatStore } from "../store/trackyChatStore";
 import type { ChatMessage, RagFuenteCitada } from "../types/ragChat.types";
-import { estadoAvatarTracky } from "../utils/trackyAvatar";
+import { estadoAvatarTracky, type EstadoAvatarTracky } from "../utils/trackyAvatar";
+import {
+  ID_BIENVENIDA,
+  avatarDeBurbuja,
+  esConversacionVacia,
+} from "../utils/trackyChatVista";
+
+// Alcance según lo que hoy tiene procesarEnRag en los tipos de documento
+// (Higiene y Seguridad e Institucional). Es el único lugar del chat que lo menciona.
+const ALCANCE_TRACKY =
+  "Te ayudo con normativas, protocolos y documentación institucional de LaborTrack.";
+
+// Solo preguntas con respaldo en lo indexado; hoy, el protocolo de EPP.
+const PREGUNTAS_EJEMPLO = ["¿Qué EPP es obligatorio en obra?"];
+
+const TEXTO_ESTADO: Record<EstadoAvatarTracky, string> = {
+  inactivo: "Asistente virtual",
+  atento: "Asistente virtual",
+  pensando: "Pensando…",
+  escribiendo: "Escribiendo…",
+};
 
 interface ChatRagProps {
   messages?: ChatMessage[];
@@ -46,7 +67,7 @@ export function ChatRag({
   onResetChat,
   onClose,
   onFuenteClick,
-  placeholder = "Preguntale a Tracky sobre convenios, normativas o documentación...",
+  placeholder = "Escribí tu consulta…",
   botName = "Tracky",
   className,
 }: ChatRagProps) {
@@ -77,6 +98,12 @@ export function ChatRag({
     ultimoBot.id !== tipeoCompletoId
       ? ultimoBot.id
       : null;
+  const estadoAvatar = estadoAvatarTracky({
+    visible: true,
+    enVuelo: isLoading,
+    escribiendo: latestBotMessageId !== null,
+  });
+  const vacia = esConversacionVacia(messages);
 
   useEffect(() => {
     verificarVencimiento();
@@ -84,6 +111,17 @@ export function ChatRag({
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const devolverFocoRef = useRef(false);
+  const idEjemplos = useId();
+
+  // Al enviar un ejemplo, su botón desaparece y el campo queda deshabilitado mientras
+  // Tracky piensa, así que el foco se pierde. Vuelve al campo cuando está listo.
+  useEffect(() => {
+    if (!isLoading && devolverFocoRef.current) {
+      devolverFocoRef.current = false;
+      textareaRef.current?.focus();
+    }
+  }, [isLoading]);
 
   // Auto-ajuste de altura hasta un máximo. Con el campo vacío mide el placeholder,
   // así no queda cortado en pantallas angostas.
@@ -106,22 +144,18 @@ export function ChatRag({
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
 
-  const handleSubmit = async (e?: FormEvent) => {
-    e?.preventDefault();
-    const trimmed = inputVal.trim();
-    if (!trimmed || isLoading) return;
+  // Compartido por el formulario y las preguntas de ejemplo.
+  const enviar = async (texto: string) => {
+    if (!texto || isLoading) return;
 
     if (onSendMessage) {
-      onSendMessage(trimmed);
-      setInputVal("");
+      onSendMessage(texto);
       return;
     }
 
-    setInputVal("");
-
     // POST /api/v1/chat/consultar. La consulta vive en el store: si el usuario cambia
     // de pantalla, la respuesta se agrega igual y no se reenvía al volver.
-    const resultado = await enviarPregunta(trimmed);
+    const resultado = await enviarPregunta(texto);
 
     if (resultado.tipo === "auth") {
       toast.error(resultado.mensaje);
@@ -134,6 +168,14 @@ export function ChatRag({
     } else if (resultado.tipo === "error") {
       toast.error(resultado.mensaje);
     }
+  };
+
+  const handleSubmit = (e?: FormEvent) => {
+    e?.preventDefault();
+    const trimmed = inputVal.trim();
+    if (!trimmed || isLoading) return;
+    setInputVal("");
+    void enviar(trimmed);
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -150,76 +192,106 @@ export function ChatRag({
   return (
     <Card
       className={cn(
-        "flex h-[620px] max-h-[85vh] w-full flex-col overflow-hidden border border-border bg-card shadow-soft",
+        "@container flex h-[620px] max-h-[85vh] w-full flex-col overflow-hidden border border-border bg-card shadow-soft",
         className,
       )}
     >
-      {/* ── Header del Chat ── */}
-      <div className="flex shrink-0 items-center justify-between border-b border-border bg-subtle px-5 py-3.5">
-        <div className="flex items-center gap-3">
-          <TrackyAvatar
-            estado={estadoAvatarTracky({
-              visible: true,
-              enVuelo: isLoading,
-              escribiendo: latestBotMessageId !== null,
-            })}
-          />
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-sm font-bold text-foreground">{botName}</h3>
-              <span className="flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-[10px] font-bold text-success">
-                <span className="size-1.5 rounded-full bg-success animate-pulse" />
-                ONLINE
-              </span>
-            </div>
-            <p className="text-xs text-foreground-muted">
-              Consultas sobre convenios, normativas y legajos
-            </p>
-          </div>
+      {/* ── Encabezado: nombre y estado; el avatar vive en la conversación ── */}
+      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border bg-subtle py-2.5 pl-5 pr-3">
+        <div className="min-w-0">
+          <h3 className="text-sm font-bold text-foreground">{botName}</h3>
+          <p className="text-xs text-foreground-muted">{TEXTO_ESTADO[estadoAvatar]}</p>
         </div>
 
         <div className="flex items-center gap-1">
           {onResetChat && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onResetChat}
-              className="text-xs"
-              title="Reiniciar conversación"
-            >
-              <RotateCcw className="size-3.5" />
-              <span className="hidden sm:inline">Reiniciar</span>
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onResetChat}
+                  disabled={vacia}
+                  className="size-8"
+                  aria-label="Reiniciar conversación"
+                >
+                  <RotateCcw />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reiniciar conversación</TooltipContent>
+            </Tooltip>
           )}
           {onClose && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              aria-label="Cerrar Tracky"
-              title="Cerrar Tracky"
-            >
-              <X className="size-4" />
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={onClose}
+                  className="size-8"
+                  aria-label="Cerrar Tracky"
+                >
+                  <X />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Cerrar Tracky</TooltipContent>
+            </Tooltip>
           )}
         </div>
       </div>
 
       {/* ── Contenedor de Mensajes (Scrollable) ── */}
-      <div className="flex-1 space-y-4 overflow-y-auto p-4 sm:p-5">
-        {/* Mensajes */}
-        {messages.map((msg) => (
-          <ChatBubble
-            key={msg.id}
-            message={msg}
-            enableTypewriter={msg.id === latestBotMessageId}
-            onTypewriterComplete={() => setTipeoCompletoId(msg.id)}
-            onFuenteClick={onFuenteClick}
-          />
-        ))}
+      <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-5">
+        {vacia ? (
+          <div className="my-auto flex flex-col items-center gap-2 px-3 py-2 text-center">
+            <TrackyAvatar estado={estadoAvatar} className="size-20" />
+            <h4 className="mt-3 text-base font-bold text-foreground">¡Hola! Soy {botName}.</h4>
+            <p className="max-w-[32ch] text-sm text-foreground-muted">{ALCANCE_TRACKY}</p>
+            {PREGUNTAS_EJEMPLO.length > 0 && (
+              <>
+                <p id={idEjemplos} className="mt-3 text-xs text-foreground-muted">
+                  Probá con:
+                </p>
+                <ul aria-labelledby={idEjemplos} className="flex flex-wrap justify-center gap-2">
+                  {PREGUNTAS_EJEMPLO.map((pregunta) => (
+                    <li key={pregunta}>
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={() => {
+                          devolverFocoRef.current = true;
+                          void enviar(pregunta);
+                        }}
+                        className="rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-55"
+                      >
+                        {pregunta}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
+        ) : (
+          messages
+            .filter((msg) => msg.id !== ID_BIENVENIDA)
+            .map((msg) => (
+              <ChatBubble
+                key={msg.id}
+                message={msg}
+                enableTypewriter={msg.id === latestBotMessageId}
+                onTypewriterComplete={() => setTipeoCompletoId(msg.id)}
+                onFuenteClick={onFuenteClick}
+                avatar={avatarDeBurbuja({
+                  enCurso: msg.id === latestBotMessageId,
+                  enVuelo: isLoading,
+                })}
+              />
+            ))
+        )}
 
-        {/* Estado de carga / procesando */}
-        {isLoading && <ChatSkeleton />}
+        {/* Consulta en vuelo: ocupa el lugar de la respuesta */}
+        {isLoading && <BurbujaPensando />}
 
         <div ref={messagesEndRef} />
       </div>
@@ -240,30 +312,33 @@ export function ChatRag({
             />
           </div>
 
-          <Button
-            type="submit"
-            size="md"
-            disabled={!inputVal.trim() || isLoading}
-            className="h-10 px-4"
-            aria-label="Enviar mensaje"
-          >
-            {isLoading ? (
-              <Loader2 className="size-4 animate-spin" />
-            ) : (
-              <SendHorizontal className="size-4" />
-            )}
-            <span className="hidden sm:inline">Enviar</span>
-          </Button>
+          {/* Ícono fijo también con la consulta en vuelo: la burbuja "pensando" ya lo indica. */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="submit"
+                size="md"
+                disabled={!inputVal.trim() || isLoading}
+                className="h-10 px-4"
+                aria-label="Enviar mensaje"
+              >
+                <SendHorizontal className="size-4" />
+                <span className="hidden sm:inline">Enviar</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Enter para enviar · Shift+Enter para nueva línea</TooltipContent>
+          </Tooltip>
         </form>
-        <div className="mt-2 flex flex-col items-center justify-between gap-1 text-[11px] text-foreground-muted sm:flex-row">
-          <p className="flex items-center gap-1 text-center sm:text-left">
-            <Sparkles className="size-3 text-primary" />
-            Tracky es una IA y puede cometer errores. Verificá la información importante en las fuentes citadas.
-          </p>
-          <p className="shrink-0">
-            <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Enter</kbd> enviar · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Shift+Enter</kbd> línea
-          </p>
-        </div>
+        <p className="mt-2 flex items-center justify-between gap-3 text-[11px] text-foreground-muted">
+          <span className="flex min-w-0 items-center gap-1">
+            <Sparkles className="size-3 shrink-0 text-primary" />
+            <span className="truncate">Tracky puede equivocarse. Verificá en las fuentes citadas.</span>
+          </span>
+          {/* Atajos solo con teclado y mouse, y si la tarjeta es ancha (/asistente-virtual). */}
+          <span className="hidden shrink-0 pointer-fine:@xl:inline">
+            <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Enter</kbd> enviar · <kbd className="rounded border border-border bg-muted px-1 text-[10px]">Shift+Enter</kbd> nueva línea
+          </span>
+        </p>
       </div>
     </Card>
   );

@@ -79,6 +79,8 @@ function WidgetFlotante() {
         >
           <TrackyAvatar
             estado={estadoAvatarBoton(enVuelo)}
+            // Con el panel abierto, la animación protagonista está en la conversación.
+            animado={!abierto}
             className="size-14 shadow-floating transition-shadow group-hover:ring-primary"
           />
           {indicador !== "inactivo" && (

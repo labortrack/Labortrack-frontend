@@ -3,6 +3,8 @@ import type { EstadoAvatarTracky } from "../utils/trackyAvatar";
 
 interface TrackyAvatarProps {
   estado?: EstadoAvatarTracky;
+  /** En false muestra la pose del estado sin animarla (burbujas respondidas, botón con el panel abierto). */
+  animado?: boolean;
   className?: string;
 }
 
@@ -11,7 +13,11 @@ interface TrackyAvatarProps {
  * La cara de cada estado y sus animaciones (solo con movimiento permitido) están
  * en globals.css, bajo los selectores .lt-tracky[data-estado=…].
  */
-export function TrackyAvatar({ estado = "inactivo", className }: TrackyAvatarProps) {
+export function TrackyAvatar({
+  estado = "inactivo",
+  animado = true,
+  className,
+}: TrackyAvatarProps) {
   return (
     <span
       aria-hidden="true"
@@ -23,6 +29,7 @@ export function TrackyAvatar({ estado = "inactivo", className }: TrackyAvatarPro
       <svg
         className="lt-tracky size-[64%]"
         data-estado={estado}
+        data-animado={animado}
         viewBox="0 0 24 24"
         fill="none"
         stroke="currentColor"

@@ -110,7 +110,14 @@
   .lt-tracky[data-estado="escribiendo"] .lt-tracky-punto { animation: lt-tracky-rebote 0.9s ease-in-out infinite; }
   .lt-tracky[data-estado="escribiendo"] .lt-tracky-punto:nth-child(2) { animation-delay: 0.15s; }
   .lt-tracky[data-estado="escribiendo"] .lt-tracky-punto:nth-child(3) { animation-delay: 0.3s; }
+  /* Puntos de la burbuja "pensando": mismo ritmo que la antena, se leen como una sola animación. */
+  .lt-tracky-pensando-punto { animation: lt-tracky-titilar 1.2s ease-in-out infinite; }
+  .lt-tracky-pensando-punto:nth-child(2) { animation-delay: 0.2s; }
+  .lt-tracky-pensando-punto:nth-child(3) { animation-delay: 0.4s; }
 }
+/* Avatar en reposo: pose del estado sin animación. Necesita !important porque las reglas
+   por estado de arriba son más específicas. */
+.lt-tracky[data-animado="false"] * { animation: none !important; }
 
 @media (prefers-reduced-motion: reduce) {
   *,
