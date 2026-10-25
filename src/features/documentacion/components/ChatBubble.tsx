@@ -17,11 +17,12 @@ const AVATAR_EN_REPOSO: AvatarDeBurbuja = {
   animado: false,
 };
 
-// 24px en las burbujas respondidas, 48px en la que está en curso. El cambio de
-// tamaño al terminar el tipeo solo se anima con movimiento permitido.
+// 24px en las burbujas respondidas, 64px en la que está en curso (pensando y
+// escribiendo). El cambio de tamaño al terminar el tipeo solo se anima con
+// movimiento permitido.
 const TAMANO_AVATAR = {
   chico: "size-6",
-  grande: "size-12",
+  grande: "size-16",
 } as const;
 
 export interface ChatBubbleProps extends ComponentProps<"div"> {
