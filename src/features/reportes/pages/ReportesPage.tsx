@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FileSpreadsheet, FileText, Play } from "lucide-react";
 import { toast } from "sonner";
 import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
@@ -15,9 +15,15 @@ import type {
   TipoReporteResponseDto,
 } from "../types/reporte.types";
 import { hoyIso, inicioDeMesIso } from "../utils/formatoReporte";
+import { opcionesScrollFiltros } from "../utils/scrollReporte";
 
 function filtrosIniciales(): ReporteFiltros {
   return { fechaDesde: inicioDeMesIso(), fechaHasta: hoyIso(), fechaCorte: hoyIso() };
+}
+
+// Se lee en el momento del desplazamiento; no hace falta re-renderizar si cambia.
+function prefiereMenosMovimiento() {
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 function agruparPorCategoria(tipos: TipoReporteResponseDto[]) {
@@ -39,11 +45,35 @@ export function ReportesPage() {
   const grupos = useMemo(() => agruparPorCategoria(tiposQuery.data ?? []), [tiposQuery.data]);
   const seleccionado = tiposQuery.data?.find((tipo) => tipo.codigo === codigo);
 
+  const filtrosCardRef = useRef<HTMLDivElement>(null);
+  const filtrosTituloRef = useRef<HTMLHeadingElement>(null);
+  // Cuenta cada selección (también la del mismo reporte) para volver a llevar a la card.
+  const [selecciones, setSelecciones] = useState(0);
+
   const seleccionar = (tipo: TipoReporte) => {
     setCodigo(tipo);
     setFiltros(filtrosIniciales());
     setFiltrosAplicados(undefined);
+    setSelecciones((n) => n + 1);
   };
+
+  // La card de filtros se agrega debajo de la grilla y suele quedar fuera de vista: se
+  // lleva hasta ella y el foco pasa a su título, para teclado y lector de pantalla.
+  useEffect(() => {
+    if (selecciones === 0) return;
+    filtrosTituloRef.current?.focus({ preventScroll: true });
+    filtrosCardRef.current?.scrollIntoView(opcionesScrollFiltros(prefiereMenosMovimiento()));
+  }, [selecciones]);
+
+  // El resultado se agrega debajo de la card de filtros y también puede quedar fuera de
+  // vista. Solo se lleva hasta él cuando llega uno nuevo: React Query conserva la misma
+  // referencia si al regenerar los datos no cambian. El foco queda en "Generar".
+  const resultadoRef = useRef<HTMLDivElement>(null);
+  const resultado = reporteQuery.data;
+  useEffect(() => {
+    if (!resultado) return;
+    resultadoRef.current?.scrollIntoView(opcionesScrollFiltros(prefiereMenosMovimiento()));
+  }, [resultado]);
 
   const descargar = (formato: FormatoExportacion) => {
     if (!codigo) return;
@@ -103,35 +133,44 @@ export function ReportesPage() {
       )}
 
       {seleccionado ? (
-        <Card>
-          <CardContent className="space-y-4 p-4 sm:p-5">
-            <div>
-              <h2 className="text-lg font-semibold text-foreground">{seleccionado.titulo}</h2>
-              <p className="text-sm text-foreground-muted">{seleccionado.descripcion}</p>
-            </div>
-            {seleccionado.filtros.length > 0 ? (
-              <FiltrosReporte tipo={seleccionado} filtros={filtros} onChange={setFiltros} />
-            ) : null}
-            <div className="flex flex-wrap gap-2.5">
-              <Button onClick={() => setFiltrosAplicados({ ...filtros })}>
-                <Play />
-                Generar
-              </Button>
-              {seleccionado.formatos.includes("PDF") ? (
-                <Button variant="outline" disabled={exportar.isPending} onClick={() => descargar("PDF")}>
-                  <FileText />
-                  Exportar PDF
-                </Button>
+        // scroll-mb-24: al alinearse abajo, que no la tape el botón flotante de Tracky.
+        <div ref={filtrosCardRef} className="scroll-mb-24">
+          <Card>
+            <CardContent className="space-y-4 p-4 sm:p-5">
+              <div>
+                <h2
+                  ref={filtrosTituloRef}
+                  tabIndex={-1}
+                  className="text-lg font-semibold text-foreground focus:outline-none"
+                >
+                  {seleccionado.titulo}
+                </h2>
+                <p className="text-sm text-foreground-muted">{seleccionado.descripcion}</p>
+              </div>
+              {seleccionado.filtros.length > 0 ? (
+                <FiltrosReporte tipo={seleccionado} filtros={filtros} onChange={setFiltros} />
               ) : null}
-              {seleccionado.formatos.includes("EXCEL") ? (
-                <Button variant="outline" disabled={exportar.isPending} onClick={() => descargar("EXCEL")}>
-                  <FileSpreadsheet />
-                  Exportar Excel
+              <div className="flex flex-wrap gap-2.5">
+                <Button onClick={() => setFiltrosAplicados({ ...filtros })}>
+                  <Play />
+                  Generar
                 </Button>
-              ) : null}
-            </div>
-          </CardContent>
-        </Card>
+                {seleccionado.formatos.includes("PDF") ? (
+                  <Button variant="outline" disabled={exportar.isPending} onClick={() => descargar("PDF")}>
+                    <FileText />
+                    Exportar PDF
+                  </Button>
+                ) : null}
+                {seleccionado.formatos.includes("EXCEL") ? (
+                  <Button variant="outline" disabled={exportar.isPending} onClick={() => descargar("EXCEL")}>
+                    <FileSpreadsheet />
+                    Exportar Excel
+                  </Button>
+                ) : null}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       ) : null}
 
       {seleccionado && filtrosAplicados ? (
@@ -143,7 +182,10 @@ export function ReportesPage() {
             onRetry={() => reporteQuery.refetch()}
           />
         ) : reporteQuery.data ? (
-          <ResultadoReporte reporte={reporteQuery.data} />
+          // Si es más alto que la pantalla, "nearest" lo alinea arriba; scroll-mt-4 deja aire.
+          <div ref={resultadoRef} className="scroll-mt-4 scroll-mb-24">
+            <ResultadoReporte reporte={reporteQuery.data} />
+          </div>
         ) : null
       ) : null}
     </div>
