@@ -30,6 +30,7 @@ import {
   ID_BIENVENIDA,
   avatarDeBurbuja,
   esConversacionVacia,
+  estaAlFinal,
 } from "../utils/trackyChatVista";
 
 // Alcance según lo que hoy tiene procesarEnRag en los tipos de documento
@@ -109,7 +110,10 @@ export function ChatRag({
     verificarVencimiento();
   }, [verificarVencimiento]);
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const listaRef = useRef<HTMLDivElement>(null);
+  const contenidoRef = useRef<HTMLDivElement>(null);
+  // Si el usuario está al final de la conversación. Se actualiza al scrollear.
+  const alFinalRef = useRef(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const devolverFocoRef = useRef(false);
   const idEjemplos = useId();
@@ -139,10 +143,33 @@ export function ChatRag({
     return () => window.removeEventListener("resize", ajustarAlto);
   }, [inputVal]);
 
-  // Auto-scroll al final con cada nuevo mensaje o estado de carga
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  // Un mensaje nuevo o el inicio/fin de una consulta llevan siempre al final. Es layout
+  // effect para marcar alFinalRef antes de que el ResizeObserver vea el cambio de alto.
+  useLayoutEffect(() => {
+    const lista = listaRef.current;
+    if (!lista) return;
+    alFinalRef.current = true;
+    lista.scrollTop = lista.scrollHeight;
   }, [messages, isLoading]);
+
+  // Mientras el contenido crece (tipeo de una respuesta larga, el avatar que pasa de
+  // 64 a 24px), sigue el final solo si el usuario ya estaba ahí. Instantáneo: un scroll
+  // suave por cada letra se atrasa.
+  useEffect(() => {
+    const lista = listaRef.current;
+    const contenido = contenidoRef.current;
+    if (!lista || !contenido) return;
+    const observer = new ResizeObserver(() => {
+      if (alFinalRef.current) lista.scrollTop = lista.scrollHeight;
+    });
+    observer.observe(contenido);
+    return () => observer.disconnect();
+  }, []);
+
+  const handleScroll = () => {
+    const lista = listaRef.current;
+    if (lista) alFinalRef.current = estaAlFinal(lista);
+  };
 
   // Compartido por el formulario y las preguntas de ejemplo.
   const enviar = async (texto: string) => {
@@ -241,59 +268,64 @@ export function ChatRag({
       </div>
 
       {/* ── Contenedor de Mensajes (Scrollable) ── */}
-      <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-4 sm:p-5">
-        {vacia ? (
-          <div className="my-auto flex flex-col items-center gap-2 px-3 py-2 text-center">
-            <TrackyAvatar estado={estadoAvatar} className="size-20" />
-            <h4 className="mt-3 text-base font-bold text-foreground">¡Hola! Soy {botName}.</h4>
-            <p className="max-w-[32ch] text-sm text-foreground-muted">{ALCANCE_TRACKY}</p>
-            {PREGUNTAS_EJEMPLO.length > 0 && (
-              <>
-                <p id={idEjemplos} className="mt-3 text-xs text-foreground-muted">
-                  Probá con:
-                </p>
-                <ul aria-labelledby={idEjemplos} className="flex flex-wrap justify-center gap-2">
-                  {PREGUNTAS_EJEMPLO.map((pregunta) => (
-                    <li key={pregunta}>
-                      <button
-                        type="button"
-                        disabled={isLoading}
-                        onClick={() => {
-                          devolverFocoRef.current = true;
-                          void enviar(pregunta);
-                        }}
-                        className="rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-55"
-                      >
-                        {pregunta}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </>
-            )}
-          </div>
-        ) : (
-          messages
-            .filter((msg) => msg.id !== ID_BIENVENIDA)
-            .map((msg) => (
-              <ChatBubble
-                key={msg.id}
-                message={msg}
-                enableTypewriter={msg.id === latestBotMessageId}
-                onTypewriterComplete={() => setTipeoCompletoId(msg.id)}
-                onFuenteClick={onFuenteClick}
-                avatar={avatarDeBurbuja({
-                  enCurso: msg.id === latestBotMessageId,
-                  enVuelo: isLoading,
-                })}
-              />
-            ))
-        )}
+      <div
+        ref={listaRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 sm:p-5"
+      >
+        {/* Lo observa el ResizeObserver; min-h-full deja centrar la vista vacía. */}
+        <div ref={contenidoRef} className="flex min-h-full flex-col gap-4">
+          {vacia ? (
+            <div className="my-auto flex flex-col items-center gap-2 px-3 py-2 text-center">
+              <TrackyAvatar estado={estadoAvatar} className="size-20" />
+              <h4 className="mt-3 text-base font-bold text-foreground">¡Hola! Soy {botName}.</h4>
+              <p className="max-w-[32ch] text-sm text-foreground-muted">{ALCANCE_TRACKY}</p>
+              {PREGUNTAS_EJEMPLO.length > 0 && (
+                <>
+                  <p id={idEjemplos} className="mt-3 text-xs text-foreground-muted">
+                    Probá con:
+                  </p>
+                  <ul aria-labelledby={idEjemplos} className="flex flex-wrap justify-center gap-2">
+                    {PREGUNTAS_EJEMPLO.map((pregunta) => (
+                      <li key={pregunta}>
+                        <button
+                          type="button"
+                          disabled={isLoading}
+                          onClick={() => {
+                            devolverFocoRef.current = true;
+                            void enviar(pregunta);
+                          }}
+                          className="rounded-full border border-border-strong bg-card px-3.5 py-1.5 text-[13px] text-foreground transition-colors hover:border-primary hover:bg-primary-soft hover:text-primary disabled:cursor-not-allowed disabled:opacity-55"
+                        >
+                          {pregunta}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </>
+              )}
+            </div>
+          ) : (
+            messages
+              .filter((msg) => msg.id !== ID_BIENVENIDA)
+              .map((msg) => (
+                <ChatBubble
+                  key={msg.id}
+                  message={msg}
+                  enableTypewriter={msg.id === latestBotMessageId}
+                  onTypewriterComplete={() => setTipeoCompletoId(msg.id)}
+                  onFuenteClick={onFuenteClick}
+                  avatar={avatarDeBurbuja({
+                    enCurso: msg.id === latestBotMessageId,
+                    enVuelo: isLoading,
+                  })}
+                />
+              ))
+          )}
 
-        {/* Consulta en vuelo: ocupa el lugar de la respuesta */}
-        {isLoading && <BurbujaPensando />}
-
-        <div ref={messagesEndRef} />
+          {/* Consulta en vuelo: ocupa el lugar de la respuesta */}
+          {isLoading && <BurbujaPensando />}
+        </div>
       </div>
 
       {/* ── Input y Barra de Envío Fijada al Fondo ── */}

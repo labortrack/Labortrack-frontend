@@ -9,6 +9,28 @@ export function esConversacionVacia(mensajes: ChatMessage[]): boolean {
   return mensajes.every((m) => m.id === ID_BIENVENIDA);
 }
 
+/** Distancia al final, en px, dentro de la cual se considera que el usuario está al final. */
+export const UMBRAL_FINAL_PX = 48;
+
+/**
+ * Si la conversación está scrolleada al final (o casi). Mientras sea así, el chat sigue
+ * el final cuando crece el contenido, por ejemplo durante el tipeo; si el usuario sube
+ * más allá del umbral para leer, deja de seguirlo. Sin scroll cuenta como al final.
+ */
+export function estaAlFinal({
+  scrollTop,
+  clientHeight,
+  scrollHeight,
+  umbral = UMBRAL_FINAL_PX,
+}: {
+  scrollTop: number;
+  clientHeight: number;
+  scrollHeight: number;
+  umbral?: number;
+}): boolean {
+  return scrollHeight - scrollTop - clientHeight <= umbral;
+}
+
 export interface AvatarDeBurbuja {
   tamano: "chico" | "grande";
   estado: EstadoAvatarTracky;
