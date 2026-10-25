@@ -40,6 +40,7 @@ import { useMiLegajo } from "@/features/legajos/hooks/useLegajos";
 import { AvatarMinio } from "@/features/legajos/components/AvatarMinio";
 import { NotificacionesBell } from "@/features/notificaciones/components/NotificacionesBell";
 import { TrackyWidget } from "@/features/documentacion/components/TrackyWidget";
+import { debeMostrarWidgetTracky } from "@/features/documentacion/utils/trackyWidget";
 import { esErrorSinLegajo } from "@/features/perfil/utils/legajoError";
 import {
   Avatar,
@@ -377,7 +378,14 @@ export function AppLayout() {
           </div>
         </header>
         <main className="min-h-0 flex-1 overflow-y-auto">
-          <div className="mx-auto w-full max-w-[1366px] p-4 sm:p-8">
+          <div
+            className={cn(
+              "mx-auto w-full max-w-[1366px] p-4 sm:p-8",
+              // Espacio para que el botón flotante de Tracky no tape lo último de la página
+              // (por ejemplo, la paginación alineada a la derecha).
+              debeMostrarWidgetTracky(location.pathname) && "pb-28 sm:pb-28",
+            )}
+          >
             <Outlet />
           </div>
         </main>

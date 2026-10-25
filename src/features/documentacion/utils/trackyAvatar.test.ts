@@ -71,11 +71,36 @@ describe("estadoAvatarTracky", () => {
 });
 
 describe("estadoAvatarBoton", () => {
-  it("sin consulta en vuelo queda inactivo", () => {
-    expect(estadoAvatarBoton(false)).toBe("inactivo");
+  it("sin consulta en vuelo ni cursor queda inactivo", () => {
+    expect(estadoAvatarBoton({ enVuelo: false, hover: false })).toBe("inactivo");
+  });
+
+  it("con el cursor encima pasa a atento", () => {
+    expect(estadoAvatarBoton({ enVuelo: false, hover: true })).toBe("atento");
   });
 
   it("con consulta en vuelo piensa", () => {
-    expect(estadoAvatarBoton(true)).toBe("pensando");
+    expect(estadoAvatarBoton({ enVuelo: true, hover: false })).toBe("pensando");
+  });
+
+  it("pensando tiene prioridad sobre el cursor encima", () => {
+    expect(estadoAvatarBoton({ enVuelo: true, hover: true })).toBe("pensando");
+  });
+
+  it("recorre inactivo → atento → pensando → atento → inactivo", () => {
+    const pasos = [
+      { enVuelo: false, hover: false },
+      { enVuelo: false, hover: true },
+      { enVuelo: true, hover: true },
+      { enVuelo: false, hover: true },
+      { enVuelo: false, hover: false },
+    ];
+    expect(pasos.map(estadoAvatarBoton)).toEqual([
+      "inactivo",
+      "atento",
+      "pensando",
+      "atento",
+      "inactivo",
+    ]);
   });
 });
