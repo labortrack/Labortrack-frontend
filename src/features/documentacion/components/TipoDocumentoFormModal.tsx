@@ -1,14 +1,13 @@
 import { useEffect } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Brain, FileText, Plus, Save } from "lucide-react";
+import { AlertTriangle, Brain, FileText, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import {
   tipoDocumentoCreacionSchema,
   tipoDocumentoModificacionSchema,
   type TipoDocumentoForm,
   CATEGORIAS_RUTEO_VALUES,
-  VISIBILIDADES_VALUES,
 } from "../schemas/documentacionSchemas";
 import {
   CATEGORIA_RUTEO_LABELS,
@@ -16,13 +15,24 @@ import {
   type CategoriaRuteo,
   type TipoDocumentoDTO,
   type TipoDocumentoModificacionDto,
+  type Visibilidad,
 } from "../types/documentacion.types";
+import {
+  ajustarAlCambiarCategoria,
+  describirRegla,
+  esRagPermitido,
+  esVisibilidadPermitida,
+  opcionesPorCategoria,
+  opcionesVisibilidad,
+  switchRagDeshabilitado,
+} from "../utils/categoriaRuteoMatriz";
 import {
   useCrearTipoDocumento,
   useModificarTipoDocumento,
 } from "../hooks/useDocumentacion";
 import { FormField } from "@/shared/components";
 import {
+  Alert,
   Button,
   Dialog,
   DialogContent,
@@ -65,19 +75,47 @@ export function TipoDocumentoFormModal({
     handleSubmit,
     control,
     reset,
-    formState: { errors, dirtyFields },
+    getValues,
+    setValue,
+    formState: { errors, dirtyFields, isSubmitted },
   } = useForm<TipoDocumentoForm>({
     resolver: zodResolver(
       isEditing ? tipoDocumentoModificacionSchema : tipoDocumentoCreacionSchema,
     ),
+    // Sin categoría elegida no hay visibilidad posible: ambas arrancan vacías.
     defaultValues: {
       nombre: "",
       descripcion: "",
       procesarEnRag: false,
-      categoriaRuteo: "LEGAJO_PERSONAL",
-      visibilidadDefecto: "RRHH",
+      categoriaRuteo: "",
+      visibilidadDefecto: "",
     },
   });
+
+  const [categoriaRuteo, visibilidadDefecto, procesarEnRag] = useWatch({
+    control,
+    name: ["categoriaRuteo", "visibilidadDefecto", "procesarEnRag"],
+  });
+  const admiteRag = opcionesPorCategoria(categoriaRuteo).admiteRag;
+  const opcionesDeVisibilidad = opcionesVisibilidad(
+    categoriaRuteo,
+    visibilidadDefecto,
+    isEditing,
+  );
+  // Tipo existente guardado con una combinación que hoy la matriz no admite.
+  const configuracionInvalida =
+    isEditing &&
+    Boolean(categoriaRuteo) &&
+    (!esVisibilidadPermitida(categoriaRuteo, visibilidadDefecto) ||
+      !esRagPermitido(categoriaRuteo, procesarEnRag));
+
+  const handleCategoriaChange = (categoria: string) => {
+    const ajuste = ajustarAlCambiarCategoria(categoria, getValues());
+    const opciones = { shouldDirty: true, shouldValidate: isSubmitted };
+    setValue("categoriaRuteo", categoria, opciones);
+    setValue("visibilidadDefecto", ajuste.visibilidadDefecto, opciones);
+    setValue("procesarEnRag", ajuste.procesarEnRag, opciones);
+  };
 
   // Cargar o limpiar valores cuando abre el modal o cambia el tipo a editar
   useEffect(() => {
@@ -87,16 +125,17 @@ export function TipoDocumentoFormModal({
           nombre: tipo.nombre || "",
           descripcion: tipo.descripcion || "",
           procesarEnRag: Boolean(tipo.procesarEnRag),
-          categoriaRuteo: tipo.categoriaRuteo || "LEGAJO_PERSONAL",
-          visibilidadDefecto: tipo.visibilidadDefecto || "RRHH",
+          // Se cargan los valores reales aunque la combinación sea inválida: se avisa, no se corrige.
+          categoriaRuteo: tipo.categoriaRuteo || "",
+          visibilidadDefecto: tipo.visibilidadDefecto || "",
         });
       } else {
         reset({
           nombre: "",
           descripcion: "",
           procesarEnRag: false,
-          categoriaRuteo: "LEGAJO_PERSONAL",
-          visibilidadDefecto: "RRHH",
+          categoriaRuteo: "",
+          visibilidadDefecto: "",
         });
       }
     }
@@ -210,6 +249,18 @@ export function TipoDocumentoFormModal({
 
         {/* Formulario */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
+          {configuracionInvalida ? (
+            <Alert variant="warning">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0" />
+              <span>
+                La configuración actual no es válida: la categoría{" "}
+                {CATEGORIA_RUTEO_LABELS[categoriaRuteo as CategoriaRuteo] ||
+                  categoriaRuteo}{" "}
+                {describirRegla(categoriaRuteo)}. Corregila para poder guardar.
+              </span>
+            </Alert>
+          ) : null}
+
           {/* Nombre */}
           <FormField
             id="tipo-nombre"
@@ -267,7 +318,10 @@ export function TipoDocumentoFormModal({
                   <Switch
                     checked={field.value}
                     onCheckedChange={field.onChange}
-                    disabled={isSubmitting}
+                    disabled={
+                      isSubmitting ||
+                      switchRagDeshabilitado(categoriaRuteo, field.value)
+                    }
                   />
                 )}
               />
@@ -279,6 +333,16 @@ export function TipoDocumentoFormModal({
                 Nota: Los tipos con RAG solo aceptan archivos en formato PDF.
               </strong>
             </p>
+            {!admiteRag ? (
+              <p className="text-xs text-foreground-muted">
+                {categoriaRuteo
+                  ? "La categoría elegida no admite procesamiento en RAG."
+                  : "Elegí una categoría para saber si admite procesamiento en RAG."}
+              </p>
+            ) : null}
+            {errors.procesarEnRag?.message ? (
+              <p className="text-xs text-error">{errors.procesarEnRag.message}</p>
+            ) : null}
           </div>
 
           {/* Categoría de Ruteo */}
@@ -306,7 +370,7 @@ export function TipoDocumentoFormModal({
                 render={({ field }) => (
                   <Select
                     value={field.value}
-                    onValueChange={field.onChange}
+                    onValueChange={handleCategoriaChange}
                     disabled={isSubmitting}
                   >
                     <SelectTrigger id="tipo-categoriaRuteo">
@@ -340,20 +404,27 @@ export function TipoDocumentoFormModal({
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || opcionesDeVisibilidad.length === 0}
                 >
                   <SelectTrigger id="tipo-visibilidadDefecto">
-                    <SelectValue placeholder="Seleccioná la visibilidad..." />
+                    <SelectValue
+                      placeholder={
+                        categoriaRuteo
+                          ? "Seleccioná la visibilidad..."
+                          : "Elegí primero una categoría"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {VISIBILIDADES_VALUES.map((vis) => (
-                      <SelectItem key={vis} value={vis}>
+                    {opcionesDeVisibilidad.map(({ valor, invalida }) => (
+                      <SelectItem key={valor} value={valor} disabled={invalida}>
                         <div className="py-0.5">
                           <span className="font-medium text-foreground block">
-                            {VISIBILIDAD_LABELS[vis]?.label || vis}
+                            {VISIBILIDAD_LABELS[valor as Visibilidad]?.label || valor}
+                            {invalida ? " (actual, no válida)" : ""}
                           </span>
                           <span className="text-xs text-foreground-muted block">
-                            {VISIBILIDAD_LABELS[vis]?.desc}
+                            {VISIBILIDAD_LABELS[valor as Visibilidad]?.desc}
                           </span>
                         </div>
                       </SelectItem>
