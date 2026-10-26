@@ -247,7 +247,6 @@ export const VALORES_ENUM_POR_CAMPO = {
     PUBLICO: "Público",
     RRHH: "RRHH",
     EMPLEADO: "Empleado",
-    PRIVADO: "Privado",
   },
   genero: { MASCULINO: "Masculino", FEMENINO: "Femenino", OTRO: "Otro" },
   rol: {

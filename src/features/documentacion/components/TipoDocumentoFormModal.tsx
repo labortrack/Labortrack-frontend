@@ -1,7 +1,7 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { AlertTriangle, Brain, FileText, Plus, Save } from "lucide-react";
+import { AlertCircle, AlertTriangle, Brain, FileText, Plus, Save } from "lucide-react";
 import { toast } from "sonner";
 import {
   tipoDocumentoCreacionSchema,
@@ -70,6 +70,14 @@ export function TipoDocumentoFormModal({
   const modificarMutation = useModificarTipoDocumento();
   const isSubmitting = crearMutation.isPending || modificarMutation.isPending;
 
+  // Mensaje del 400 del back (red de seguridad si la combinación pasa igual el formulario).
+  const [errorServidor, setErrorServidor] = useState<string | null>(null);
+  const [openPrevio, setOpenPrevio] = useState(open);
+  if (open !== openPrevio) {
+    setOpenPrevio(open);
+    if (open) setErrorServidor(null);
+  }
+
   const {
     register,
     handleSubmit,
@@ -77,6 +85,7 @@ export function TipoDocumentoFormModal({
     reset,
     getValues,
     setValue,
+    subscribe,
     formState: { errors, dirtyFields, isSubmitted },
   } = useForm<TipoDocumentoForm>({
     resolver: zodResolver(
@@ -116,6 +125,16 @@ export function TipoDocumentoFormModal({
     setValue("visibilidadDefecto", ajuste.visibilidadDefecto, opciones);
     setValue("procesarEnRag", ajuste.procesarEnRag, opciones);
   };
+
+  // El error del back deja de aplicar en cuanto se edita cualquier campo.
+  useEffect(
+    () =>
+      subscribe({
+        formState: { values: true },
+        callback: () => setErrorServidor(null),
+      }),
+    [subscribe],
+  );
 
   // Cargar o limpiar valores cuando abre el modal o cambia el tipo a editar
   useEffect(() => {
@@ -206,14 +225,14 @@ export function TipoDocumentoFormModal({
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      toast.error(
-        normalizeApiError(
-          error,
-          isEditing
-            ? "No se pudo modificar el tipo de documento."
-            : "No se pudo crear el tipo de documento.",
-        ).message,
+      const { message } = normalizeApiError(
+        error,
+        isEditing
+          ? "No se pudo modificar el tipo de documento."
+          : "No se pudo crear el tipo de documento.",
       );
+      setErrorServidor(message);
+      toast.error(message);
     }
   };
 
@@ -249,6 +268,13 @@ export function TipoDocumentoFormModal({
 
         {/* Formulario */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 px-6 py-5">
+          {errorServidor ? (
+            <Alert variant="error">
+              <AlertCircle className="mt-0.5 size-4 shrink-0" />
+              <span>{errorServidor}</span>
+            </Alert>
+          ) : null}
+
           {configuracionInvalida ? (
             <Alert variant="warning">
               <AlertTriangle className="mt-0.5 size-4 shrink-0" />
