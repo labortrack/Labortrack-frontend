@@ -99,9 +99,12 @@ export default function ObraQrDisplayPage() {
   const error = configuracionQuery.error ?? qrQuery.error;
 
   return (
-    <main className="relative flex min-h-screen flex-col overflow-hidden bg-page p-4 sm:p-6 lg:p-8">
-      <div className="pointer-events-none absolute -left-40 -top-40 size-96 rounded-full bg-primary/8 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-48 -right-32 size-[32rem] rounded-full bg-primary/8 blur-3xl" />
+    <main className="relative flex min-h-dvh flex-col bg-page p-4 sm:p-6 lg:p-8">
+      {/* Los blobs se recortan en su propia capa: overflow-hidden sobre el main bloquea el scroll táctil en mobile. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -left-40 -top-40 size-96 rounded-full bg-primary/8 blur-3xl" />
+        <div className="absolute -bottom-48 -right-32 size-[32rem] rounded-full bg-primary/8 blur-3xl" />
+      </div>
 
       <header className="relative z-10 flex items-center justify-between gap-3">
         <Button variant="outline" onClick={() => navigate(`/obras/${obraId}`)}>
@@ -183,7 +186,7 @@ export default function ObraQrDisplayPage() {
               </div>
             </div>
 
-            <div className="mx-auto w-full max-w-[min(70vh,560px)]">
+            <div className="order-first mx-auto w-full max-w-[min(70dvh,560px)] lg:order-none">
               <Card className="border-2 border-primary/15 bg-white p-4 shadow-xl sm:p-6">
                 <div className="aspect-square w-full rounded-xl bg-white p-2 sm:p-4">
                   <QRCodeSVG
