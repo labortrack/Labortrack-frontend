@@ -58,10 +58,12 @@ export function useModificarCategoriaUocra() {
     mutationFn: ({
       id,
       payload,
+      confirmar,
     }: {
       id: number;
       payload: CategoriaUocraRequestDto;
-    }) => categoriaUocraApi.modificar(id, payload),
+      confirmar?: boolean;
+    }) => categoriaUocraApi.modificar(id, payload, confirmar),
     onSuccess: invalidate,
   });
 }

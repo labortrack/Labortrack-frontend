@@ -6,12 +6,14 @@ import {
   PlusCircle,
   FileEdit,
   Trash2,
+  Ban,
   ArrowRight,
   ShieldAlert,
   AlertCircle,
   ChevronDown,
   ChevronUp,
   FileText,
+  Link2,
 } from "lucide-react";
 import {
   Badge,
@@ -29,10 +31,17 @@ import {
   formatNombreCampo,
   formatValorAuditoria,
 } from "../utils/campoDictionary";
+import { formatNombreEntidad } from "../constants/entidades.constants";
 import {
-  CAMPOS_OCULTOS,
-  formatNombreEntidad,
-} from "../constants/entidades.constants";
+  cambiosVisibles,
+  clasificarRevision,
+  esEntidadFichaje,
+  etiquetaOperacion,
+  tipoFichajeDelHistorial,
+  tonoOperacion,
+  type TipoFichaje,
+  type TonoOperacion,
+} from "../utils/historialPresentacion";
 import type {
   AuditoriaLogDTO,
   CambioCampoDTO,
@@ -52,6 +61,20 @@ const ROLE_LABELS: Record<string, string> = {
   ROLE_ADMIN: "Administrador",
   ROLE_RRHH: "Recursos Humanos",
   ROLE_OPERARIO: "Operario",
+};
+
+/** Estilo del nodo de la línea de tiempo para cada tono de la Guía Visual. */
+const NODO_POR_TONO: Record<TonoOperacion, string> = {
+  success: "border-success text-success bg-success-soft",
+  primary: "border-primary text-primary bg-primary-soft",
+  error: "border-error text-error bg-error-soft",
+  warning: "border-warning text-warning bg-warning-soft",
+  neutral: "border-border text-foreground-muted bg-muted",
+};
+
+const ETIQUETA_TIPO_FICHAJE: Record<TipoFichaje, string> = {
+  QR: "QR",
+  REGISTRO_MANUAL: "Registro manual",
 };
 
 function formatRol(rol?: string | null): string {
@@ -77,36 +100,25 @@ function formatFechaHora(fechaIso: string): string {
   }
 }
 
-function getOperacionConfig(operacion: OperacionAuditoria) {
+function IconoOperacion({
+  entidad,
+  operacion,
+}: {
+  entidad: string;
+  operacion: OperacionAuditoria;
+}) {
   switch (operacion) {
     case "CREACION":
-      return {
-        label: "Creación",
-        badgeVariant: "success" as const,
-        icon: PlusCircle,
-        nodeBorder: "border-success text-success bg-success-soft",
-      };
+      return <PlusCircle className="size-4" />;
     case "MODIFICACION":
-      return {
-        label: "Modificación",
-        badgeVariant: "primary" as const,
-        icon: FileEdit,
-        nodeBorder: "border-primary text-primary bg-primary-soft",
-      };
+      return <FileEdit className="size-4" />;
     case "ELIMINACION":
-      return {
-        label: "Eliminación",
-        badgeVariant: "error" as const,
-        icon: Trash2,
-        nodeBorder: "border-error text-error bg-error-soft",
-      };
+      // En Ingreso/Egreso la baja es una anulación, no un borrado de datos.
+      return esEntidadFichaje(entidad)
+        ? <Ban className="size-4" />
+        : <Trash2 className="size-4" />;
     default:
-      return {
-        label: operacion,
-        badgeVariant: "neutral" as const,
-        icon: History,
-        nodeBorder: "border-border text-foreground-muted bg-muted",
-      };
+      return <History className="size-4" />;
   }
 }
 
@@ -138,7 +150,7 @@ function ValorCampo({
     );
   }
 
-  return <span>{formatValorAuditoria(valor)}</span>;
+  return <span>{formatValorAuditoria(valor, campo)}</span>;
 }
 
 /**
@@ -213,28 +225,133 @@ function CambioRow({ cambio }: { cambio: CambioCampoDTO }) {
   );
 }
 
+/** Autor de la revisión: usuario y rol tomados del token al momento del cambio. */
+function AutorRevision({ log }: { log: AuditoriaLogDTO }) {
+  return (
+    <div className="flex items-center gap-1.5 text-xs text-foreground-muted">
+      <span className="flex size-6 items-center justify-center rounded-full bg-muted text-foreground-muted">
+        <User className="size-3.5" />
+      </span>
+      <span className="max-w-[160px] truncate font-medium text-foreground sm:max-w-[220px]" title={log.usuario}>
+        {log.usuario}
+      </span>
+      <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
+        {formatRol(log.rol)}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Primera revisión de un registro creado antes de que existiera la auditoría: el backend no
+ * tiene una foto previa con la cual comparar, así que se informa con una leyenda en lugar de
+ * mostrar una tarjeta vacía.
+ */
+function LeyendaPreviaAuditoria({ log, isLast }: { log: AuditoriaLogDTO; isLast: boolean }) {
+  return (
+    <div className="relative flex gap-4 pb-8 last:pb-2">
+      {!isLast && (
+        <span
+          className="absolute left-[17px] top-9 -bottom-1 w-[2px] bg-border"
+          aria-hidden="true"
+        />
+      )}
+      <div
+        className={`relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border-2 ${NODO_POR_TONO.neutral}`}
+        title={`Revisión #${log.revision}`}
+      >
+        <History className="size-4" />
+      </div>
+      <div className="flex-1 rounded-xl border border-dashed border-border bg-subtle px-4 py-3">
+        <p className="text-sm font-medium text-foreground">
+          Registro anterior al inicio de la auditoría
+        </p>
+        <p className="mt-1 text-xs text-foreground-muted">
+          Primera modificación registrada el {formatFechaHora(log.fecha)} por{" "}
+          <span className="font-medium text-foreground">{log.usuario}</span> ({formatRol(log.rol)}).
+          Los valores anteriores a esa fecha no quedaron registrados.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Modificación sin campos propios: solo cambiaron datos relacionados (por ejemplo, la
+ * asistencia que recibe su ingreso). Se muestra como una línea compacta y colapsada.
+ */
+function RevisionRelacionesSinDetalle({ log, isLast }: { log: AuditoriaLogDTO; isLast: boolean }) {
+  const [expandida, setExpandida] = useState(false);
+
+  return (
+    <div className="relative flex gap-4 pb-6 last:pb-2">
+      {!isLast && (
+        <span
+          className="absolute left-[17px] top-7 -bottom-1 w-[2px] bg-border"
+          aria-hidden="true"
+        />
+      )}
+      <div className="relative z-10 flex size-9 shrink-0 items-center justify-center">
+        <span
+          className={`flex size-6 items-center justify-center rounded-full border-2 ${NODO_POR_TONO.neutral}`}
+        >
+          <Link2 className="size-3" />
+        </span>
+      </div>
+      <div className="flex-1">
+        <button
+          type="button"
+          onClick={() => setExpandida((prev) => !prev)}
+          className="flex w-full items-center justify-between gap-2 rounded-md px-1 py-1.5 text-left text-xs text-foreground-muted hover:bg-subtle focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          aria-expanded={expandida}
+        >
+          <span>
+            Se actualizaron datos relacionados (sin detalle de campos) · {formatFechaHora(log.fecha)}
+          </span>
+          {expandida ? (
+            <ChevronUp className="size-4 shrink-0" />
+          ) : (
+            <ChevronDown className="size-4 shrink-0" />
+          )}
+        </button>
+        {expandida && (
+          <div className="mt-1 flex flex-wrap items-center gap-2 px-1">
+            <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground-muted">
+              Rev. #{log.revision}
+            </span>
+            <AutorRevision log={log} />
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /**
  * Nodo individual de la línea de tiempo.
  */
 function NodoAuditoria({
   log,
+  entidad,
+  tipoFichaje,
   isLast,
 }: {
   log: AuditoriaLogDTO;
+  entidad: string;
+  tipoFichaje: TipoFichaje | null;
   isLast: boolean;
 }) {
-  const config = getOperacionConfig(log.operacion);
-  const Icono = config.icon;
+  const visibles = useMemo(() => cambiosVisibles(log), [log]);
+  const esFichaje = esEntidadFichaje(entidad);
+  const etiqueta = etiquetaOperacion(entidad, log.operacion, {
+    tipoFichaje,
+    cambios: visibles,
+  });
+  const tono = tonoOperacion(entidad, log.operacion, tipoFichaje);
   const fechaHora = formatFechaHora(log.fecha);
-
-  // Filtrar campos técnicos no deseados
-  const cambiosVisibles = useMemo(
-    () =>
-      (log.cambios ?? []).filter(
-        (c) => !(CAMPOS_OCULTOS as readonly string[]).includes(c.campo),
-      ),
-    [log.cambios],
-  );
+  // El fichaje QR es lo habitual: queda en segundo plano. Las cargas manuales y las
+  // anulaciones conservan el tono de atención que les da tonoOperacion.
+  const segundoPlano = esFichaje && tipoFichaje === "QR" && log.operacion === "CREACION";
 
   // En CREACION se inicia colapsado; en MODIFICACION y ELIMINACION expandido si tiene contenido
   const [expandido, setExpandido] = useState<boolean>(() => {
@@ -242,7 +359,7 @@ function NodoAuditoria({
     return true;
   });
 
-  const tieneCambios = cambiosVisibles.length > 0;
+  const tieneCambios = visibles.length > 0;
 
   return (
     <div className="relative flex gap-4 pb-8 last:pb-2">
@@ -256,20 +373,35 @@ function NodoAuditoria({
 
       {/* Ícono de estado en el nodo */}
       <div
-        className={`relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border-2 shadow-xs ${config.nodeBorder}`}
-        title={`Revisión #${log.revision} - ${config.label}`}
+        className={`relative z-10 flex size-9 shrink-0 items-center justify-center rounded-full border-2 shadow-xs ${NODO_POR_TONO[tono]}`}
+        title={`Revisión #${log.revision} - ${etiqueta}`}
       >
-        <Icono className="size-4" />
+        <IconoOperacion entidad={entidad} operacion={log.operacion} />
       </div>
 
       {/* Tarjeta de contenido */}
-      <div className="flex-1 overflow-hidden rounded-xl border border-border bg-card shadow-soft transition-all duration-200 hover:shadow-md">
+      <div
+        className={`flex-1 overflow-hidden rounded-xl border bg-card transition-all duration-200 ${
+          tono === "warning"
+            ? "border-warning shadow-soft hover:shadow-md"
+            : segundoPlano
+              ? "border-border/60"
+              : "border-border shadow-soft hover:shadow-md"
+        }`}
+      >
         {/* Cabecera del nodo */}
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/60 bg-subtle/50 px-4 py-3">
           <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <Badge variant={config.badgeVariant} className="font-semibold shadow-xs">
-              {config.label}
+            <Badge variant={tono} className="font-semibold shadow-xs">
+              {etiqueta}
             </Badge>
+
+            {/* En la anulación se recuerda qué tipo de registro se anuló */}
+            {esFichaje && tipoFichaje && log.operacion !== "CREACION" && (
+              <Badge variant={tipoFichaje === "REGISTRO_MANUAL" ? "warning" : "neutral"}>
+                {ETIQUETA_TIPO_FICHAJE[tipoFichaje]}
+              </Badge>
+            )}
 
             <span className="rounded-md bg-muted px-2 py-0.5 font-mono text-[11px] font-semibold text-foreground-muted">
               Rev. #{log.revision}
@@ -281,17 +413,7 @@ function NodoAuditoria({
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-foreground-muted">
-              <span className="flex size-6 items-center justify-center rounded-full bg-muted text-foreground-muted">
-                <User className="size-3.5" />
-              </span>
-              <span className="max-w-[160px] truncate font-medium text-foreground sm:max-w-[220px]" title={log.usuario}>
-                {log.usuario}
-              </span>
-              <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-foreground-muted">
-                {formatRol(log.rol)}
-              </span>
-            </div>
+            <AutorRevision log={log} />
 
             {tieneCambios && (
               <button
@@ -316,8 +438,8 @@ function NodoAuditoria({
           {log.operacion === "CREACION" ? (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium text-foreground">
-                  Registro creado
+                <p className={`text-xs font-medium ${segundoPlano ? "text-foreground-muted" : "text-foreground"}`}>
+                  {esFichaje ? "Fichaje registrado" : "Registro creado"}
                 </p>
                 {tieneCambios && (
                   <button
@@ -331,7 +453,7 @@ function NodoAuditoria({
               </div>
               {expandido && tieneCambios && (
                 <div className="grid gap-2 pt-2">
-                  {cambiosVisibles.map((cambio, idx) => (
+                  {visibles.map((cambio, idx) => (
                     <CambioRow
                       key={`${cambio.campo}-${idx}`}
                       cambio={cambio}
@@ -340,14 +462,10 @@ function NodoAuditoria({
                 </div>
               )}
             </div>
-          ) : log.operacion === "MODIFICACION" && !tieneCambios ? (
-            <p className="text-xs italic text-foreground-muted">
-              Sin detalle de cambios (registro anterior a la auditoría)
-            </p>
           ) : tieneCambios ? (
             expandido ? (
               <div className="grid gap-2">
-                {cambiosVisibles.map((cambio, idx) => (
+                {visibles.map((cambio, idx) => (
                   <CambioRow
                     key={`${cambio.campo}-${idx}`}
                     cambio={cambio}
@@ -356,9 +474,15 @@ function NodoAuditoria({
               </div>
             ) : (
               <p className="text-xs text-foreground-muted">
-                {cambiosVisibles.length} modificación(es) colapsada(s).
+                {visibles.length} modificación(es) colapsada(s).
               </p>
             )
+          ) : log.operacion === "ELIMINACION" ? (
+            <p className="text-xs text-foreground-muted">
+              {esFichaje
+                ? "Registro anulado. Los valores originales figuran en el registro de alta."
+                : "Registro eliminado. Los últimos valores figuran en la revisión anterior."}
+            </p>
           ) : (
             <p className="text-xs text-foreground-muted">
               Operación registrada sin cambios adicionales.
@@ -390,6 +514,12 @@ export function HistorialAuditoria({
     if (!logs) return [];
     return [...logs].sort((a, b) => b.revision - a.revision);
   }, [logs]);
+
+  // Ingreso/Egreso: el tipo de registro se toma del alta y se usa en todas sus revisiones
+  const tipoFichaje = useMemo(
+    () => (esEntidadFichaje(entidad) ? tipoFichajeDelHistorial(logsOrdenados) : null),
+    [entidad, logsOrdenados],
+  );
 
   // 1. Estado Cargando
   if (isLoading) {
@@ -468,13 +598,28 @@ export function HistorialAuditoria({
       </div>
 
       <div className="flex flex-col">
-        {logsOrdenados.map((log, index) => (
-          <NodoAuditoria
-            key={`${log.revision}-${log.fecha}-${index}`}
-            log={log}
-            isLast={index === logsOrdenados.length - 1}
-          />
-        ))}
+        {logsOrdenados.map((log, index) => {
+          const isLast = index === logsOrdenados.length - 1;
+          const key = `${log.revision}-${log.fecha}-${index}`;
+          // La lista está ordenada de la más nueva a la más antigua.
+          const clase = clasificarRevision(log, isLast);
+
+          if (clase === "PREVIA_A_AUDITORIA") {
+            return <LeyendaPreviaAuditoria key={key} log={log} isLast={isLast} />;
+          }
+          if (clase === "RELACIONES_SIN_DETALLE") {
+            return <RevisionRelacionesSinDetalle key={key} log={log} isLast={isLast} />;
+          }
+          return (
+            <NodoAuditoria
+              key={key}
+              log={log}
+              entidad={entidad}
+              tipoFichaje={tipoFichaje}
+              isLast={isLast}
+            />
+          );
+        })}
       </div>
     </div>
   );

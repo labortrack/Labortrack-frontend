@@ -15,10 +15,17 @@ export function Typewriter({
   className,
 }: TypewriterProps) {
   const [displayedText, setDisplayedText] = useState("");
+  const [textoPrevio, setTextoPrevio] = useState(text);
+
+  // Si cambia el texto, el tipeo arranca de cero. Se ajusta durante el render y no
+  // en el efecto, para no encadenar un render extra (react-hooks/set-state-in-effect).
+  if (text !== textoPrevio) {
+    setTextoPrevio(text);
+    setDisplayedText("");
+  }
 
   useEffect(() => {
     let index = 0;
-    setDisplayedText("");
 
     if (!text) {
       onComplete?.();
@@ -41,7 +48,8 @@ export function Typewriter({
     <div className={className}>
       {renderMarkdownText(displayedText)}
       {displayedText.length < text.length && (
-        <span className="inline-block h-4 w-1.5 animate-pulse bg-primary ml-0.5 align-middle" />
+        // Cursor fijo: la animación protagonista del tipeo es el avatar "escribiendo".
+        <span className="inline-block h-4 w-1.5 bg-primary ml-0.5 align-middle" />
       )}
     </div>
   );

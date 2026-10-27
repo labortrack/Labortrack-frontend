@@ -5,12 +5,32 @@ import {
   PlusCircle,
   Table2,
 } from "lucide-react";
+import { ConceptosAdicionalesTab } from "@/features/conceptoAdicional/components/ConceptosAdicionalesTab";
 import { CuadroTarifarioTab } from "@/features/cuadroTarifario/components/CuadroTarifarioTab";
-import { ComingSoonPanel } from "../components/ComingSoonPanel";
+import { DeduccionesTab } from "@/features/deduccion/components/DeduccionesTab";
+import { PeriodosLiquidacionTab } from "@/features/periodoLiquidacion/components/PeriodosLiquidacionTab";
+import { MisRecibos } from "@/features/reciboSueldo/components/MisRecibos";
+import { RecibosSueldoTab } from "@/features/reciboSueldo/components/RecibosSueldoTab";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 import { PageHeader } from "@/shared/components";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/shared/ui";
 
 export default function RecibosPage() {
+  const rol = useSessionStore((state) => state.user?.rol);
+
+  // Misma ruta para los dos, como el link de las notificaciones: el operario ve sus recibos.
+  if (rol === "ROLE_OPERARIO") {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Mis recibos"
+          description="Tus recibos de sueldo. Abrí el PDF y confirmá la lectura."
+        />
+        <MisRecibos />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -18,8 +38,8 @@ export default function RecibosPage() {
         description="Gestión de recibos de sueldo y liquidaciones de haberes."
       />
 
-      <Tabs defaultValue="cuadro-tarifario">
-        <TabsList className="flex-wrap">
+      <Tabs defaultValue="recibos">
+        <TabsList>
           <TabsTrigger value="recibos" className="gap-1.5">
             <FileText className="size-4" />
             Recibos de Sueldo
@@ -43,10 +63,7 @@ export default function RecibosPage() {
         </TabsList>
 
         <TabsContent value="recibos">
-          <ComingSoonPanel
-            title="Recibos de Sueldo"
-            description="Generación de pre-liquidación, ajuste y consulta de recibos de sueldo."
-          />
+          <RecibosSueldoTab />
         </TabsContent>
 
         <TabsContent value="cuadro-tarifario">
@@ -54,24 +71,15 @@ export default function RecibosPage() {
         </TabsContent>
 
         <TabsContent value="periodos">
-          <ComingSoonPanel
-            title="Configuración de Períodos"
-            description="Alta y programación de períodos de liquidación."
-          />
+          <PeriodosLiquidacionTab />
         </TabsContent>
 
         <TabsContent value="conceptos">
-          <ComingSoonPanel
-            title="Conceptos Adicionales"
-            description="Catálogo de conceptos adicionales aplicables a los recibos."
-          />
+          <ConceptosAdicionalesTab />
         </TabsContent>
 
         <TabsContent value="deducciones">
-          <ComingSoonPanel
-            title="Deducciones"
-            description="Catálogo de deducciones aplicables a los recibos."
-          />
+          <DeduccionesTab />
         </TabsContent>
       </Tabs>
     </div>

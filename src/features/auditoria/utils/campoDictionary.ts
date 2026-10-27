@@ -91,7 +91,180 @@ export const DICCIONARIO_CAMPOS: Record<string, string> = {
   cantidad: "Cantidad",
   archivo: "Archivo",
   url: "Enlace URL",
+
+  // Tablas de estado (asistencia, solicitud, empleado, cuadrilla, jornada, recibo)
+  fechaHoraDesde: "Vigente desde",
+  fechaHoraHasta: "Vigente hasta",
+  fechaDesde: "Fecha desde",
+  fechaHasta: "Fecha hasta",
+  observacion: "Observación",
+  estadoAsistencia: "Estado de la asistencia",
+  estadoSolicitudAusencia: "Estado de la solicitud",
+  estadoEmpleado: "Estado del empleado",
+  estadoCuadrilla: "Estado de la cuadrilla",
+  estadoJornadaTrabajo: "Estado de la jornada",
+  estadoReciboSueldo: "Estado del recibo",
+  motivoJornadaTrabajoEstado: "Motivo",
+
+  // Asistencia, ingreso y egreso
+  fechaAsistencia: "Fecha de la asistencia",
+  fechaHoraIngreso: "Hora de ingreso",
+  fechaHoraEgreso: "Hora de egreso",
+  tipoAsistencia: "Tipo de registro",
+
+  // Jornadas y planes de trabajo
+  fechaJornadaTrabajo: "Fecha de la jornada",
+  horaInicioPlanificada: "Hora de inicio planificada",
+  horaFinPlanificada: "Hora de fin planificada",
+  esExtraordinaria: "Jornada extraordinaria",
+  tipoJornada: "Tipo de jornada",
+  decisionDiaNoLaborable: "Decisión sobre día no laborable",
+  fechaHoraCancelacion: "Fecha de cancelación",
+  tipoCierre: "Tipo de cierre",
+  motivoCierre: "Motivo del cierre",
+  fechaHoraCierre: "Fecha de cierre",
+  fechaVigenciaHastaOriginal: "Fin de vigencia original",
+
+  // Recibos de sueldo
+  fechaRecibo: "Fecha del recibo",
+  cantidadDeHoras: "Cantidad de horas",
+  valorHoraBasico: "Valor hora básico",
+  valorHoraAdicional: "Valor hora adicional",
+  valorHoraTotal: "Valor hora total",
+  sumaNoRemunerativa: "Suma no remunerativa",
+  totalRemunerativo: "Total remunerativo",
+  totalNoRemunerativo: "Total no remunerativo",
+  totalBruto: "Total bruto",
+  totalNeto: "Total neto",
+  fechaHoraLectura: "Fecha de lectura",
+  descripcionDetalle: "Descripción",
+  columnaRecibo: "Columna del recibo",
+  cantidadDetalle: "Cantidad",
+  valorDetalle: "Valor",
+
+  // Legajo del empleado
+  numeroIeric: "N° IERIC",
+  grupoSanguineo: "Grupo sanguíneo",
+  domicilio: "Domicilio",
+  numeroCelular: "Celular",
+  nombreContactoEmergencia: "Contacto de emergencia",
+  celularContactoEmergencia: "Celular de emergencia",
+  fotoPerfilKey: "Foto de perfil",
+
+  // Documentos
+  nombreDocumento: "Nombre del documento",
+  nombreArchivoOriginal: "Archivo original",
+  visibilidad: "Visibilidad",
+  usuarioSubidaId: "Usuario que lo subió (ID)",
+  contentType: "Tipo de archivo",
+
+  // Empresa
+  nombreEmpresa: "Nombre de la empresa",
+  direccionEmpresa: "Dirección",
+  emailEmpresa: "Correo electrónico",
+  nroIericEmpresa: "N° IERIC de la empresa",
+  urlLogotipoEmpresa: "Logotipo",
+
+  // Usuario (cuenta)
+  enabled: "Cuenta habilitada",
+  accountNonExpired: "Cuenta vigente",
+  accountNonLocked: "Cuenta no bloqueada",
+  credentialsNonExpired: "Credenciales vigentes",
+  motivoBaja: "Motivo de baja",
 };
+
+/**
+ * Etiquetas legibles para los valores de enums que el backend devuelve crudos en los cambios
+ * (por ejemplo "REGISTRO_MANUAL"). La clave externa es el nombre del campo; si el campo o el
+ * valor no figuran acá, se muestra el valor tal como llegó.
+ */
+export const VALORES_ENUM_POR_CAMPO = {
+  tipoAsistencia: { QR: "QR", REGISTRO_MANUAL: "Registro manual" },
+  estadoAsistencia: {
+    PENDIENTE_INGRESO: "Pendiente de ingreso",
+    PRESENTE: "Presente",
+    EGRESADO: "Egresado",
+    AUSENTE: "Ausente",
+    AUSENCIA_JUSTIFICADA: "Ausencia justificada",
+    NO_TRABAJADA_COMPUTABLE: "No trabajada (computable)",
+    ANULADA: "Anulada",
+  },
+  estadoSolicitudAusencia: {
+    EN_REVISION: "En revisión",
+    ACEPTADA: "Aceptada",
+    RECHAZADA: "Rechazada",
+    REVOCADA: "Revocada",
+  },
+  estadoEmpleado: {
+    ACTIVO: "Activo",
+    INACTIVO: "Inactivo",
+    EN_OBRA: "En obra",
+    LICENCIA: "Licencia",
+  },
+  estadoCuadrilla: {
+    PLANIFICADA: "Planificada",
+    EN_ESPERA: "En espera",
+    ACTIVA: "Activa",
+    FINALIZADA: "Finalizada",
+    SUSPENDIDA: "Suspendida",
+  },
+  estadoJornadaTrabajo: {
+    PROGRAMADA: "Programada",
+    NO_TRABAJADA: "No trabajada",
+    EN_CURSO: "En curso",
+    FINALIZADA: "Finalizada",
+    ANULADA: "Anulada",
+  },
+  tipoJornada: {
+    HABIL: "Hábil",
+    SABADO: "Sábado",
+    DOMINGO: "Domingo",
+    FERIADO: "Feriado",
+    NO_LABORABLE: "No laborable",
+  },
+  decisionDiaNoLaborable: {
+    NO_APLICA: "No aplica",
+    SE_TRABAJA: "Se trabaja",
+    NO_SE_TRABAJA: "No se trabaja",
+  },
+  estadoReciboSueldo: {
+    BORRADOR: "Borrador",
+    GENERADO: "Generado",
+    PENDIENTE_LECTURA: "Pendiente de lectura",
+    LEIDO: "Leído",
+    CANCELADO: "Cancelado",
+  },
+  columnaRecibo: {
+    REMUNERATIVO: "Remunerativo",
+    NO_REMUNERATIVO: "No remunerativo",
+    DEDUCCION: "Deducción",
+  },
+  tipoCierre: {
+    CANCELACION: "Cancelación",
+    FINALIZACION_ANTICIPADA: "Finalización anticipada",
+  },
+  visibilidad: {
+    PUBLICO: "Público",
+    RRHH: "RRHH",
+    EMPLEADO: "Empleado",
+  },
+  genero: { MASCULINO: "Masculino", FEMENINO: "Femenino", OTRO: "Otro" },
+  rol: {
+    ROLE_ADMIN: "Administrador",
+    ROLE_RRHH: "Recursos Humanos",
+    ROLE_OPERARIO: "Operario",
+  },
+} as const satisfies Record<string, Readonly<Record<string, string>>>;
+
+export type CampoConValoresEnum = keyof typeof VALORES_ENUM_POR_CAMPO;
+
+/** Devuelve la etiqueta del valor de un enum, o undefined si el campo/valor no está mapeado. */
+export function etiquetaValorEnum(campo: string, valor: string): string | undefined {
+  if (!Object.hasOwn(VALORES_ENUM_POR_CAMPO, campo)) return undefined;
+  const valores: Readonly<Record<string, string>> =
+    VALORES_ENUM_POR_CAMPO[campo as CampoConValoresEnum];
+  return Object.hasOwn(valores, valor) ? valores[valor] : undefined;
+}
 
 /**
  * Convierte un nombre técnico de campo en una etiqueta legible para el usuario.
@@ -150,14 +323,23 @@ export function formatNombreCampo(campo: string): string {
  * - null / undefined / "" -> "—"
  * - "true" / "false" -> "Sí" / "No"
  * - Strings con forma de fecha ISO (YYYY-MM-DD o con hora) -> fecha legible es-AR
+ * - Valores de enums conocidos (si se indica el campo) -> etiqueta de VALORES_ENUM_POR_CAMPO
  */
-export function formatValorAuditoria(valor: string | null | undefined): string {
+export function formatValorAuditoria(
+  valor: string | null | undefined,
+  campo?: string,
+): string {
   if (valor === null || valor === undefined || valor === "") {
     return "—";
   }
   const trimmed = valor.trim();
   if (trimmed === "true") return "Sí";
   if (trimmed === "false") return "No";
+
+  if (campo) {
+    const etiquetaEnum = etiquetaValorEnum(campo, trimmed);
+    if (etiquetaEnum) return etiquetaEnum;
+  }
 
   // Fecha corta ISO: YYYY-MM-DD
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {

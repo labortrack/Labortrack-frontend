@@ -51,10 +51,12 @@ export function useModificarCategoriaZona() {
     mutationFn: ({
       id,
       payload,
+      confirmar,
     }: {
       id: number;
       payload: CategoriaZonaRequestDto;
-    }) => categoriaZonaApi.modificar(id, payload),
+      confirmar?: boolean;
+    }) => categoriaZonaApi.modificar(id, payload, confirmar),
     onSuccess: invalidate,
   });
 }

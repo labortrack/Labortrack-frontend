@@ -14,11 +14,11 @@ import {
   SelectContent,
   SelectItem,
 } from "@/shared/ui";
-import { useAsignarLider } from "../../hooks/useCuadrillas";
-import { useEmpleadosPorGrupo } from "@/features/estructuraLaboral/hooks/useEstructuraLaboral";
+import { useAsignarLider, useOperariosCuadrilla } from "../../hooks/useCuadrillas";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
-import { HardHat, AlertCircle } from "lucide-react";
+import { HardHat, AlertCircle, AlertTriangle } from "lucide-react";
 import type { CuadrillaResponseDto } from "../../types/cuadrilla.types";
+import { agruparNominaPorEmpleado } from "../../utils/nomina";
 
 interface AsignarLiderDialogProps {
   obraId: number;
@@ -35,14 +35,33 @@ export function AsignarLiderDialog({
 }: AsignarLiderDialogProps) {
   const [empleadoId, setEmpleadoId] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  // Con un líder vigente, el primer envío solo muestra la advertencia de reemplazo.
+  const [confirmandoReemplazo, setConfirmandoReemplazo] = useState(false);
 
   const asignarLiderMutation = useAsignarLider(obraId);
 
-  // Consultar operarios con asignación activa a la especialidad/grupo de la cuadrilla
-  const { data: operariosGrupoData, isLoading: isLoadingOperarios } =
-    useEmpleadosPorGrupo(cuadrilla?.grupo?.id, { activo: true });
+  // El líder se elige entre los integrantes de la cuadrilla.
+  const { data: nominaData, isLoading: isLoadingOperarios } =
+    useOperariosCuadrilla(open ? cuadrilla?.id : null);
 
-  const operariosGrupo = operariosGrupoData?.content ?? [];
+  const operariosGrupo = cuadrilla
+    ? agruparNominaPorEmpleado(nominaData ?? [], cuadrilla).filter(
+        (integrante) => integrante.asignaciones.length > 0,
+      )
+    : [];
+
+  const nuevoLider = operariosGrupo.find(
+    (integrante) => String(integrante.empleadoId) === empleadoId,
+  );
+
+  const cerrar = (nextOpen: boolean) => {
+    if (!nextOpen) {
+      setEmpleadoId("");
+      setErrorMsg(null);
+      setConfirmandoReemplazo(false);
+    }
+    onOpenChange(nextOpen);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +73,18 @@ export function AsignarLiderDialog({
       return;
     }
 
+    if (cuadrilla.lider && !confirmandoReemplazo) {
+      setConfirmandoReemplazo(true);
+      return;
+    }
+
     try {
       await asignarLiderMutation.mutateAsync({
         cuadrillaId: cuadrilla.id,
         empleadoId: Number(empleadoId),
+        confirmarReemplazo: Boolean(cuadrilla.lider),
       });
-      setEmpleadoId("");
-      onOpenChange(false);
+      cerrar(false);
     } catch (err) {
       setErrorMsg(
         normalizeApiError(err, "No se pudo asignar el líder a la cuadrilla.")
@@ -72,12 +96,12 @@ export function AsignarLiderDialog({
   if (!cuadrilla) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={cerrar}>
       <DialogContent className="sm:max-w-[480px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+              <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <HardHat className="size-5" />
               </div>
               <div>
@@ -111,10 +135,28 @@ export function AsignarLiderDialog({
             {operariosGrupo.length === 0 && !isLoadingOperarios && (
               <div className="rounded-lg bg-amber-500/10 p-3 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400">
                 <span>
-                  No hay operarios activos asignados a la especialidad{" "}
-                  <strong>{cuadrilla.grupo?.tipoActividad}</strong>. Para
-                  designar un líder, el trabajador debe pertenecer primero a este
-                  grupo en Estructura Laboral.
+                  La cuadrilla no tiene integrantes. Para designar un líder,
+                  primero incorpora al trabajador a la nómina de la cuadrilla.
+                </span>
+              </div>
+            )}
+
+            {confirmandoReemplazo && cuadrilla.lider && nuevoLider && (
+              <div
+                role="alert"
+                className="rounded-lg bg-amber-500/10 p-3 border border-amber-500/20 text-xs text-amber-700 dark:text-amber-400 flex gap-2"
+              >
+                <AlertTriangle className="size-4 shrink-0" />
+                <span>
+                  <strong>
+                    {cuadrilla.lider.nombre} {cuadrilla.lider.apellido}
+                  </strong>{" "}
+                  dejará de ser líder de la cuadrilla y seguirá como integrante.
+                  El nuevo líder será{" "}
+                  <strong>
+                    {nuevoLider.nombreEmpleado} {nuevoLider.apellidoEmpleado}
+                  </strong>
+                  . ¿Confirmas el reemplazo?
                 </span>
               </div>
             )}
@@ -125,7 +167,10 @@ export function AsignarLiderDialog({
               </Label>
               <Select
                 value={empleadoId}
-                onValueChange={setEmpleadoId}
+                onValueChange={(value) => {
+                  setEmpleadoId(value);
+                  setConfirmandoReemplazo(false);
+                }}
                 disabled={
                   asignarLiderMutation.isPending ||
                   isLoadingOperarios ||
@@ -136,28 +181,26 @@ export function AsignarLiderDialog({
                   <SelectValue
                     placeholder={
                       isLoadingOperarios
-                        ? "Cargando operarios de la especialidad..."
+                        ? "Cargando integrantes de la cuadrilla..."
                         : operariosGrupo.length === 0
-                        ? "Sin operarios en esta especialidad"
-                        : "Seleccionar operario"
+                        ? "Sin integrantes en la cuadrilla"
+                        : "Seleccionar integrante"
                     }
                   />
                 </SelectTrigger>
                 <SelectContent>
-                  {operariosGrupo.map((asig) => {
+                  {operariosGrupo.map((integrante) => {
                     const esLiderActual =
                       cuadrilla.lider != null &&
-                      cuadrilla.lider.idEmpleado === asig.empleadoId;
+                      cuadrilla.lider.idEmpleado === integrante.empleadoId;
                     return (
                       <SelectItem
-                        key={asig.id}
-                        value={String(asig.empleadoId)}
+                        key={integrante.empleadoId}
+                        value={String(integrante.empleadoId)}
                         disabled={esLiderActual}
                       >
-                        {asig.apellidoEmpleado}, {asig.nombreEmpleado}
-                        {asig.dniEmpleado
-                          ? ` (DNI: ${asig.dniEmpleado})`
-                          : ` (Legajo #${asig.empleadoId})`}
+                        {integrante.apellidoEmpleado}, {integrante.nombreEmpleado}
+                        {` (Legajo #${integrante.empleadoId})`}
                         {esLiderActual ? " — Líder actual" : ""}
                       </SelectItem>
                     );
@@ -165,7 +208,7 @@ export function AsignarLiderDialog({
                 </SelectContent>
               </Select>
               <p className="text-[11px] text-muted-foreground mt-1">
-                El empleado debe tener vinculación activa con la especialidad ({cuadrilla.grupo?.tipoActividad}) de la cuadrilla.
+                Debe ser integrante de la cuadrilla y pertenecer al grupo "Líder de Cuadrilla" en Estructura Laboral.
               </p>
             </div>
           </div>
@@ -174,7 +217,7 @@ export function AsignarLiderDialog({
             <Button
               type="button"
               variant="outline"
-              onClick={() => onOpenChange(false)}
+              onClick={() => cerrar(false)}
               disabled={asignarLiderMutation.isPending}
             >
               Cancelar
@@ -189,6 +232,10 @@ export function AsignarLiderDialog({
             >
               {asignarLiderMutation.isPending
                 ? "Guardando..."
+                : confirmandoReemplazo
+                ? "Confirmar reemplazo"
+                : cuadrilla.lider
+                ? "Reemplazar Líder"
                 : "Confirmar Líder"}
             </Button>
           </DialogFooter>

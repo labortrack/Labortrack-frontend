@@ -1,6 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { authApi } from "../api/authApi";
 import { useSessionStore } from "../store/sessionStore";
+import { vincularChatTrackyASesion } from "@/features/documentacion/store/trackyChatStore";
 import { refreshAccessToken } from "@/shared/lib/http/httpClient";
 import { registerUnauthorizedHandler } from "@/shared/lib/http/sessionEvents";
 import { setAccessToken } from "@/shared/lib/http/tokenManager";
@@ -11,6 +12,8 @@ export function SessionInitializer({ children }: { children: ReactNode }) {
   const clearSession = useSessionStore((state) => state.clearSession);
 
   useEffect(() => registerUnauthorizedHandler(clearSession), [clearSession]);
+
+  useEffect(() => vincularChatTrackyASesion(), []);
 
   useEffect(() => {
     let active = true;

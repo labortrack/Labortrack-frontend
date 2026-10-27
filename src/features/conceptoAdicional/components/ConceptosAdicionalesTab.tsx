@@ -1,0 +1,303 @@
+import { useState } from "react";
+import { Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
+import {
+  ActivarConceptoAdicionalDialog,
+  BajaConceptoAdicionalDialog,
+  ConceptoAdicionalFormDialog,
+} from "./ConceptoAdicionalDialogs";
+import { useConceptosAdicionales } from "../hooks/useConceptosAdicionales";
+import type {
+  ConceptoAdicionalResponseDto,
+  TabFiltroConcepto,
+} from "../types/conceptoAdicional.types";
+import {
+  BASE_IMPONIBLE_LABELS,
+  TIPO_CONCEPTO_LABELS,
+  formatValorParametro,
+} from "@/features/recibos/utils/parametrosLiquidablesLabels";
+import { EmptyState, ErrorState, LoadingState } from "@/shared/components";
+import {
+  Badge,
+  Button,
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/shared/ui";
+import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { cn } from "@/shared/utils/cn";
+import {
+  useHistorialAuditoriaDialog,
+  HistorialAuditoriaIconButton,
+} from "@/features/auditoria";
+
+const TABS: TabFiltroConcepto[] = ["Todos", "Activos", "Inactivos"];
+
+export function ConceptosAdicionalesTab() {
+  const [filtro, setFiltro] = useState<TabFiltroConcepto>("Activos");
+  const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
+
+  const [createOpen, setCreateOpen] = useState(false);
+  const [editingConcepto, setEditingConcepto] =
+    useState<ConceptoAdicionalResponseDto | null>(null);
+  const [bajaConcepto, setBajaConcepto] =
+    useState<ConceptoAdicionalResponseDto | null>(null);
+  const [activarConcepto, setActivarConcepto] =
+    useState<ConceptoAdicionalResponseDto | null>(null);
+
+  const query = useConceptosAdicionales(filtro);
+  const conceptos = query.data ?? [];
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex w-full sm:w-auto items-center gap-1 rounded-lg border border-border bg-muted p-1">
+          {TABS.map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setFiltro(tab)}
+              className={cn(
+                "flex-1 sm:flex-initial flex h-8 items-center justify-center gap-1.5 rounded-control px-3 text-xs font-semibold transition-all cursor-pointer",
+                filtro === tab
+                  ? "bg-card text-primary shadow-soft"
+                  : "text-foreground-muted hover:text-foreground",
+              )}
+            >
+              <span>{tab}</span>
+            </button>
+          ))}
+        </div>
+
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="w-full sm:w-auto justify-center"
+        >
+          <Plus className="mr-1.5 size-4" />
+          Agregar Nuevo
+        </Button>
+      </div>
+
+      {query.isPending ? (
+        <LoadingState label="Cargando conceptos..." />
+      ) : query.isError ? (
+        <ErrorState
+          message={
+            normalizeApiError(
+              query.error,
+              "No se pudieron obtener los conceptos.",
+            ).message
+          }
+          onRetry={() => void query.refetch()}
+        />
+      ) : conceptos.length === 0 ? (
+        <EmptyState
+          title="No se encontraron conceptos"
+          description={`No hay conceptos ${filtro !== "Todos" ? filtro.toLowerCase() : ""} registrados.`}
+        />
+      ) : (
+        <Table>
+          <TableHeader>
+            <TableRow className="border-b border-border bg-subtle">
+              <TableHead className="min-w-[240px]">Concepto</TableHead>
+              <TableHead className="min-w-[120px]">Tipo</TableHead>
+              <TableHead className="min-w-[120px] text-right">Valor</TableHead>
+              <TableHead className="min-w-[150px]">Base Imponible</TableHead>
+              <TableHead className="min-w-[150px] text-center">
+                Carácter
+              </TableHead>
+              <TableHead className="min-w-[120px] text-center">
+                Aplicación
+              </TableHead>
+              <TableHead className="min-w-[110px] w-[120px] text-center">
+                Estado
+              </TableHead>
+              <TableHead className="min-w-[100px] w-[110px] text-right">
+                Acciones
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {conceptos.map((concepto) => (
+              <TableRow
+                key={concepto.id}
+                className={cn(
+                  "transition-colors",
+                  !concepto.vigente ? "bg-subtle/50" : "hover:bg-subtle/40",
+                )}
+              >
+                <TableCell>
+                  <div className="flex items-start gap-2">
+                    <span
+                      className={cn(
+                        "mt-1.5 size-2 shrink-0 rounded-full",
+                        concepto.vigente ? "bg-success" : "bg-border-strong",
+                      )}
+                    />
+                    <div className="min-w-0">
+                      <p
+                        className={cn(
+                          "tracking-wide",
+                          concepto.vigente
+                            ? "font-semibold text-foreground"
+                            : "text-foreground-muted line-through",
+                        )}
+                      >
+                        {concepto.nombreConceptoAdicional}
+                      </p>
+                      <p className="mt-0.5 text-xs text-foreground-muted">
+                        {concepto.descripcionConceptoAdicional}
+                      </p>
+                    </div>
+                  </div>
+                </TableCell>
+
+                <TableCell>{TIPO_CONCEPTO_LABELS[concepto.tipoConcepto]}</TableCell>
+
+                <TableCell className="text-right font-medium tabular-nums">
+                  {formatValorParametro(
+                    concepto.tipoConcepto,
+                    concepto.valorConcepto,
+                  )}
+                </TableCell>
+
+                <TableCell
+                  className={cn(
+                    concepto.baseImponible === "NO_APLICA" &&
+                      "text-foreground-muted",
+                  )}
+                >
+                  {BASE_IMPONIBLE_LABELS[concepto.baseImponible]}
+                </TableCell>
+
+                <TableCell className="text-center">
+                  {concepto.remunerativo ? (
+                    <Badge variant="primary">Remunerativo</Badge>
+                  ) : (
+                    <Badge variant="warning">No remunerativo</Badge>
+                  )}
+                </TableCell>
+
+                <TableCell className="text-center">
+                  {concepto.isGeneral ? (
+                    <Badge variant="primary">General</Badge>
+                  ) : (
+                    <Badge variant="neutral">Particular</Badge>
+                  )}
+                </TableCell>
+
+                <TableCell className="text-center">
+                  {concepto.vigente ? (
+                    <Badge variant="success">Activo</Badge>
+                  ) : (
+                    <Badge variant="neutral">Inactivo</Badge>
+                  )}
+                </TableCell>
+
+                <TableCell>
+                  <div className="flex justify-end gap-1">
+                    <HistorialAuditoriaIconButton
+                      onAbrir={() =>
+                        abrirHistorial(
+                          "concepto_adicional",
+                          concepto.id,
+                          concepto.nombreConceptoAdicional,
+                        )
+                      }
+                      label={`Historial de ${concepto.nombreConceptoAdicional}`}
+                    />
+
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary"
+                          onClick={() => setEditingConcepto(concepto)}
+                          aria-label={`Editar ${concepto.nombreConceptoAdicional}`}
+                        >
+                          <Pencil className="size-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>Editar concepto</TooltipContent>
+                    </Tooltip>
+
+                    {concepto.vigente ? (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-foreground-muted hover:bg-error-soft hover:text-error"
+                            onClick={() => setBajaConcepto(concepto)}
+                            aria-label={`Dar de baja ${concepto.nombreConceptoAdicional}`}
+                          >
+                            <Trash2 className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Dar de baja</TooltipContent>
+                      </Tooltip>
+                    ) : (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="size-8 text-foreground-muted hover:bg-success-soft hover:text-success"
+                            onClick={() => setActivarConcepto(concepto)}
+                            aria-label={`Reactivar ${concepto.nombreConceptoAdicional}`}
+                          >
+                            <RotateCcw className="size-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>Reactivar</TooltipContent>
+                      </Tooltip>
+                    )}
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+
+      <ConceptoAdicionalFormDialog
+        concepto={null}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+      />
+
+      <ConceptoAdicionalFormDialog
+        key={editingConcepto?.id ?? "edit-concepto"}
+        concepto={editingConcepto}
+        open={Boolean(editingConcepto)}
+        onOpenChange={(open) => {
+          if (!open) setEditingConcepto(null);
+        }}
+      />
+
+      <BajaConceptoAdicionalDialog
+        key={bajaConcepto?.id ?? "baja-concepto"}
+        concepto={bajaConcepto}
+        onOpenChange={(open) => {
+          if (!open) setBajaConcepto(null);
+        }}
+      />
+
+      <ActivarConceptoAdicionalDialog
+        key={activarConcepto?.id ?? "activar-concepto"}
+        concepto={activarConcepto}
+        onOpenChange={(open) => {
+          if (!open) setActivarConcepto(null);
+        }}
+      />
+
+      {renderDialog()}
+    </div>
+  );
+}

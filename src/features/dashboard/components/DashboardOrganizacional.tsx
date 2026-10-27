@@ -4,12 +4,17 @@ import { ResumenHeroPanel } from "./ResumenHeroPanel";
 import { CuadrillasPorEstadoChart } from "./CuadrillasPorEstadoChart";
 import { PersonalPorObraChart } from "./PersonalPorObraChart";
 import { TendenciaAsistenciaSection } from "./TendenciaAsistenciaSection";
+import { LecturaRecibosSection } from "./LecturaRecibosSection";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 
 interface DashboardOrganizacionalProps {
   data: ResumenOrganizacionalDto;
 }
 
 export function DashboardOrganizacional({ data }: DashboardOrganizacionalProps) {
+  // Solo quien tiene acceso a recibos de sueldo ve el indicador de lectura.
+  const accesoRecibos = useSessionStore((state) => state.user?.rol) === "ROLE_ADMIN";
+
   return (
     <div className="space-y-6">
       <ResumenHeroPanel
@@ -47,6 +52,8 @@ export function DashboardOrganizacional({ data }: DashboardOrganizacionalProps) 
       </div>
 
       <TendenciaAsistenciaSection />
+
+      {accesoRecibos ? <LecturaRecibosSection /> : null}
     </div>
   );
 }

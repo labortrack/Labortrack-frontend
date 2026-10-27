@@ -114,4 +114,8 @@ export interface DocumentoFilterDto {
   visibilidad?: string;
   esIndexadoRag?: boolean;
   estado?: EstadoDocumentoFiltro;
+  /** Fecha de subida mínima, formato ISO `yyyy-MM-dd`. */
+  fechaDesde?: string;
+  /** Fecha de subida máxima, formato ISO `yyyy-MM-dd`. */
+  fechaHasta?: string;
 }

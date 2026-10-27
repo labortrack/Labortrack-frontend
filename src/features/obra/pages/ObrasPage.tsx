@@ -91,8 +91,8 @@ export default function ObrasPage() {
           <SearchInput
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            placeholder="Buscar por nomenclatura contractual (ej: NOM-2026-04)..."
-            aria-label="Buscar por nomenclatura contractual"
+            placeholder="Buscar por nombre de obra o nomenclatura (ej: NOM-2026-04)..."
+            aria-label="Buscar por nombre de obra o nomenclatura"
           />
         </div>
         {busqueda ? (
@@ -118,7 +118,7 @@ export default function ObrasPage() {
           {obras.length} obra{obras.length !== 1 ? "s" : ""}
           {busqueda ? (
             <span className="ml-1">
-              — filtrando por nomenclatura "{busqueda}"
+              — filtrando por "{busqueda}"
             </span>
           ) : null}
         </span>
@@ -163,7 +163,7 @@ export default function ObrasPage() {
             title="No se encontraron obras"
             description={
               busqueda
-                ? `No se encontraron obras con la nomenclatura "${busqueda}".`
+                ? `No se encontraron obras con nombre o nomenclatura "${busqueda}".`
                 : "No hay obras registradas en el sistema."
             }
             action={

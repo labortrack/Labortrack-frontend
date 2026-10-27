@@ -179,6 +179,9 @@ export default function ConfiguracionObrasPage() {
                         >
                           {estado.nombreEstadoObra}
                         </span>
+                        {estado.sistema && (
+                          <Badge variant="neutral">Sistema</Badge>
+                        )}
                       </div>
                     </TableCell>
 
@@ -208,14 +211,19 @@ export default function ConfiguracionObrasPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary"
+                              disabled={estado.sistema}
+                              className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary disabled:opacity-30"
                               onClick={() => setEditingEstado(estado)}
                               aria-label={`Editar ${estado.nombreEstadoObra}`}
                             >
                               <Pencil className="size-3.5" />
                             </Button>
                           </TooltipTrigger>
-                          <TooltipContent>Editar descripción</TooltipContent>
+                          <TooltipContent>
+                            {estado.sistema
+                              ? "Estado del sistema, no se puede modificar"
+                              : "Editar descripción"}
+                          </TooltipContent>
                         </Tooltip>
 
                         <Tooltip>
@@ -223,7 +231,7 @@ export default function ConfiguracionObrasPage() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              disabled={isInactivo}
+                              disabled={isInactivo || estado.sistema}
                               className="size-8 text-foreground-muted hover:bg-error-soft hover:text-error disabled:opacity-30"
                               onClick={() => setDeletingEstado(estado)}
                               aria-label={`Dar de baja ${estado.nombreEstadoObra}`}
@@ -232,7 +240,11 @@ export default function ConfiguracionObrasPage() {
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            {isInactivo ? "Ya está inactivo" : "Dar de baja"}
+                            {estado.sistema
+                              ? "Estado del sistema, no se puede dar de baja"
+                              : isInactivo
+                                ? "Ya está inactivo"
+                                : "Dar de baja"}
                           </TooltipContent>
                         </Tooltip>
 

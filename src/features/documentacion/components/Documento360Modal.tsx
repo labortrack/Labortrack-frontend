@@ -36,6 +36,7 @@ import { documentacionApi } from "../api/documentacionApi";
 import { useObtenerUrlVisor } from "../hooks/useDocumentacion";
 import { useRagIndexingPolling } from "../hooks/useRagIndexingPolling";
 import type { DocumentoRespuestaDto } from "../types/documentacion.types";
+import { etiquetaVisibilidad } from "../utils/etiquetaVisibilidad";
 
 interface Documento360ModalProps {
   doc: DocumentoRespuestaDto | null;
@@ -236,7 +237,7 @@ export function Documento360Modal({
                   ) : (
                     <Lock className="size-3 text-foreground-muted" />
                   )}
-                  {doc.visibilidad || (esDocumentoPublico ? "PUBLICO" : "PRIVADO")}
+                  {etiquetaVisibilidad(doc.visibilidad)}
                 </Badge>
               </div>
 

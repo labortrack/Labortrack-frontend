@@ -1,6 +1,33 @@
 import { z } from "zod";
+import {
+  esRagPermitido,
+  esVisibilidadPermitida,
+} from "../utils/categoriaRuteoMatriz";
 
 // ─── Tipos de Documento ───────────────────────────────────────────────────────
+
+/** Valida la combinación categoría ↔ visibilidad ↔ RAG contra MATRIZ_CATEGORIA_RUTEO. */
+function validarConfiguracionCategoria(
+  data: { categoriaRuteo: string; visibilidadDefecto: string; procesarEnRag: boolean },
+  ctx: z.RefinementCtx,
+) {
+  // Sin categoría ya falla el campo obligatorio; no se repite el error.
+  if (!data.categoriaRuteo) return;
+  if (data.visibilidadDefecto && !esVisibilidadPermitida(data.categoriaRuteo, data.visibilidadDefecto)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["visibilidadDefecto"],
+      message: "La visibilidad no está permitida para esta categoría.",
+    });
+  }
+  if (!esRagPermitido(data.categoriaRuteo, data.procesarEnRag)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["procesarEnRag"],
+      message: "Esta categoría no admite procesamiento en RAG. Desactivalo para guardar.",
+    });
+  }
+}
 
 /** Categorías de Ruteo soportadas por el backend Spring Boot. */
 export const CATEGORIAS_RUTEO_VALUES = [
@@ -39,7 +66,7 @@ export const tipoDocumentoCreacionSchema = z.object({
     .string()
     .trim()
     .min(1, "Seleccioná la visibilidad por defecto."),
-});
+}).superRefine(validarConfiguracionCategoria);
 
 /** Schema Zod para modificación de Tipo de Documento (PUT). */
 export const tipoDocumentoModificacionSchema = z.object({
@@ -59,7 +86,7 @@ export const tipoDocumentoModificacionSchema = z.object({
     .string()
     .trim()
     .min(1, "Seleccioná la visibilidad por defecto."),
-});
+}).superRefine(validarConfiguracionCategoria);
 
 export const tipoDocumentoSchema = tipoDocumentoCreacionSchema;
 

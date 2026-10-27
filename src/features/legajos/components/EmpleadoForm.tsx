@@ -34,7 +34,7 @@ import { PAISES_FRECUENTES, PAISES_RESTO, normalizarPais } from "@/shared/consta
 import { validarFotoPerfil } from "../utils/validarFotoPerfil";
 import { useCategoriasUocraActivas } from "@/features/cuadroTarifario/hooks/useCategoriasUocra";
 import { useZonasActivas } from "@/features/cuadroTarifario/hooks/useZonas";
-import { FormField, LoadingState } from "@/shared/components";
+import { FormField, LoadingState, PasswordField } from "@/shared/components";
 import {
   Alert,
   Button,
@@ -356,9 +356,10 @@ export function EmpleadoForm({
               hint={PASSWORD_HINT}
               required
             >
-              <Input
+              <PasswordField
                 id="empleado-password"
-                type="password"
+                autoComplete="new-password"
+                withIcon={false}
                 aria-invalid={Boolean(errors.usuario?.password)}
                 {...register("usuario.password")}
               />

@@ -2,6 +2,8 @@ export interface EstadoObraResponseDto {
   id: number;
   nombreEstadoObra: string;
   descripcionEstadoObra: string;
+  /** Estado que el backend usa por nombre: siempre existe y no se modifica ni se da de baja. */
+  sistema: boolean;
 }
 
 export interface CreateEstadoObraDto {

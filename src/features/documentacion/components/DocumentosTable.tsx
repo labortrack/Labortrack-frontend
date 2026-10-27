@@ -139,8 +139,12 @@ export function DocumentosTable({
   }
 
   if (!query.data?.content.length) {
+    const hayOtrosFiltros = Boolean(
+      filters.tipoDocumentoId || filters.fechaDesde || filters.fechaHasta || filters.empleadoId,
+    );
+
     const emptyTitle =
-      filters.nombreDocumento?.trim()
+      filters.nombreDocumento?.trim() || hayOtrosFiltros
         ? "Sin coincidencias"
         : filters.estado === "INACTIVOS"
           ? "No hay documentos inactivos"
@@ -151,7 +155,9 @@ export function DocumentosTable({
     const emptyDescription =
       filters.nombreDocumento?.trim()
         ? `No se encontraron documentos que coincidan con "${filters.nombreDocumento}".`
-        : filters.estado === "INACTIVOS"
+        : hayOtrosFiltros
+          ? "No se encontraron documentos con los filtros aplicados."
+          : filters.estado === "INACTIVOS"
           ? "No se encontraron documentos dados de baja en el sistema."
           : filters.estado === "TODOS"
             ? "Todavía no se ha subido ningún documento al sistema."

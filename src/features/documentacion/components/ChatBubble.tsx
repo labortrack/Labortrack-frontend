@@ -1,21 +1,37 @@
 import { forwardRef, type ComponentProps } from "react";
 import {
-  Bot,
   User,
-  Sparkles,
   FileText,
   ExternalLink,
 } from "lucide-react";
 import { cn } from "@/shared/utils/cn";
 import { Typewriter } from "./Typewriter";
 import { renderMarkdownText } from "./MarkdownText";
+import { TrackyAvatar } from "./TrackyAvatar";
 import type { ChatMessage } from "../types/ragChat.types";
+import type { AvatarDeBurbuja } from "../utils/trackyChatVista";
+
+const AVATAR_EN_REPOSO: AvatarDeBurbuja = {
+  tamano: "chico",
+  estado: "inactivo",
+  animado: false,
+};
+
+// 24px en las burbujas respondidas, 64px en la que está en curso (pensando y
+// escribiendo). El cambio de tamaño al terminar el tipeo solo se anima con
+// movimiento permitido.
+const TAMANO_AVATAR = {
+  chico: "size-6",
+  grande: "size-16",
+} as const;
 
 export interface ChatBubbleProps extends ComponentProps<"div"> {
   message: ChatMessage;
   enableTypewriter?: boolean;
   onTypewriterComplete?: () => void;
   onFuenteClick?: (fuente: NonNullable<ChatMessage["fuentes"]>[number]) => void;
+  /** Solo para burbujas del bot; por defecto, chico y en reposo. */
+  avatar?: AvatarDeBurbuja;
 }
 
 /**
@@ -31,6 +47,7 @@ export const ChatBubble = forwardRef<HTMLDivElement, ChatBubbleProps>(
       enableTypewriter = false,
       onTypewriterComplete,
       onFuenteClick,
+      avatar = AVATAR_EN_REPOSO,
       className,
       ...props
     },
@@ -78,27 +95,17 @@ export const ChatBubble = forwardRef<HTMLDivElement, ChatBubbleProps>(
         <div className="flex max-w-[95%] flex-col items-start sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%]">
           {/* Encabezado Bot */}
           <div className="flex items-center gap-2 pb-1.5 text-xs font-semibold text-primary">
-            <div
+            <TrackyAvatar
+              estado={avatar.estado}
+              animado={avatar.animado}
               className={cn(
-                "flex size-6 items-center justify-center rounded-full text-primary",
-                message.isError
-                  ? "bg-error-soft text-error"
-                  : "bg-primary-soft text-primary",
+                TAMANO_AVATAR[avatar.tamano],
+                "motion-safe:transition-[width,height] motion-safe:duration-300",
               )}
-            >
-              <Bot className="size-3.5" />
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className={cn(message.isError && "text-error")}>
-                {message.isError ? "Error del Asistente" : "Tracky"}
-              </span>
-              {!message.isError && (
-                <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.2 text-[10px] font-bold text-primary">
-                  <Sparkles className="size-2.5" />
-                  RAG IA
-                </span>
-              )}
-            </div>
+            />
+            <span className={cn(message.isError && "text-error")}>
+              {message.isError ? "Error del Asistente" : "Tracky"}
+            </span>
           </div>
 
           {/* Burbuja Principal */}
@@ -175,42 +182,28 @@ export const ChatBubble = forwardRef<HTMLDivElement, ChatBubbleProps>(
 );
 
 /**
- * ChatSkeleton: Indicador dinámico de carga para cuando la IA está procesando la respuesta.
- * Muestra una burbuja elegante con animación de tres puntos suspensivos ("...").
+ * BurbujaPensando: lugar de la respuesta mientras la consulta está en vuelo. El avatar
+ * grande en "pensando" es la animación protagonista; los puntos titilan con el mismo
+ * ritmo que la antena (globals.css) para leerse como una sola animación.
  */
-export function ChatSkeleton() {
+export function BurbujaPensando() {
   return (
     <div className="flex w-full justify-start gap-3">
       <div className="flex max-w-[95%] flex-col items-start sm:max-w-[90%] md:max-w-[85%] lg:max-w-[80%]">
-        {/* Encabezado Bot */}
         <div className="flex items-center gap-2 pb-1.5 text-xs font-semibold text-primary">
-          <div className="flex size-6 items-center justify-center rounded-full bg-primary-soft text-primary">
-            <Bot className="size-3.5" />
-          </div>
-          <div className="flex items-center gap-1.5">
-            <span>Tracky</span>
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-1.5 py-0.2 text-[10px] font-bold text-primary">
-              <Sparkles className="size-2.5" />
-              RAG IA
-            </span>
-          </div>
+          <TrackyAvatar estado="pensando" className={TAMANO_AVATAR.grande} />
+          <span>Tracky</span>
         </div>
 
-        {/* Burbuja con indicador de escritura dinámico */}
-        <div className="rounded-card rounded-tl-sm border border-border bg-subtle px-4 py-3 shadow-soft">
-          <div className="flex items-center gap-1.5 py-1" aria-label="Tracky está respondiendo...">
-            <span
-              className="size-2 rounded-full bg-primary/70 animate-bounce"
-              style={{ animationDelay: "-0.32s", animationDuration: "1s" }}
-            />
-            <span
-              className="size-2 rounded-full bg-primary/70 animate-bounce"
-              style={{ animationDelay: "-0.16s", animationDuration: "1s" }}
-            />
-            <span
-              className="size-2 rounded-full bg-primary/70 animate-bounce"
-              style={{ animationDelay: "0s", animationDuration: "1s" }}
-            />
+        <div
+          role="status"
+          className="rounded-card rounded-tl-sm border border-border bg-subtle px-4 py-3 shadow-soft"
+        >
+          <span className="sr-only">Tracky está pensando…</span>
+          <div className="flex items-center gap-1.5 py-1" aria-hidden="true">
+            <span className="lt-tracky-pensando-punto size-2 rounded-full bg-primary/70" />
+            <span className="lt-tracky-pensando-punto size-2 rounded-full bg-accent" />
+            <span className="lt-tracky-pensando-punto size-2 rounded-full bg-primary/70" />
           </div>
         </div>
       </div>

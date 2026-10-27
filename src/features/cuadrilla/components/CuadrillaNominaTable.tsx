@@ -10,6 +10,7 @@ import {
   TableHead,
   TableCell,
   Button,
+  Badge,
 } from "@/shared/ui";
 import {
   SearchInput,
@@ -23,6 +24,7 @@ import {
   Trash2,
   HardHat,
   Calendar,
+  Crown,
 } from "lucide-react";
 import { HistorialAuditoriaIconButton } from "@/features/auditoria";
 import type {
@@ -30,6 +32,7 @@ import type {
   EmpleadoGrupoCuadrillaResponseDto,
 } from "../types/cuadrilla.types";
 import { normalizeSearchText } from "@/shared/utils/normalizeText";
+import { agruparNominaPorEmpleado } from "../utils/nomina";
 
 interface CuadrillaNominaTableProps {
   cuadrilla: CuadrillaResponseDto;
@@ -64,14 +67,21 @@ export function CuadrillaNominaTable({
   const searchTerm = controlledSearchTerm ?? internalSearchTerm;
   const setSearchTerm = onSearchTermChange ?? setInternalSearchTerm;
 
-  const filteredOperarios = operarios.filter((op) => {
+  const integrantes = agruparNominaPorEmpleado(operarios, cuadrilla);
+
+  const filteredOperarios = integrantes.filter((integrante) => {
     const term = normalizeSearchText(searchTerm);
     if (!term) return true;
     const fullName = normalizeSearchText(
-      `${op.nombreEmpleado || ""} ${op.apellidoEmpleado || ""}`,
+      `${integrante.nombreEmpleado || ""} ${integrante.apellidoEmpleado || ""}`,
     );
-    const actividad = normalizeSearchText(op.descripcionActividad);
-    return fullName.includes(term) || actividad.includes(term);
+    const roles = normalizeSearchText(
+      [
+        ...integrante.asignaciones.map((asig) => asig.descripcionActividad),
+        integrante.asignacionLider ? "Líder de cuadrilla" : "",
+      ].join(" "),
+    );
+    return fullName.includes(term) || roles.includes(term);
   });
 
   const isSuspended = cuadrilla.estadoActual === "SUSPENDIDA";
@@ -142,9 +152,12 @@ export function CuadrillaNominaTable({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredOperarios.map((op) => (
+              {filteredOperarios.map((integrante) => {
+                const op = integrante.principal;
+                const lider = integrante.asignacionLider;
+                return (
                 <TableRow
-                  key={op.id}
+                  key={integrante.empleadoId}
                   className="group hover:bg-muted/40 transition-colors"
                 >
                   <TableCell>
@@ -165,22 +178,42 @@ export function CuadrillaNominaTable({
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1.5 text-xs text-foreground">
-                      <HardHat className="size-3.5 text-primary shrink-0" />
-                      <span className="font-medium truncate">
-                        {op.descripcionActividad || "Operario"}
-                      </span>
+                    <div className="flex flex-col gap-1">
+                      {integrante.asignaciones.map((asig) => (
+                        <div key={asig.id} className="flex items-center gap-1.5 text-xs text-foreground">
+                          <HardHat className="size-3.5 text-primary shrink-0" />
+                          <span className="font-medium truncate">
+                            {asig.descripcionActividad || "Operario"}
+                          </span>
+                        </div>
+                      ))}
+                      {lider && (
+                        <Badge variant="primary">
+                          <Crown className="size-3 shrink-0" />
+                          Líder de cuadrilla
+                        </Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                      <Calendar className="size-3.5 text-muted-foreground/70 shrink-0" />
-                      <span>
-                        {op.fechaVigenciaDesde}
-                        {op.fechaVigenciaHasta
-                          ? ` hasta ${op.fechaVigenciaHasta}`
-                          : " (Indefinida)"}
-                      </span>
+                    <div className="flex flex-col gap-1 text-xs text-muted-foreground">
+                      {integrante.asignaciones.map((asig) => (
+                        <div key={asig.id} className="flex items-center gap-1.5">
+                          <Calendar className="size-3.5 text-muted-foreground/70 shrink-0" />
+                          <span>
+                            {asig.fechaVigenciaDesde}
+                            {asig.fechaVigenciaHasta
+                              ? ` hasta ${asig.fechaVigenciaHasta}`
+                              : " (Indefinida)"}
+                          </span>
+                        </div>
+                      ))}
+                      {lider && (
+                        <div className="flex items-center gap-1.5">
+                          <Crown className="size-3.5 text-muted-foreground/70 shrink-0" />
+                          <span>Líder desde {lider.fechaVigenciaDesde}</span>
+                        </div>
+                      )}
                     </div>
                   </TableCell>
                   {!readOnly ? (
@@ -197,9 +230,13 @@ export function CuadrillaNominaTable({
                           variant="ghost"
                           size="sm"
                           className="size-8 p-0 text-error hover:bg-error-soft hover:text-error-strong"
-                          title="Desvincular de la cuadrilla"
+                          title={
+                            lider
+                              ? "Es el líder: designe a otro líder antes de desvincularlo"
+                              : "Desvincular de la cuadrilla"
+                          }
                           onClick={() => onDesvincularOperario(op)}
-                          disabled={isSuspended || isFinalizada}
+                          disabled={isSuspended || isFinalizada || Boolean(lider)}
                         >
                           <Trash2 className="size-4" />
                         </Button>
@@ -216,7 +253,8 @@ export function CuadrillaNominaTable({
                     </TableCell>
                   ) : null}
                 </TableRow>
-              ))}
+                );
+              })}
             </TableBody>
           </Table>
         </div>
@@ -240,7 +278,7 @@ export function CuadrillaNominaTable({
                   Nómina Operativa de Cuadrilla
                 </h3>
                 <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
-                  {operarios.length} operario{operarios.length !== 1 ? "s" : ""}
+                  {integrantes.length} operario{integrantes.length !== 1 ? "s" : ""}
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-0.5">

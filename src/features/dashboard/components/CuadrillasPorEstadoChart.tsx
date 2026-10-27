@@ -56,7 +56,8 @@ export function CuadrillasPorEstadoChart({ data }: CuadrillasPorEstadoChartProps
               innerRadius="55%"
               outerRadius="100%"
               paddingAngle={filas.length > 1 ? 2 : 0}
-              stroke="var(--color-card)"
+              // Con un solo estado el borde dibuja una costura entre inicio y fin del anillo.
+              stroke={filas.length > 1 ? "var(--color-card)" : "none"}
               isAnimationActive={false}
             >
               {filas.map((fila) => (
