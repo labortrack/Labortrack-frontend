@@ -271,11 +271,11 @@ export function EmpleadoDetail360({
               </span>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <span className="text-xs text-foreground-muted block font-medium">
                 Correo Electrónico
               </span>
-              <span className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5">
+              <span className="font-semibold text-foreground flex items-center gap-1.5 mt-0.5 [overflow-wrap:anywhere]">
                 <Mail className="size-3.5 text-foreground-muted" />
                 {legajo.email}
               </span>
