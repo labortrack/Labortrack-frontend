@@ -27,7 +27,7 @@ function idParam(value: string | null) {
 
 function JornadaCard({ jornada, onDetail }: { jornada: JornadaResumen; onDetail: () => void }) {
   return (
-    <article className="space-y-2 rounded-lg border border-border bg-card p-3 shadow-sm">
+    <article className="min-w-0 space-y-2 rounded-lg border border-border bg-card p-3 shadow-sm">
       <div className="min-w-0 text-xs font-semibold text-foreground">{jornada.obraNombre}</div>
       <p className="truncate text-xs text-foreground-muted">{jornada.cuadrillaNombre}</p>
       <p className="text-xs">{formatTime(jornada.horaInicioPlanificada)} a {formatTime(jornada.horaFinPlanificada)} · {tipoJornadaLabels[jornada.tipo]}</p>
@@ -183,7 +183,7 @@ export function JornadasExplorer({ cuadrillaId, embedded = false, active = true,
       {isFetching && !isPending ? <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs text-foreground-muted" role="status"><Spinner className="size-4" />Actualizando jornadas…</div> : null}
       {vista === "listado" && rangoInvalido ? <div className="p-5 text-sm text-error">La fecha desde no puede ser posterior a la fecha hasta.</div> : isPending ? <LoadingState label="Cargando jornadas…" /> : isError ? <ErrorState message="No se pudieron cargar las jornadas." onRetry={() => void (vista === "agenda" ? weekQuery.refetch() : listQuery.refetch())} /> : jornadas.length === 0 ? <EmptyState title="No se encontraron jornadas de trabajo" description={vista === "agenda" ? "Probá con otra semana o ajustá los filtros." : "Probá con otro período o ajustá los filtros."} action={hayFiltros ? <Button variant="outline" size="sm" onClick={clear}>Limpiar filtros</Button> : undefined} /> : vista === "agenda" ? (
         <div className="overflow-x-auto">
-          <div className="grid min-w-[900px] grid-cols-7 divide-x divide-border">
+          <div className="grid min-w-[1176px] grid-cols-7 divide-x divide-border">
             {Array.from({ length: 7 }, (_, index) => {
               const fecha = sumarDias(semana, index);
               const delDia = jornadas.filter((item) => item.fecha === fecha);
