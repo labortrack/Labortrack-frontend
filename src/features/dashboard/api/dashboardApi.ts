@@ -8,10 +8,10 @@ import type {
 const BASE_URL = "/api/dashboard";
 
 export const dashboardApi = {
-  getResumen: async (obraId?: number) => {
+  getResumen: async (obraId?: number, fecha?: string) => {
     const response = await httpClient.get<DashboardResumenResponseDto>(
       `${BASE_URL}/resumen`,
-      { params: { obraId } }
+      { params: { obraId, fecha } }
     );
     return response.data;
   },

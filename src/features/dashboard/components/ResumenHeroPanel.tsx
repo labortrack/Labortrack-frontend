@@ -9,6 +9,8 @@ interface ResumenHeroPanelProps {
   ausenciasHoy: number;
   /** Nomenclatura de la obra por la que se filtra el tablero, si hay filtro. */
   obraFiltrada?: string;
+  /** Fecha consultada (dd/mm/aaaa) si no es hoy. */
+  fechaFiltrada?: string;
   /** Detalle de las ausencias en el parte diario; sin link si no hay acceso. */
   ausenciasHref?: string;
 }
@@ -58,6 +60,7 @@ export function ResumenHeroPanel({
   obrasActivas,
   ausenciasHoy,
   obraFiltrada,
+  fechaFiltrada,
   ausenciasHref,
 }: ResumenHeroPanelProps) {
   const porcentajeAcotado = Math.min(100, Math.max(0, asistenciaPorcentaje));
@@ -68,7 +71,7 @@ export function ResumenHeroPanel({
         {/* Numero del dia + gauge */}
         <div className="max-w-sm">
           <p className="text-sm text-foreground-muted">
-            Asistencia de hoy
+            {fechaFiltrada ? `Asistencia del ${fechaFiltrada}` : "Asistencia de hoy"}
             {obraFiltrada ? (
               <span className="font-semibold text-foreground"> · {obraFiltrada}</span>
             ) : null}
@@ -84,7 +87,7 @@ export function ResumenHeroPanel({
             />
           </div>
           <p className="mt-2 text-xs text-foreground-muted">
-            Proporción de operarios presentes sobre lo esperado para hoy.
+            Proporción de operarios presentes sobre lo esperado para {fechaFiltrada ? "ese día" : "hoy"}.
           </p>
         </div>
 
@@ -97,7 +100,7 @@ export function ResumenHeroPanel({
           <StatItem
             icon={UserX}
             value={ausenciasHoy}
-            label="Ausencias hoy"
+            label={fechaFiltrada ? "Ausencias del día" : "Ausencias hoy"}
             href={ausenciasHref}
             hrefTitle="Ver ausentes en el parte diario"
           />

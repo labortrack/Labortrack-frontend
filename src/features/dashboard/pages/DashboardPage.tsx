@@ -2,6 +2,7 @@ import { useSearchParams } from "react-router-dom";
 import { Card } from "@/shared/ui";
 import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { fechaLocalActual } from "@/shared/utils/fechaLocal";
 import { useDashboardResumen } from "../hooks/useDashboard";
 import { DashboardOrganizacional } from "../components/DashboardOrganizacional";
 import { DashboardLiderCuadrilla } from "../components/DashboardLiderCuadrilla";
@@ -19,18 +20,28 @@ function leerObraId(valor: string | null): number | undefined {
   return Number.isInteger(id) && id > 0 ? id : undefined;
 }
 
-export default function DashboardPage() {
-  // El filtro de obra vive en la URL: sobrevive a recargas y se puede compartir.
-  const [searchParams, setSearchParams] = useSearchParams();
-  const obraId = leerObraId(searchParams.get("obraId"));
-  const resumenQuery = useDashboardResumen(true, obraId);
+/** Solo fechas pasadas válidas; hoy o una fecha inválida equivalen a no filtrar. */
+function leerFecha(valor: string | null, hoy: string): string | undefined {
+  if (!valor || !/^\d{4}-\d{2}-\d{2}$/.test(valor) || Number.isNaN(Date.parse(valor))) {
+    return undefined;
+  }
+  return valor < hoy ? valor : undefined;
+}
 
-  const cambiarObra = (nuevaObraId: number | undefined) => {
+export default function DashboardPage() {
+  // Los filtros viven en la URL: sobreviven a recargas y se pueden compartir.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hoy = fechaLocalActual();
+  const obraId = leerObraId(searchParams.get("obraId"));
+  const fecha = leerFecha(searchParams.get("fecha"), hoy);
+  const resumenQuery = useDashboardResumen(true, obraId, fecha);
+
+  const cambiarFiltro = (clave: "obraId" | "fecha", valor: string | undefined) => {
     setSearchParams(
       (actual) => {
         const siguiente = new URLSearchParams(actual);
-        if (nuevaObraId) siguiente.set("obraId", String(nuevaObraId));
-        else siguiente.delete("obraId");
+        if (valor) siguiente.set(clave, valor);
+        else siguiente.delete(clave);
         return siguiente;
       },
       { replace: true }
@@ -72,7 +83,9 @@ export default function DashboardPage() {
         <DashboardOrganizacional
           data={resumenQuery.data.organizacional!}
           obraId={obraId}
-          onObraChange={cambiarObra}
+          onObraChange={(id) => cambiarFiltro("obraId", id ? String(id) : undefined)}
+          fecha={fecha}
+          onFechaChange={(nueva) => cambiarFiltro("fecha", nueva && nueva < hoy ? nueva : undefined)}
           actualizando={resumenQuery.isPlaceholderData}
         />
       )}
