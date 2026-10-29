@@ -129,3 +129,10 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Recharts hace foco en el SVG (y en las porciones del donut) al hacer click y el
+   navegador dibuja el contorno del contenedor del gráfico. */
+.recharts-wrapper,
+.recharts-wrapper *:focus {
+  outline: none;
+}
