@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Area,
   CartesianGrid,
@@ -13,14 +14,20 @@ import type { TendenciaAsistenciaPuntoDto } from "../types/dashboard.types";
 
 interface TendenciaAsistenciaChartProps {
   data: TendenciaAsistenciaPuntoDto[];
+  onDiaClick?: (fecha: string) => void;
 }
+
+type Serie = "presentes" | "ausentes";
 
 function formatFechaCorta(fecha: string) {
   const [, mes, dia] = fecha.split("-");
   return `${dia}/${mes}`;
 }
 
-export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps) {
+export function TendenciaAsistenciaChart({ data, onDiaClick }: TendenciaAsistenciaChartProps) {
+  // Click en la leyenda oculta o muestra la serie, para comparar de a una.
+  const [seriesOcultas, setSeriesOcultas] = useState<Set<Serie>>(new Set());
+
   if (data.length === 0) {
     return (
       <p className="py-6 text-sm text-foreground-muted">
@@ -33,7 +40,15 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
 
   return (
     <ResponsiveContainer width="100%" height={220}>
-      <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+      <ComposedChart
+        data={chartData}
+        margin={{ top: 8, right: 8, left: 0, bottom: 0 }}
+        onClick={(estado) => {
+          const punto = chartData[Number(estado.activeTooltipIndex)];
+          if (punto) onDiaClick?.(punto.fecha);
+        }}
+        className={onDiaClick ? "cursor-pointer" : undefined}
+      >
         <defs>
           <linearGradient id="presentesFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--color-primary)" stopOpacity={0.18} />
@@ -55,7 +70,32 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
           tick={{ fontSize: 11, fill: "var(--color-foreground-muted)" }}
         />
         <Tooltip />
-        <Legend verticalAlign="top" align="right" height={28} iconSize={8} wrapperStyle={{ fontSize: 12 }} />
+        <Legend
+          verticalAlign="top"
+          align="right"
+          height={28}
+          iconSize={8}
+          wrapperStyle={{ fontSize: 12, cursor: "pointer" }}
+          onClick={(entrada) => {
+            const serie = entrada.dataKey as Serie;
+            setSeriesOcultas((actuales) => {
+              const siguientes = new Set(actuales);
+              if (siguientes.has(serie)) siguientes.delete(serie);
+              else siguientes.add(serie);
+              return siguientes;
+            });
+          }}
+          formatter={(valor, entrada) => (
+            <span
+              style={{
+                opacity: seriesOcultas.has(entrada.dataKey as Serie) ? 0.4 : 1,
+                textDecoration: seriesOcultas.has(entrada.dataKey as Serie) ? "line-through" : "none",
+              }}
+            >
+              {valor}
+            </span>
+          )}
+        />
         <Area
           type="linear"
           dataKey="presentes"
@@ -64,6 +104,7 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
           strokeWidth={2}
           fill="url(#presentesFill)"
           dot={false}
+          hide={seriesOcultas.has("presentes")}
         />
         <Line
           type="linear"
@@ -72,6 +113,7 @@ export function TendenciaAsistenciaChart({ data }: TendenciaAsistenciaChartProps
           stroke="var(--color-error)"
           strokeWidth={2}
           dot={false}
+          hide={seriesOcultas.has("ausentes")}
         />
       </ComposedChart>
     </ResponsiveContainer>

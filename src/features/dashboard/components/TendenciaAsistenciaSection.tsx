@@ -22,9 +22,20 @@ const RANGOS_TENDENCIA = [
   { dias: 29, label: "30 días" },
 ];
 
-export function TendenciaAsistenciaSection() {
+interface TendenciaAsistenciaSectionProps {
+  obraId?: number;
+  obraNomenclatura?: string;
+  /** Sin handler, los días no son clickeables. */
+  onDiaClick?: (fecha: string) => void;
+}
+
+export function TendenciaAsistenciaSection({
+  obraId,
+  obraNomenclatura,
+  onDiaClick,
+}: TendenciaAsistenciaSectionProps = {}) {
   const [rangoDias, setRangoDias] = useState(13);
-  const tendenciaQuery = useTendenciaAsistencia(haceDiasIso(rangoDias), hoyIso());
+  const tendenciaQuery = useTendenciaAsistencia(haceDiasIso(rangoDias), hoyIso(), obraId);
 
   return (
     <Card>
@@ -35,7 +46,9 @@ export function TendenciaAsistenciaSection() {
               Tendencia de asistencia
             </h3>
             <p className="mt-0.5 text-xs text-foreground-muted">
-              Operarios presentes y ausentes por día.
+              Operarios presentes y ausentes por día
+              {obraNomenclatura ? ` en ${obraNomenclatura}` : ""}.
+              {onDiaClick ? " Click en un día para ver su parte diario." : ""}
             </p>
           </div>
           <div className="inline-flex items-center gap-1 self-start rounded-control bg-subtle p-1">
@@ -71,7 +84,17 @@ export function TendenciaAsistenciaSection() {
               onRetry={() => void tendenciaQuery.refetch()}
             />
           ) : (
-            <TendenciaAsistenciaChart data={tendenciaQuery.data} />
+            <div
+              className={cn(
+                "transition-opacity",
+                tendenciaQuery.isPlaceholderData && "opacity-60"
+              )}
+            >
+              <TendenciaAsistenciaChart
+                data={tendenciaQuery.data}
+                onDiaClick={onDiaClick}
+              />
+            </div>
           )}
         </div>
       </CardContent>

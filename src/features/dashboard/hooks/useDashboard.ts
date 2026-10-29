@@ -1,20 +1,23 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { dashboardApi } from "../api/dashboardApi";
 
 export const dashboardKeys = {
   all: ["dashboard"] as const,
-  resumen: () => [...dashboardKeys.all, "resumen"] as const,
-  tendenciaAsistencia: (fechaDesde: string, fechaHasta: string) =>
-    [...dashboardKeys.all, "tendencia-asistencia", { fechaDesde, fechaHasta }] as const,
+  resumen: (obraId?: number) => [...dashboardKeys.all, "resumen", { obraId }] as const,
+  tendenciaAsistencia: (fechaDesde: string, fechaHasta: string, obraId?: number) =>
+    [...dashboardKeys.all, "tendencia-asistencia", { fechaDesde, fechaHasta, obraId }] as const,
   lecturaRecibos: (meses: number) =>
     [...dashboardKeys.all, "lectura-recibos", { meses }] as const,
 };
 
-export function useDashboardResumen(enabled = true) {
+// Al cambiar el filtro de obra se mantienen los datos anteriores mientras llega la
+// respuesta, para que el tablero no vuelva al estado de carga en cada click.
+export function useDashboardResumen(enabled = true, obraId?: number) {
   return useQuery({
-    queryKey: dashboardKeys.resumen(),
-    queryFn: () => dashboardApi.getResumen(),
+    queryKey: dashboardKeys.resumen(obraId),
+    queryFn: () => dashboardApi.getResumen(obraId),
     enabled,
+    placeholderData: keepPreviousData,
   });
 }
 
@@ -25,10 +28,11 @@ export function useLecturaRecibos(meses: number) {
   });
 }
 
-export function useTendenciaAsistencia(fechaDesde: string, fechaHasta: string) {
+export function useTendenciaAsistencia(fechaDesde: string, fechaHasta: string, obraId?: number) {
   return useQuery({
-    queryKey: dashboardKeys.tendenciaAsistencia(fechaDesde, fechaHasta),
-    queryFn: () => dashboardApi.getTendenciaAsistencia(fechaDesde, fechaHasta),
+    queryKey: dashboardKeys.tendenciaAsistencia(fechaDesde, fechaHasta, obraId),
+    queryFn: () => dashboardApi.getTendenciaAsistencia(fechaDesde, fechaHasta, obraId),
     enabled: Boolean(fechaDesde) && Boolean(fechaHasta),
+    placeholderData: keepPreviousData,
   });
 }

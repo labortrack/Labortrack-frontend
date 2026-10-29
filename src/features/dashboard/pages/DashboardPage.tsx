@@ -1,3 +1,4 @@
+import { useSearchParams } from "react-router-dom";
 import { Card } from "@/shared/ui";
 import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
@@ -13,8 +14,28 @@ const DESCRIPCION_POR_ALCANCE: Record<string, string> = {
   PERSONAL: "Tu resumen personal.",
 };
 
+function leerObraId(valor: string | null): number | undefined {
+  const id = Number(valor);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
 export default function DashboardPage() {
-  const resumenQuery = useDashboardResumen();
+  // El filtro de obra vive en la URL: sobrevive a recargas y se puede compartir.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const obraId = leerObraId(searchParams.get("obraId"));
+  const resumenQuery = useDashboardResumen(true, obraId);
+
+  const cambiarObra = (nuevaObraId: number | undefined) => {
+    setSearchParams(
+      (actual) => {
+        const siguiente = new URLSearchParams(actual);
+        if (nuevaObraId) siguiente.set("obraId", String(nuevaObraId));
+        else siguiente.delete("obraId");
+        return siguiente;
+      },
+      { replace: true }
+    );
+  };
 
   return (
     <div className="space-y-6">
@@ -48,7 +69,12 @@ export default function DashboardPage() {
       ) : resumenQuery.data.tipoAlcance === "PERSONAL" ? (
         <DashboardPersonal data={resumenQuery.data.personal!} />
       ) : (
-        <DashboardOrganizacional data={resumenQuery.data.organizacional!} />
+        <DashboardOrganizacional
+          data={resumenQuery.data.organizacional!}
+          obraId={obraId}
+          onObraChange={cambiarObra}
+          actualizando={resumenQuery.isPlaceholderData}
+        />
       )}
     </div>
   );

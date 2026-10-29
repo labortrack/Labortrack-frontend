@@ -1,6 +1,7 @@
 import {
   Bar,
   BarChart,
+  Cell,
   LabelList,
   ResponsiveContainer,
   Tooltip,
@@ -43,9 +44,15 @@ function recortarAlAncho(texto: string, anchoMax: number): string {
 
 interface PersonalPorObraChartProps {
   data: ConteoPersonalObraDto[];
+  obraSeleccionadaId?: number;
+  onObraClick?: (obraId: number) => void;
 }
 
-export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
+export function PersonalPorObraChart({
+  data,
+  obraSeleccionadaId,
+  onObraClick,
+}: PersonalPorObraChartProps) {
   if (data.length === 0) {
     return (
       <p className="py-6 text-sm text-foreground-muted">
@@ -55,7 +62,13 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
   }
 
   // sort es estable: ante empate se mantiene el orden por nombre que envia el backend.
-  const topObras = [...data].sort((a, b) => b.cantidad - a.cantidad).slice(0, MAX_OBRAS);
+  const ordenadas = [...data].sort((a, b) => b.cantidad - a.cantidad);
+  let topObras = ordenadas.slice(0, MAX_OBRAS);
+  // Una obra elegida desde el selector que no entra en el top sigue visible y resaltada.
+  const seleccionada = ordenadas.find((d) => d.obraId === obraSeleccionadaId);
+  if (seleccionada && !topObras.includes(seleccionada)) {
+    topObras = [...ordenadas.slice(0, MAX_OBRAS - 1), seleccionada];
+  }
 
   const alturaFila = 34;
   const altura = Math.max(120, topObras.length * alturaFila);
@@ -79,7 +92,11 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
       textAnchor="start"
       fontSize={12}
       fill="var(--color-foreground)"
-      className="cursor-default"
+      className={onObraClick ? "cursor-pointer" : "cursor-default"}
+      onClick={() => {
+        const obra = topObras.find((d) => d.nomenclatura === payload.value);
+        if (obra) onObraClick?.(obra.obraId);
+      }}
     >
       <title>
         {`${payload.value} · ${nombrePorNomenclatura.get(payload.value) ?? ""}`}
@@ -90,7 +107,17 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
 
   return (
     <ResponsiveContainer width="100%" height={altura}>
-      <BarChart data={topObras} layout="vertical" margin={{ top: 0, right: 24, left: MARGEN_IZQUIERDO, bottom: 0 }}>
+      <BarChart
+        data={topObras}
+        layout="vertical"
+        margin={{ top: 0, right: 24, left: MARGEN_IZQUIERDO, bottom: 0 }}
+        // Click en toda la fila (no solo en la barra, que es finita) para elegir la obra.
+        onClick={(estado) => {
+          const obra = topObras[Number(estado.activeTooltipIndex)];
+          if (obra) onObraClick?.(obra.obraId);
+        }}
+        className={onObraClick ? "cursor-pointer" : undefined}
+      >
         <XAxis type="number" hide allowDecimals={false} />
         <YAxis
           type="category"
@@ -113,6 +140,16 @@ export function PersonalPorObraChart({ data }: PersonalPorObraChartProps) {
           formatter={(value) => [`${value} operarios`, ""]}
         />
         <Bar dataKey="cantidad" fill="var(--color-primary)" radius={[0, 3, 3, 0]} maxBarSize={14}>
+          {topObras.map((obra) => (
+            <Cell
+              key={obra.obraId}
+              fill={
+                obraSeleccionadaId && obra.obraId !== obraSeleccionadaId
+                  ? "var(--lt-neutral-300)"
+                  : "var(--color-primary)"
+              }
+            />
+          ))}
           <LabelList
             dataKey="cantidad"
             position="right"
