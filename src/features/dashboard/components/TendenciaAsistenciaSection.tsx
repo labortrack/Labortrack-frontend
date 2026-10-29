@@ -3,18 +3,9 @@ import { Card, CardContent } from "@/shared/ui";
 import { ErrorState, LoadingState } from "@/shared/components";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { cn } from "@/shared/utils/cn";
+import { fechaLocalActual, sumarDiasFechaLocal } from "@/shared/utils/fechaLocal";
 import { useTendenciaAsistencia } from "../hooks/useDashboard";
 import { TendenciaAsistenciaChart } from "./TendenciaAsistenciaChart";
-
-function hoyIso() {
-  return new Date().toISOString().slice(0, 10);
-}
-
-function haceDiasIso(dias: number) {
-  const fecha = new Date();
-  fecha.setDate(fecha.getDate() - dias);
-  return fecha.toISOString().slice(0, 10);
-}
 
 const RANGOS_TENDENCIA = [
   { dias: 6, label: "7 días" },
@@ -25,6 +16,8 @@ const RANGOS_TENDENCIA = [
 interface TendenciaAsistenciaSectionProps {
   obraId?: number;
   obraNomenclatura?: string;
+  /** Último día del rango; hoy por defecto. */
+  hasta?: string;
   /** Sin handler, los días no son clickeables. */
   onDiaClick?: (fecha: string) => void;
 }
@@ -32,10 +25,16 @@ interface TendenciaAsistenciaSectionProps {
 export function TendenciaAsistenciaSection({
   obraId,
   obraNomenclatura,
+  hasta,
   onDiaClick,
 }: TendenciaAsistenciaSectionProps = {}) {
   const [rangoDias, setRangoDias] = useState(13);
-  const tendenciaQuery = useTendenciaAsistencia(haceDiasIso(rangoDias), hoyIso(), obraId);
+  const fechaHasta = hasta ?? fechaLocalActual();
+  const tendenciaQuery = useTendenciaAsistencia(
+    sumarDiasFechaLocal(fechaHasta, -rangoDias),
+    fechaHasta,
+    obraId
+  );
 
   return (
     <Card>
@@ -48,7 +47,7 @@ export function TendenciaAsistenciaSection({
             <p className="mt-0.5 text-xs text-foreground-muted">
               Operarios presentes y ausentes por día
               {obraNomenclatura ? ` en ${obraNomenclatura}` : ""}.
-              {onDiaClick ? " Click en un día para ver su parte diario." : ""}
+              {onDiaClick ? " Click en un día para ver el tablero de esa fecha." : ""}
             </p>
           </div>
           <div className="inline-flex items-center gap-1 self-start rounded-control bg-subtle p-1">
@@ -93,6 +92,7 @@ export function TendenciaAsistenciaSection({
               <TendenciaAsistenciaChart
                 data={tendenciaQuery.data}
                 onDiaClick={onDiaClick}
+                diaSeleccionado={hasta}
               />
             </div>
           )}

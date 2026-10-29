@@ -5,6 +5,7 @@ import {
   ComposedChart,
   Legend,
   Line,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -15,6 +16,8 @@ import type { TendenciaAsistenciaPuntoDto } from "../types/dashboard.types";
 interface TendenciaAsistenciaChartProps {
   data: TendenciaAsistenciaPuntoDto[];
   onDiaClick?: (fecha: string) => void;
+  /** Día resaltado en el gráfico (fecha consultada del tablero). */
+  diaSeleccionado?: string;
 }
 
 type Serie = "presentes" | "ausentes";
@@ -24,7 +27,11 @@ function formatFechaCorta(fecha: string) {
   return `${dia}/${mes}`;
 }
 
-export function TendenciaAsistenciaChart({ data, onDiaClick }: TendenciaAsistenciaChartProps) {
+export function TendenciaAsistenciaChart({
+  data,
+  onDiaClick,
+  diaSeleccionado,
+}: TendenciaAsistenciaChartProps) {
   // Click en la leyenda oculta o muestra la serie, para comparar de a una.
   const [seriesOcultas, setSeriesOcultas] = useState<Set<Serie>>(new Set());
 
@@ -70,6 +77,13 @@ export function TendenciaAsistenciaChart({ data, onDiaClick }: TendenciaAsistenc
           tick={{ fontSize: 11, fill: "var(--color-foreground-muted)" }}
         />
         <Tooltip />
+        {diaSeleccionado ? (
+          <ReferenceLine
+            x={formatFechaCorta(diaSeleccionado)}
+            stroke="var(--color-foreground-muted)"
+            strokeDasharray="4 4"
+          />
+        ) : null}
         <Legend
           verticalAlign="top"
           align="right"
