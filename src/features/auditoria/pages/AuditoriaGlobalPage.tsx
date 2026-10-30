@@ -58,6 +58,7 @@ const ROLE_LABELS: Record<string, string> = {
   ROLE_ADMIN: "Administrador",
   ROLE_RRHH: "Recursos Humanos",
   ROLE_OPERARIO: "Operario",
+  ROLE_CONTADOR: "Contador",
 };
 
 function formatRol(rol?: string | null): string {

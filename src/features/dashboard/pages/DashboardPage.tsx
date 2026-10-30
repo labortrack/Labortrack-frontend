@@ -7,6 +7,8 @@ import { useDashboardResumen } from "../hooks/useDashboard";
 import { DashboardOrganizacional } from "../components/DashboardOrganizacional";
 import { DashboardLiderCuadrilla } from "../components/DashboardLiderCuadrilla";
 import { DashboardPersonal } from "../components/DashboardPersonal";
+import { LecturaRecibosSection } from "../components/LecturaRecibosSection";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 
 const DESCRIPCION_POR_ALCANCE: Record<string, string> = {
   GLOBAL: "Indicadores clave del sistema.",
@@ -34,7 +36,11 @@ export default function DashboardPage() {
   const hoy = fechaLocalActual();
   const obraId = leerObraId(searchParams.get("obraId"));
   const fecha = leerFecha(searchParams.get("fecha"), hoy);
-  const resumenQuery = useDashboardResumen(true, obraId, fecha);
+
+  // El contador no tiene alcance operativo: el backend le niega el resumen y solo
+  // le habilita el indicador de lectura de recibos.
+  const esContador = useSessionStore((state) => state.user?.rol) === "ROLE_CONTADOR";
+  const resumenQuery = useDashboardResumen(!esContador, obraId, fecha);
 
   const cambiarFiltro = (clave: "obraId" | "fecha", valor: string | undefined) => {
     setSearchParams(
@@ -47,6 +53,19 @@ export default function DashboardPage() {
       { replace: true }
     );
   };
+
+  if (esContador) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Indicadores de la liquidación de sueldos."
+        />
+        <LecturaRecibosSection />
+      </div>
+    );
+  }
+
 
   return (
     <div className="space-y-6">

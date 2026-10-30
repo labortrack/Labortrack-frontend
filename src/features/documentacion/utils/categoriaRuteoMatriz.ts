@@ -22,7 +22,7 @@ export const MATRIZ_CATEGORIA_RUTEO: Readonly<Record<CategoriaRuteo, ReglaCatego
   LEGAJO_PERSONAL: { visibilidades: ["EMPLEADO"], admiteRag: false },
   RECIBOS_SUELDOS: { visibilidades: ["EMPLEADO"], admiteRag: false },
   HIGIENE_Y_SEGURIDAD: { visibilidades: ["EMPLEADO"], admiteRag: false },
-  INSTITUCIONAL: { visibilidades: ["PUBLICO", "RRHH"], admiteRag: true },
+  INSTITUCIONAL: { visibilidades: ["PUBLICO", "RRHH", "CONTADOR"], admiteRag: true },
   AUSENTISMO: { visibilidades: ["EMPLEADO"], admiteRag: false },
 };
 

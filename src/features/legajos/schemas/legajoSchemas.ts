@@ -3,7 +3,7 @@ import { passwordSchema } from "@/shared/lib/validation/passwordSchema";
 
 // ─── Schema del objeto anidado: Usuario ──────────────────────────────────────
 
-export const rolSchema = z.enum(["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"], {
+export const rolSchema = z.enum(["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO", "ROLE_CONTADOR"], {
   error: "Seleccioná un rol.",
 });
 

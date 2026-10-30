@@ -27,7 +27,7 @@ function formatPorcentaje(valor: number) {
 
 /**
  * Indicador de control de entrega de recibos (US039): qué parte de los recibos publicados
- * ya confirmaron sus empleados. Solo para quien tiene acceso a recibos (ADMIN).
+ * ya confirmaron sus empleados. Solo para quien tiene acceso a recibos (ADMIN y CONTADOR).
  */
 export function LecturaRecibosSection() {
   const [meses, setMeses] = useState(6);

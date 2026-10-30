@@ -71,6 +71,7 @@ const GENERO_OPTIONS: Array<{ value: Genero; label: string }> = (
 const ROL_OPTIONS: Array<{ value: RolNombre; label: string }> = [
   { value: "ROLE_OPERARIO", label: "Operario" },
   { value: "ROLE_RRHH", label: "Recursos Humanos" },
+  { value: "ROLE_CONTADOR", label: "Contador" },
   { value: "ROLE_ADMIN", label: "Administrador" },
 ];
 

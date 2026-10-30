@@ -11,7 +11,7 @@ export type CategoriaRuteo =
   | "INSTITUCIONAL"
   | "AUSENTISMO";
 
-export type Visibilidad = "PUBLICO" | "RRHH" | "EMPLEADO";
+export type Visibilidad = "PUBLICO" | "RRHH" | "EMPLEADO" | "CONTADOR";
 
 export const CATEGORIA_RUTEO_LABELS: Record<CategoriaRuteo, string> = {
   LEGAJO_PERSONAL: "Legajo Personal",
@@ -33,6 +33,10 @@ export const VISIBILIDAD_LABELS: Record<Visibilidad, { label: string; desc: stri
   EMPLEADO: {
     label: "Empleado",
     desc: "Accesible únicamente por el dueño del legajo y perfiles RRHH/Admin",
+  },
+  CONTADOR: {
+    label: "Contador",
+    desc: "Accesible solo por perfiles Admin y Contador",
   },
 };
 

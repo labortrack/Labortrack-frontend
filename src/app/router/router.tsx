@@ -236,7 +236,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/documentacion",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO", "ROLE_CONTADOR"]}>
                         {suspense(<DocumentacionPage />)}
                       </RoleRoute>
                     ),
@@ -244,7 +244,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/asistente-virtual",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO", "ROLE_CONTADOR"]}>
                         {suspense(<AsistenteVirtualPage />)}
                       </RoleRoute>
                     ),
@@ -260,7 +260,7 @@ export const router = createBrowserRouter([
                   {
                     path: "/recibos",
                     element: (
-                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_OPERARIO"]}>
+                      <RoleRoute allowed={["ROLE_ADMIN", "ROLE_CONTADOR", "ROLE_OPERARIO"]}>
                         {suspense(<RecibosPage />)}
                       </RoleRoute>
                     ),
