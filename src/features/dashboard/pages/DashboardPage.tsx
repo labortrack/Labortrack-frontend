@@ -5,6 +5,8 @@ import { useDashboardResumen } from "../hooks/useDashboard";
 import { DashboardOrganizacional } from "../components/DashboardOrganizacional";
 import { DashboardLiderCuadrilla } from "../components/DashboardLiderCuadrilla";
 import { DashboardPersonal } from "../components/DashboardPersonal";
+import { LecturaRecibosSection } from "../components/LecturaRecibosSection";
+import { useSessionStore } from "@/features/auth/store/sessionStore";
 
 const DESCRIPCION_POR_ALCANCE: Record<string, string> = {
   GLOBAL: "Indicadores clave del sistema.",
@@ -14,7 +16,22 @@ const DESCRIPCION_POR_ALCANCE: Record<string, string> = {
 };
 
 export default function DashboardPage() {
-  const resumenQuery = useDashboardResumen();
+  // El contador no tiene alcance operativo: el backend le niega el resumen y solo
+  // le habilita el indicador de lectura de recibos.
+  const esContador = useSessionStore((state) => state.user?.rol) === "ROLE_CONTADOR";
+  const resumenQuery = useDashboardResumen(!esContador);
+
+  if (esContador) {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          title="Dashboard"
+          description="Indicadores de la liquidación de sueldos."
+        />
+        <LecturaRecibosSection />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

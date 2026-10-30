@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const ROLES_AVISO = ["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"] as const;
+export const ROLES_AVISO = ["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO", "ROLE_CONTADOR"] as const;
 
 export const avisoGlobalSchema = z.object({
   titulo: z

@@ -253,6 +253,7 @@ export const VALORES_ENUM_POR_CAMPO = {
     ROLE_ADMIN: "Administrador",
     ROLE_RRHH: "Recursos Humanos",
     ROLE_OPERARIO: "Operario",
+    ROLE_CONTADOR: "Contador",
   },
 } as const satisfies Record<string, Readonly<Record<string, string>>>;
 

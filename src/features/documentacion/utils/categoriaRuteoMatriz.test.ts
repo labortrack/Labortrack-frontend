@@ -22,9 +22,9 @@ describe("opcionesPorCategoria", () => {
     },
   );
 
-  it("INSTITUCIONAL admite PUBLICO o RRHH, sin preselección, con RAG", () => {
+  it("INSTITUCIONAL admite PUBLICO, RRHH o CONTADOR, sin preselección, con RAG", () => {
     expect(opcionesPorCategoria("INSTITUCIONAL")).toEqual({
-      visibilidades: ["PUBLICO", "RRHH"],
+      visibilidades: ["PUBLICO", "RRHH", "CONTADOR"],
       admiteRag: true,
       visibilidadPorDefecto: "",
     });

@@ -26,6 +26,7 @@ import type {
   UsuarioFilterDto,
 } from "../types/usuario.types";
 import type { UserFiltersForm } from "../schemas/usuarioSchemas";
+import { rolLabels } from "@/features/auth/types/auth.types";
 import {
   EmptyState,
   ErrorState,
@@ -59,15 +60,11 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
-const roleLabels: Record<RolNombre, string> = {
-  ROLE_ADMIN: "Administrador",
-  ROLE_RRHH: "Recursos Humanos",
-  ROLE_OPERARIO: "Operario",
-};
-const roleVariants: Record<RolNombre, "primary" | "warning" | "success"> = {
+const roleVariants: Record<RolNombre, "primary" | "warning" | "success" | "neutral"> = {
   ROLE_ADMIN: "primary",
   ROLE_RRHH: "warning",
   ROLE_OPERARIO: "success",
+  ROLE_CONTADOR: "neutral",
 };
 const defaultFilters: UserFiltersForm = {
   nombre: "",
@@ -158,6 +155,7 @@ export default function UsuariosPage() {
                     <SelectItem value="ROLE_ADMIN">Administrador</SelectItem>
                     <SelectItem value="ROLE_RRHH">Recursos Humanos</SelectItem>
                     <SelectItem value="ROLE_OPERARIO">Operario</SelectItem>
+                    <SelectItem value="ROLE_CONTADOR">Contador</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -246,7 +244,7 @@ export default function UsuariosPage() {
                     </TableCell>
                     <TableCell>
                       <Badge variant={roleVariants[user.rol]}>
-                        {roleLabels[user.rol]}
+                        {rolLabels[user.rol]}
                       </Badge>
                     </TableCell>
                     <TableCell>
