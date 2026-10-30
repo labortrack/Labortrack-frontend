@@ -1,6 +1,8 @@
+import { useSearchParams } from "react-router-dom";
 import { Card } from "@/shared/ui";
 import { ErrorState, LoadingState, PageHeader } from "@/shared/components";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
+import { fechaLocalActual } from "@/shared/utils/fechaLocal";
 import { useDashboardResumen } from "../hooks/useDashboard";
 import { DashboardOrganizacional } from "../components/DashboardOrganizacional";
 import { DashboardLiderCuadrilla } from "../components/DashboardLiderCuadrilla";
@@ -15,11 +17,42 @@ const DESCRIPCION_POR_ALCANCE: Record<string, string> = {
   PERSONAL: "Tu resumen personal.",
 };
 
+function leerObraId(valor: string | null): number | undefined {
+  const id = Number(valor);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
+/** Solo fechas pasadas válidas; hoy o una fecha inválida equivalen a no filtrar. */
+function leerFecha(valor: string | null, hoy: string): string | undefined {
+  if (!valor || !/^\d{4}-\d{2}-\d{2}$/.test(valor) || Number.isNaN(Date.parse(valor))) {
+    return undefined;
+  }
+  return valor < hoy ? valor : undefined;
+}
+
 export default function DashboardPage() {
+  // Los filtros viven en la URL: sobreviven a recargas y se pueden compartir.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const hoy = fechaLocalActual();
+  const obraId = leerObraId(searchParams.get("obraId"));
+  const fecha = leerFecha(searchParams.get("fecha"), hoy);
+
   // El contador no tiene alcance operativo: el backend le niega el resumen y solo
   // le habilita el indicador de lectura de recibos.
   const esContador = useSessionStore((state) => state.user?.rol) === "ROLE_CONTADOR";
-  const resumenQuery = useDashboardResumen(!esContador);
+  const resumenQuery = useDashboardResumen(!esContador, obraId, fecha);
+
+  const cambiarFiltro = (clave: "obraId" | "fecha", valor: string | undefined) => {
+    setSearchParams(
+      (actual) => {
+        const siguiente = new URLSearchParams(actual);
+        if (valor) siguiente.set(clave, valor);
+        else siguiente.delete(clave);
+        return siguiente;
+      },
+      { replace: true }
+    );
+  };
 
   if (esContador) {
     return (
@@ -32,6 +65,7 @@ export default function DashboardPage() {
       </div>
     );
   }
+
 
   return (
     <div className="space-y-6">
@@ -65,7 +99,14 @@ export default function DashboardPage() {
       ) : resumenQuery.data.tipoAlcance === "PERSONAL" ? (
         <DashboardPersonal data={resumenQuery.data.personal!} />
       ) : (
-        <DashboardOrganizacional data={resumenQuery.data.organizacional!} />
+        <DashboardOrganizacional
+          data={resumenQuery.data.organizacional!}
+          obraId={obraId}
+          onObraChange={(id) => cambiarFiltro("obraId", id ? String(id) : undefined)}
+          fecha={fecha}
+          onFechaChange={(nueva) => cambiarFiltro("fecha", nueva && nueva < hoy ? nueva : undefined)}
+          actualizando={resumenQuery.isPlaceholderData}
+        />
       )}
     </div>
   );
