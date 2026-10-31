@@ -128,6 +128,12 @@
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
+  /* Los spinners indican que hay una tarea en curso (subida, indexación): congelados
+     parecen un cuelgue, así que siguen girando aunque se reduzca el movimiento. */
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
 }
 
 /* Recharts hace foco en el SVG (y en las porciones del donut) al hacer click y el
