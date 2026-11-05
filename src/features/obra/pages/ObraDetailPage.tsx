@@ -56,6 +56,7 @@ export default function ObraDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const esAdmin = useSessionStore((state) => state.user?.rol === "ROLE_ADMIN");
+  const usuario = useSessionStore((state) => state.user);
   const obraId = Number(id);
   const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
@@ -120,7 +121,7 @@ export default function ObraDetailPage() {
           description={`Nomenclatura Contractual: ${obra.nomenclatura} • ID #${obra.id}`}
           actions={
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              {esAdmin ? (
+              {esAdmin || (usuario?.rol === "ROLE_OPERARIO" && obra.capataz?.email.toLowerCase() === usuario.email.toLowerCase()) ? (
                 <Button
                   variant="primary"
                   onClick={() => navigate(`/obras/${obra.id}/qr`)}
@@ -151,6 +152,10 @@ export default function ObraDetailPage() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56">
+                    <DropdownMenuItem onSelect={() => navigate(`/obras/${obra.id}/terminales`)}>
+                      <MonitorUp className="size-4 text-foreground-muted" />
+                      Terminales
+                    </DropdownMenuItem>
                     <DropdownMenuItem onSelect={() => setTransicionOpen(true)}>
                       <ArrowRightLeft className="size-4 text-foreground-muted" />
                       Cambiar Estado

@@ -90,6 +90,7 @@ export function useQrObra(
     queryFn: () => obraApi.generarQr(id!),
     enabled: Boolean(id) && configuracionLista,
     refetchInterval: (query) => {
+      if (query.state.error) return 5000;
       const venceEn = query.state.data?.venceEn;
       if (!venceEn) return false;
 

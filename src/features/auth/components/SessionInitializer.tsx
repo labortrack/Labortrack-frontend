@@ -16,6 +16,11 @@ export function SessionInitializer({ children }: { children: ReactNode }) {
   useEffect(() => vincularChatTrackyASesion(), []);
 
   useEffect(() => {
+    // El acceso público de terminal usa su propia cookie y no necesita una sesión de usuario.
+    if (/^\/terminal\/?$/.test(window.location.pathname)) {
+      clearSession();
+      return;
+    }
     let active = true;
     setChecking();
     void refreshAccessToken()

@@ -66,7 +66,7 @@ export default function ObraQrDisplayPage() {
     const url = new URL("/asistencias/qr", window.location.origin);
     url.searchParams.set("token", qrQuery.data.tokenQr);
     return url.toString();
-  }, [qrQuery.data?.tokenQr]);
+  }, [qrQuery.data]);
 
   const alternarPantallaCompleta = async () => {
     if (document.fullscreenElement) {
@@ -133,14 +133,14 @@ export default function ObraQrDisplayPage() {
               <p className="mt-1 text-foreground-muted">Esto puede demorar unos segundos.</p>
             </div>
           </div>
-        ) : error || !qrQuery.data ? (
+        ) : error || !qrQuery.data || (ahora !== null && Date.parse(qrQuery.data.venceEn) <= ahora) ? (
           <Card className="w-full max-w-xl space-y-5 p-6 sm:p-8">
             <Alert variant="error">
               <WifiOff className="mt-0.5 size-5 shrink-0" />
               <span>
                 {normalizeApiError(
                   error,
-                  "No pudimos obtener el QR de esta obra.",
+                  "No hay un QR vigente. Comprobá la conexión y reintentá.",
                 ).message}
               </span>
             </Alert>

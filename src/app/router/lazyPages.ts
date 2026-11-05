@@ -118,3 +118,5 @@ export const NotificacionesPage = lazy(
 export const AdministracionNotificacionesPage = lazy(
   () => import("@/features/notificaciones/pages/AdministracionNotificacionesPage"),
 );
+export const TerminalPage = lazy(() => import("@/features/terminal/pages/TerminalPage"));
+export const TerminalesObraPage = lazy(() => import("@/features/terminal/pages/TerminalesObraPage"));
