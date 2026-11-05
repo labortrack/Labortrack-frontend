@@ -22,6 +22,8 @@ import {
   ConfiguracionObrasPage,
   ObraDetailPage,
   ObraQrDisplayPage,
+  TerminalPage,
+  TerminalesObraPage,
   CuadrillasPage,
   CuadrillaDetailPage,
   MiCuadrillaPage,
@@ -61,6 +63,7 @@ export const router = createBrowserRouter([
   {
     errorElement: <ErrorPage />,
     children: [
+      { path: "/terminal", element: suspense(<TerminalPage />) },
       {
         element: <PublicOnlyRoute />,
         children: [
@@ -188,6 +191,10 @@ export const router = createBrowserRouter([
                         {suspense(<ObraDetailPage />)}
                       </RoleRoute>
                     ),
+                  },
+                  {
+                    path: "/obras/:id/terminales",
+                    element: <RoleRoute allowed={["ROLE_ADMIN"]}>{suspense(<TerminalesObraPage />)}</RoleRoute>,
                   },
                   {
                     path: "/obras/:obraId/cuadrillas",
@@ -327,7 +334,7 @@ export const router = createBrowserRouter([
               {
                 path: "/obras/:id/qr",
                 element: (
-                  <RoleRoute allowed={["ROLE_ADMIN"]}>
+                  <RoleRoute allowed={["ROLE_ADMIN", "ROLE_OPERARIO"]}>
                     {suspense(<ObraQrDisplayPage />)}
                   </RoleRoute>
                 ),

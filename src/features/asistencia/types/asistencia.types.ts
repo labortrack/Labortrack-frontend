@@ -128,11 +128,14 @@ export interface ValidarQrRequestDto {
   tokenQr: string;
 }
 
-export interface ConfirmarQrRequestDto extends ValidarQrRequestDto {
+export interface ConfirmarQrRequestDto {
   asistenciaId: number;
+  autorizacionId: string;
 }
 
 export interface ConfirmacionIngresoQrResponseDto {
+  autorizacionId: string;
+  confirmacionVenceEn: string;
   asistenciaId: number;
   obra: ObraAsistenciaResponseDto;
   fecha: string;

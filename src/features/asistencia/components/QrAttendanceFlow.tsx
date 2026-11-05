@@ -40,6 +40,8 @@ import {
   Spinner,
 } from "@/shared/ui";
 import { QrScanner } from "./QrScanner";
+import { useQrClock } from "@/features/terminal/hooks/useQrClock";
+import { segundosRestantes } from "@/features/terminal/utils/qrTime";
 
 type PasoFlujo =
   | "introduccion"
@@ -94,33 +96,32 @@ export function QrAttendanceFlow({
   onSuccess,
 }: QrAttendanceFlowProps) {
   const [paso, setPaso] = useState<PasoFlujo>("introduccion");
-  const [tokenQr, setTokenQr] = useState(initialToken ?? "");
   const [confirmacion, setConfirmacion] =
     useState<ConfirmacionQrResponseDto>();
   const [mensajeError, setMensajeError] = useState<string>();
   const validarMutation = useValidarAsistenciaQr(tipo);
   const confirmarMutation = useConfirmarAsistenciaQr(tipo);
   const esIngreso = tipo === "ingreso";
+  const ahora = useQrClock();
+  const segundos = confirmacion ? segundosRestantes(confirmacion.confirmacionVenceEn, ahora) : 0;
+  const vencida = Boolean(confirmacion) && segundos === 0;
 
   const cerrar = useCallback(() => {
     if (validarMutation.isPending || confirmarMutation.isPending) return;
     onOpenChange(false);
     setPaso("introduccion");
-    setTokenQr(initialToken ?? "");
     setConfirmacion(undefined);
     setMensajeError(undefined);
     validarMutation.reset();
     confirmarMutation.reset();
   }, [
     confirmarMutation,
-    initialToken,
     onOpenChange,
     validarMutation,
   ]);
 
   const validarToken = useCallback(
     async (token: string) => {
-      setTokenQr(token);
       setPaso("validando");
       setMensajeError(undefined);
       try {
@@ -145,7 +146,7 @@ export function QrAttendanceFlow({
     setMensajeError(undefined);
     try {
       await confirmarMutation.mutateAsync({
-        tokenQr,
+        autorizacionId: confirmacion.autorizacionId,
         asistenciaId: confirmacion.asistenciaId,
       });
       toast.success(
@@ -171,7 +172,6 @@ export function QrAttendanceFlow({
     confirmarMutation.reset();
     setConfirmacion(undefined);
     setMensajeError(undefined);
-    setTokenQr("");
     setPaso("scanner");
   };
 
@@ -280,7 +280,7 @@ export function QrAttendanceFlow({
             <div className="space-y-5">
               <Alert variant="success">
                 <CheckCircle2 className="mt-0.5 size-4 shrink-0" />
-                <span>El QR fue validado correctamente.</span>
+                <span>El QR fue validado correctamente. Tenés {segundos} segundos para revisar y confirmar, aunque cambie el QR de la entrada.</span>
               </Alert>
 
               <div className="grid gap-4 rounded-card border border-border bg-subtle p-4 sm:grid-cols-2">
@@ -334,6 +334,7 @@ export function QrAttendanceFlow({
                   <span>{mensajeError}</span>
                 </Alert>
               ) : null}
+              {vencida && <Alert variant="warning">El tiempo de confirmación venció. Volvé a escanear el QR vigente.</Alert>}
             </div>
             <DialogFooter>
               <Button
@@ -345,7 +346,7 @@ export function QrAttendanceFlow({
               </Button>
               <Button
                 onClick={() => void confirmar()}
-                disabled={confirmarMutation.isPending}
+                disabled={confirmarMutation.isPending || vencida}
               >
                 {confirmarMutation.isPending ? (
                   <Spinner className="text-white" />
@@ -356,6 +357,7 @@ export function QrAttendanceFlow({
                   ? `Registrando ${tipo}…`
                   : `Confirmar ${tipo}`}
               </Button>
+              {(vencida || mensajeError) && <Button variant="outline" disabled={confirmarMutation.isPending} onClick={volverAEscanear}>Escanear nuevamente</Button>}
             </DialogFooter>
           </>
         ) : null}

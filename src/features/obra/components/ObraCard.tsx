@@ -13,6 +13,8 @@ import {
   TooltipTrigger,
 } from "@/shared/ui";
 import { cn } from "@/shared/utils/cn";
+import { useNavigate } from "react-router-dom";
+import { DropdownMenuItem } from "@/shared/ui";
 import {
   useHistorialAuditoriaDialog,
   HistorialAuditoriaMenuItem,
@@ -35,6 +37,7 @@ export function ObraCard({
   onDetalle,
   onAsignarCapataz,
 }: ObraCardProps) {
+  const navigate = useNavigate();
   const { esAdmin, abrirHistorial, renderDialog } =
     useHistorialAuditoriaDialog();
   const isFinalizada =
@@ -230,6 +233,7 @@ export function ObraCard({
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onSelect={() => navigate(`/obras/${obra.id}/terminales`)}>Terminales</DropdownMenuItem>
                 <HistorialAuditoriaMenuItem
                   onAbrir={() => abrirHistorial("obra", obra.id, obra.nombreObra)}
                   conSeparador={false}
