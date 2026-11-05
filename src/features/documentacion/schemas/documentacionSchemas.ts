@@ -43,6 +43,7 @@ export const VISIBILIDADES_VALUES = [
   "PUBLICO",
   "RRHH",
   "EMPLEADO",
+  "CONTADOR",
 ] as const;
 
 /** Schema Zod para creación de Tipo de Documento (POST). */

@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { useEntregasPaginadas } from "../hooks/useEpp";
 import { EppDeliveryModal } from "../components/modals/EppDeliveryModal";
+import { ImprimirRemitoButton } from "../components/ImprimirRemitoButton";
 import {
   ErrorState,
   EmptyState,
@@ -174,13 +175,11 @@ export function EppDeliveriesHistoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className={esAdmin ? "w-[16%]" : "w-[18%]"}>Fecha</TableHead>
-                <TableHead className={esAdmin ? "w-[34%]" : "w-[37%]"}>Operario</TableHead>
-                <TableHead className={esAdmin ? "w-[28%]" : "w-[30%]"}>EPP Entregado</TableHead>
-                <TableHead className={esAdmin ? "w-[14%] text-center" : "w-[15%] text-center"}>Cantidad</TableHead>
-                {esAdmin && (
-                  <TableHead className="w-[8%] text-right">Acciones</TableHead>
-                )}
+                <TableHead className="w-[15%]">Fecha</TableHead>
+                <TableHead className="w-[32%]">Operario</TableHead>
+                <TableHead className="w-[27%]">EPP Entregado</TableHead>
+                <TableHead className="w-[14%] text-center">Cantidad</TableHead>
+                <TableHead className="w-[12%] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -236,22 +235,25 @@ export function EppDeliveriesHistoryPage() {
                       </span>
                     </TableCell>
 
-                    {/* Acciones (solo ROLE_ADMIN) */}
-                    {esAdmin && (
-                      <TableCell className="text-right">
-                        {entrega.id != null ? (
-                          <HistorialAuditoriaIconButton
-                            onAbrir={() =>
-                              abrirHistorial(
-                                "empleado_epp",
-                                entrega.id!,
-                                `${operarioNombre} - ${eppNombre} - ${formatFecha(entrega.fechaEntrega)}`,
-                              )
-                            }
-                          />
-                        ) : null}
-                      </TableCell>
-                    )}
+                    {/* Acciones: remito (ROLE_ADMIN y ROLE_RRHH) e historial (solo ROLE_ADMIN) */}
+                    <TableCell className="text-right">
+                      {entrega.id != null ? (
+                        <div className="flex items-center justify-end gap-1">
+                          <ImprimirRemitoButton entregaId={entrega.id} soloIcono />
+                          {esAdmin && (
+                            <HistorialAuditoriaIconButton
+                              onAbrir={() =>
+                                abrirHistorial(
+                                  "empleado_epp",
+                                  entrega.id!,
+                                  `${operarioNombre} - ${eppNombre} - ${formatFecha(entrega.fechaEntrega)}`,
+                                )
+                              }
+                            />
+                          )}
+                        </div>
+                      ) : null}
+                    </TableCell>
                   </TableRow>
                 );
               })}

@@ -44,6 +44,7 @@ import { puedeAsignarRol } from "@/features/auth/utils/rolesAsignables";
 const roleOptions: Array<{ value: RolNombre; label: string }> = [
   { value: "ROLE_OPERARIO", label: "Operario" },
   { value: "ROLE_RRHH", label: "Recursos Humanos" },
+  { value: "ROLE_CONTADOR", label: "Contador" },
   { value: "ROLE_ADMIN", label: "Administrador" },
 ];
 

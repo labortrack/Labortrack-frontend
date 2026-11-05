@@ -8,17 +8,18 @@ import type {
 const BASE_URL = "/api/dashboard";
 
 export const dashboardApi = {
-  getResumen: async () => {
+  getResumen: async (obraId?: number, fecha?: string) => {
     const response = await httpClient.get<DashboardResumenResponseDto>(
-      `${BASE_URL}/resumen`
+      `${BASE_URL}/resumen`,
+      { params: { obraId, fecha } }
     );
     return response.data;
   },
 
-  getTendenciaAsistencia: async (fechaDesde: string, fechaHasta: string) => {
+  getTendenciaAsistencia: async (fechaDesde: string, fechaHasta: string, obraId?: number) => {
     const response = await httpClient.get<TendenciaAsistenciaPuntoDto[]>(
       `${BASE_URL}/tendencia-asistencia`,
-      { params: { fechaDesde, fechaHasta } }
+      { params: { fechaDesde, fechaHasta, obraId } }
     );
     return response.data;
   },

@@ -16,6 +16,7 @@ import {
 } from "../../schemas/epp.schemas";
 import { useAsignarEpp, useEpps } from "../../hooks/useEpp";
 import { EppEmpleadoCombobox } from "./EppEmpleadoCombobox";
+import { ImprimirRemitoButton } from "../ImprimirRemitoButton";
 import { FormField } from "@/shared/components";
 import {
   Alert,
@@ -43,6 +44,11 @@ export function EppDeliveryModal({
   initialEppId,
 }: EppDeliveryModalProps) {
   const [submitError, setSubmitError] = useState<string>();
+  // Entrega recién registrada: muestra la vista de éxito con la opción de imprimir el remito.
+  const [entregaRegistrada, setEntregaRegistrada] = useState<{
+    id: number;
+    detalle: string;
+  }>();
   const asignarMutation = useAsignarEpp();
   const isPending = asignarMutation.isPending;
 
@@ -96,6 +102,7 @@ export function EppDeliveryModal({
         fechaEntrega: todayStr,
       });
       setSubmitError(undefined);
+      setEntregaRegistrada(undefined);
     }
     onOpenChange(nextOpen);
   };
@@ -104,7 +111,7 @@ export function EppDeliveryModal({
     setSubmitError(undefined);
 
     try {
-      await asignarMutation.mutateAsync({
+      const entrega = await asignarMutation.mutateAsync({
         empleadoId: Number(values.empleadoId),
         eppId: Number(values.eppId),
         cantidadEntregada: Number(values.cantidadEntregada),
@@ -112,9 +119,15 @@ export function EppDeliveryModal({
       });
 
       const eppNombre = selectedEpp?.nombreEPP ?? `EPP #${values.eppId}`;
+      const detalle = `Se entregaron ${values.cantidadEntregada}x ${eppNombre} al empleado seleccionado.`;
+
+      if (entrega.id != null) {
+        setEntregaRegistrada({ id: entrega.id, detalle });
+        return;
+      }
 
       toast.success("Entrega registrada correctamente", {
-        description: `Se entregaron ${values.cantidadEntregada}x ${eppNombre} al empleado seleccionado.`,
+        description: detalle,
       });
       handleClose(false);
     } catch (err) {
@@ -125,6 +138,33 @@ export function EppDeliveryModal({
       setSubmitError(normalized.message);
     }
   });
+
+  if (entregaRegistrada) {
+    return (
+      <Dialog open={open} onOpenChange={handleClose}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ClipboardCheck className="size-5 text-success" />
+              Entrega registrada correctamente
+            </DialogTitle>
+            <DialogDescription>{entregaRegistrada.detalle}</DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => handleClose(false)}
+            >
+              Cerrar
+            </Button>
+            <ImprimirRemitoButton entregaId={entregaRegistrada.id} />
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>

@@ -208,14 +208,19 @@ export function UploadDocumentoForm({
 
   // ── Filtro Inteligente para Operarios ───────────────────────────────────────
   // Si el rol es ROLE_OPERARIO, solo se muestran opciones con categoriaRuteo === 'LEGAJO_PERSONAL'.
-  // Si es ROLE_ADMIN o ROLE_RRHH, se muestra la lista completa.
+  // Si es ROLE_ADMIN, se muestra la lista completa. ROLE_RRHH no ve los tipos con
+  // visibilidad CONTADOR: el backend solo deja que los cargue un administrador.
+  const esAdmin = user?.rol === "ROLE_ADMIN";
   const tiposDisponibles = useMemo(() => {
-    if (!esOperario) return tiposDocumento;
+    if (esOperario) {
+      return tiposDocumento.filter(
+        (tipo) => tipo.categoriaRuteo === "LEGAJO_PERSONAL",
+      );
+    }
+    if (esAdmin) return tiposDocumento;
 
-    return tiposDocumento.filter(
-      (tipo) => tipo.categoriaRuteo === "LEGAJO_PERSONAL",
-    );
-  }, [esOperario, tiposDocumento]);
+    return tiposDocumento.filter((tipo) => tipo.visibilidadDefecto !== "CONTADOR");
+  }, [esOperario, esAdmin, tiposDocumento]);
 
   // ── Construcción dinámica del resolver ─────────────────────────────────────
   //

@@ -81,6 +81,17 @@ export const asignarEpp = async (
 };
 
 /**
+ * Descarga el remito PDF de una entrega de EPP.
+ * GET /epp/entregas/{id}/remito
+ */
+export const getRemitoEntrega = async (id: number): Promise<Blob> => {
+  const { data } = await httpClient.get<Blob>(`/epp/entregas/${id}/remito`, {
+    responseType: "blob",
+  });
+  return data;
+};
+
+/**
  * Obtiene el historial de entregas de EPP para un empleado específico.
  * GET /epp/entregasEmpleado/{empleadoId}
  */
@@ -127,6 +138,7 @@ export const eppApi = {
   activarEpp,
   reponerStockEpp,
   asignarEpp,
+  getRemitoEntrega,
   getEntregasPorEmpleado,
   getEntregasPaginadas,
   getMisEntregas,

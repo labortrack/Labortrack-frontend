@@ -65,6 +65,8 @@ export default function DocumentacionPage() {
   const user = useSessionStore((state) => state.user);
   const esAdmin = user?.rol === "ROLE_ADMIN";
   const isOperario = user?.rol === "ROLE_OPERARIO";
+  // El contador solo consulta: el backend no le permite subir documentos.
+  const puedeSubir = user?.rol !== "ROLE_CONTADOR";
   // El filtro por empleado es exclusivo de ADMIN / RRHH
   const puedeFiltrarPorEmpleado = esAdmin || user?.rol === "ROLE_RRHH";
 
@@ -296,10 +298,12 @@ export default function DocumentacionPage() {
                 </div>
               ) : <div />}
 
-              <Button onClick={() => setUploadOpen(true)}>
-                <FileUp />
-                Subir documento
-              </Button>
+              {puedeSubir ? (
+                <Button onClick={() => setUploadOpen(true)}>
+                  <FileUp />
+                  Subir documento
+                </Button>
+              ) : null}
             </div>
 
             {/* Filtros: buscador, tipo, rango de fechas y (ADMIN / RRHH) empleado */}

@@ -141,6 +141,9 @@ export function AppLayout() {
         { to: "/notificaciones/administracion", label: "Notificaciones", icon: Bell },
       ]
       : []),
+    ...(user.rol === "ROLE_CONTADOR"
+      ? [{ to: "/recibos", label: "Recibos", icon: Receipt }]
+      : []),
     { to: "/documentacion", label: "Documentación", icon: FileText },
     { to: "/asistente-virtual", label: "Asistente Virtual", icon: Bot },
     ...(capacidades?.parteDiario?.puedeConsultar

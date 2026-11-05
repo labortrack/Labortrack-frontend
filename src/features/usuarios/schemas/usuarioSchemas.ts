@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { passwordSchema } from "@/shared/lib/validation/passwordSchema";
 
-export const roleSchema = z.enum(["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO"]);
+export const roleSchema = z.enum(["ROLE_ADMIN", "ROLE_RRHH", "ROLE_OPERARIO", "ROLE_CONTADOR"]);
 
 export const userFiltersSchema = z.object({
   nombre: z.string(),

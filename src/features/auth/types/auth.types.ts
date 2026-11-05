@@ -1,9 +1,10 @@
-export type RolNombre = "ROLE_ADMIN" | "ROLE_RRHH" | "ROLE_OPERARIO";
+export type RolNombre = "ROLE_ADMIN" | "ROLE_RRHH" | "ROLE_OPERARIO" | "ROLE_CONTADOR";
 
 export const rolLabels: Record<RolNombre, string> = {
   ROLE_ADMIN: "Administrador",
   ROLE_RRHH: "Recursos Humanos",
   ROLE_OPERARIO: "Operario",
+  ROLE_CONTADOR: "Contador",
 };
 
 export interface CurrentUser {
