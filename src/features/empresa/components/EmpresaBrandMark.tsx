@@ -56,7 +56,7 @@ export function EmpresaBrandMark({ empresa, showLabel }: EmpresaBrandMarkProps) 
         <div className="min-w-0">
           <Tooltip>
             <TooltipTrigger asChild>
-              <div className="truncate text-lg font-medium">{nombre}</div>
+              <div className="line-clamp-2 break-words text-lg font-medium leading-tight">{nombre}</div>
             </TooltipTrigger>
             <TooltipContent side="bottom">{nombre}</TooltipContent>
           </Tooltip>
