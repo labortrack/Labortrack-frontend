@@ -27,15 +27,24 @@ export interface Epp {
   activo: boolean;
 }
 
-export interface EntregaEpp {
-  id?: number;
-  idEpp: number;
+export interface ItemRemito {
+  eppId: number;
   nombreEpp: string;
-  idEmpleado: number;
+  cantidad: number;
+}
+
+/** Remito de entrega de EPP. El id es el número del remito. */
+export interface Remito {
+  id: number;
+  empleadoId: number;
   nombreEmpleado: string;
   apellidoEmpleado: string;
-  cantidadEntregada: number;
   fechaEntrega: string;
+  /** Null en los remitos migrados de entregas anteriores a guardar el responsable. */
+  responsable: string | null;
+  items: ItemRemito[];
+  /** Si es false, el PDF se genera la primera vez que se abre (puede tardar unos segundos). */
+  pdfGenerado: boolean;
 }
 
 // ─── DTOs para Peticiones ───────────────────────────────────────────────────
@@ -53,9 +62,13 @@ export interface ReponerEppDto {
   cantidadReponer: number;
 }
 
-export interface NuevaEntregaDto {
-  empleadoId: number;
+export interface ItemRemitoDto {
   eppId: number;
-  cantidadEntregada: number;
-  fechaEntrega: string;
+  cantidad: number;
+}
+
+export interface NuevoRemitoDto {
+  empleadoId: number;
+  fechaEntrega?: string;
+  items: ItemRemitoDto[];
 }

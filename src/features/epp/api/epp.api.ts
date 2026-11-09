@@ -1,11 +1,11 @@
 import { httpClient } from "@/shared/lib/http/httpClient";
 import type {
   AltaEppDto,
-  EntregaEpp,
   Epp,
   ModificarEppDto,
-  NuevaEntregaDto,
+  NuevoRemitoDto,
   PaginatedResponse,
+  Remito,
   ReponerEppDto,
 } from "../types/epp.types";
 
@@ -70,50 +70,35 @@ export const reponerStockEpp = async (
 };
 
 /**
- * Asigna y entrega un EPP a un empleado.
- * POST /epp/entregas
+ * Registra un remito de entrega de EPP con todos sus ítems.
+ * POST /epp/remitos
  */
-export const asignarEpp = async (
-  payload: NuevaEntregaDto,
-): Promise<EntregaEpp> => {
-  const { data } = await httpClient.post<EntregaEpp>("/epp/entregas", payload);
+export const registrarRemito = async (payload: NuevoRemitoDto): Promise<Remito> => {
+  const { data } = await httpClient.post<Remito>("/epp/remitos", payload);
   return data;
 };
 
 /**
- * Descarga el remito PDF de una entrega de EPP.
- * GET /epp/entregas/{id}/remito
+ * Descarga el PDF de un remito. La primera apertura lo genera y puede tardar unos segundos.
+ * GET /epp/remitos/{id}/pdf
  */
-export const getRemitoEntrega = async (id: number): Promise<Blob> => {
-  const { data } = await httpClient.get<Blob>(`/epp/entregas/${id}/remito`, {
+export const getRemitoPdf = async (id: number): Promise<Blob> => {
+  const { data } = await httpClient.get<Blob>(`/epp/remitos/${id}/pdf`, {
     responseType: "blob",
   });
   return data;
 };
 
 /**
- * Obtiene el historial de entregas de EPP para un empleado específico.
- * GET /epp/entregasEmpleado/{empleadoId}
+ * Obtiene el historial global paginado de remitos de EPP.
+ * GET /epp/remitos/paginadas?page=0&size=10
  */
-export const getEntregasPorEmpleado = async (
-  empleadoId: number,
-): Promise<EntregaEpp[]> => {
-  const { data } = await httpClient.get<EntregaEpp[]>(
-    `/epp/entregasEmpleado/${empleadoId}`,
-  );
-  return data;
-};
-
-/**
- * Obtiene el historial global paginado de todas las entregas de EPP.
- * GET /epp/entregas/paginadas?page=0&size=10
- */
-export const getEntregasPaginadas = async (
+export const getRemitosPaginados = async (
   page = 0,
   size = 10,
-): Promise<PaginatedResponse<EntregaEpp>> => {
-  const { data } = await httpClient.get<PaginatedResponse<EntregaEpp>>(
-    "/epp/entregas/paginadas",
+): Promise<PaginatedResponse<Remito>> => {
+  const { data } = await httpClient.get<PaginatedResponse<Remito>>(
+    "/epp/remitos/paginadas",
     {
       params: { page, size },
     },
@@ -122,11 +107,11 @@ export const getEntregasPaginadas = async (
 };
 
 /**
- * Obtiene el listado de entregas de EPP asignadas al operario autenticado en sesión.
- * GET /epp/mis-entregas
+ * Obtiene los remitos de EPP del usuario autenticado en sesión.
+ * GET /epp/remitos/mios
  */
-export const getMisEntregas = async (): Promise<EntregaEpp[]> => {
-  const { data } = await httpClient.get<EntregaEpp[]>("/epp/entregasEmpleado");
+export const getMisRemitos = async (): Promise<Remito[]> => {
+  const { data } = await httpClient.get<Remito[]>("/epp/remitos/mios");
   return data;
 };
 
@@ -137,9 +122,8 @@ export const eppApi = {
   bajaEpp,
   activarEpp,
   reponerStockEpp,
-  asignarEpp,
-  getRemitoEntrega,
-  getEntregasPorEmpleado,
-  getEntregasPaginadas,
-  getMisEntregas,
+  registrarRemito,
+  getRemitoPdf,
+  getRemitosPaginados,
+  getMisRemitos,
 };

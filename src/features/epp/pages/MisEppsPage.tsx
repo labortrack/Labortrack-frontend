@@ -1,10 +1,15 @@
-import { Calendar, Package, ShieldCheck, ShieldAlert } from "lucide-react";
-import { useMisEntregas } from "../hooks/useEpp";
+import { Calendar, FileText, Package, ShieldCheck, ShieldAlert } from "lucide-react";
+import { useMisRemitos } from "../hooks/useEpp";
+import { useAbrirRemitoEntrega } from "../hooks/useAbrirRemitoEntrega";
+import type { Remito } from "../types/epp.types";
+import { formatNumeroRemito } from "../utils/remito";
 import { EmptyState, ErrorState, PageHeader } from "@/shared/components";
 import {
+  Button,
   Card,
   CardContent,
   Skeleton,
+  Spinner,
   Table,
   TableBody,
   TableCell,
@@ -25,13 +30,47 @@ function formatFecha(fecha: string): string {
   return fecha;
 }
 
-export function MisEppsPage() {
-  const { data: misEntregas = [], isLoading, isError, error, refetch } =
-    useMisEntregas();
+/**
+ * Abre el PDF de un remito propio. Si todavía no se generó, avisa que la primera apertura
+ * puede tardar; el backend responde 403 si el remito no es del operario.
+ */
+function VerRemitoButton({ remito }: { remito: Remito }) {
+  const { abrir, isPending } = useAbrirRemitoEntrega();
+  const textoPendiente = remito.pdfGenerado ? "Abriendo..." : "Generando remito...";
 
-  const totalEntregas = misEntregas.length;
-  const totalUnidades = misEntregas.reduce(
-    (acc, item) => acc + (item.cantidadEntregada || 0),
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => void abrir(remito.id)}
+        disabled={isPending}
+      >
+        {isPending ? (
+          <Spinner className="size-3.5" label={textoPendiente} />
+        ) : (
+          <FileText className="size-3.5" />
+        )}
+        {isPending ? textoPendiente : "Ver remito"}
+      </Button>
+      {!remito.pdfGenerado ? (
+        <p className="max-w-[14rem] text-right text-xs text-foreground-muted">
+          Se genera al abrirlo por primera vez; puede tardar unos segundos.
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export function MisEppsPage() {
+  const { data: misRemitos = [], isLoading, isError, error, refetch } =
+    useMisRemitos();
+
+  const totalRemitos = misRemitos.length;
+  const totalUnidades = misRemitos.reduce(
+    (acc, remito) =>
+      acc + remito.items.reduce((suma, item) => suma + (item.cantidad || 0), 0),
     0,
   );
 
@@ -44,7 +83,7 @@ export function MisEppsPage() {
       />
 
       {/* Resumen de equipamiento */}
-      {!isLoading && !isError && totalEntregas > 0 ? (
+      {!isLoading && !isError && totalRemitos > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <Card className="shadow-soft">
             <CardContent className="flex items-center gap-4 p-5">
@@ -53,10 +92,10 @@ export function MisEppsPage() {
               </div>
               <div>
                 <p className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                  Equipos Asignados
+                  Remitos Recibidos
                 </p>
                 <p className="text-2xl font-bold text-foreground">
-                  {totalEntregas} {totalEntregas === 1 ? "entrega" : "entregas"}
+                  {totalRemitos} {totalRemitos === 1 ? "remito" : "remitos"}
                 </p>
               </div>
             </CardContent>
@@ -109,7 +148,7 @@ export function MisEppsPage() {
             onRetry={() => refetch()}
           />
         </div>
-      ) : misEntregas.length === 0 ? (
+      ) : misRemitos.length === 0 ? (
         <div className="rounded-card border border-border bg-card p-8 shadow-soft">
           <EmptyState
             title="Aún no tienes elementos de protección personal asignados"
@@ -117,54 +156,58 @@ export function MisEppsPage() {
           />
         </div>
       ) : (
-        /* Tabla de solo lectura */
+        /* Tabla de solo lectura: un remito por fila con sus ítems */
         <div className="overflow-hidden rounded-card border border-border bg-card shadow-soft">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[25%]">Fecha de Entrega</TableHead>
-                <TableHead className="w-[50%]">EPP (Nombre)</TableHead>
-                <TableHead className="w-[25%] text-center">Cantidad</TableHead>
+                <TableHead className="w-[20%]">Fecha de Entrega</TableHead>
+                <TableHead className="w-[15%]">Remito N°</TableHead>
+                <TableHead className="w-[40%]">EPP Recibidos</TableHead>
+                <TableHead className="w-[25%] text-right">Remito</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {misEntregas.map((entrega, index) => {
-                const rowKey =
-                  entrega.id ??
-                  `${entrega.idEpp}-${entrega.fechaEntrega}-${index}`;
+              {misRemitos.map((remito) => (
+                <TableRow key={remito.id}>
+                  {/* Fecha de Entrega */}
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-foreground font-medium">
+                      <Calendar className="size-4 text-foreground-muted shrink-0" />
+                      <span>{formatFecha(remito.fechaEntrega)}</span>
+                    </div>
+                  </TableCell>
 
-                return (
-                  <TableRow key={rowKey}>
-                    {/* Fecha de Entrega */}
-                    <TableCell>
-                      <div className="flex items-center gap-2 text-foreground font-medium">
-                        <Calendar className="size-4 text-foreground-muted shrink-0" />
-                        <span>{formatFecha(entrega.fechaEntrega)}</span>
-                      </div>
-                    </TableCell>
+                  {/* Remito N° */}
+                  <TableCell>
+                    <span className="font-semibold text-foreground tabular-nums">
+                      {formatNumeroRemito(remito.id)}
+                    </span>
+                  </TableCell>
 
-                    {/* EPP (Nombre) */}
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-9 shrink-0 items-center justify-center rounded-control bg-muted text-foreground-muted">
-                          <ShieldAlert className="size-4 text-primary" />
-                        </div>
-                        <span className="font-semibold text-foreground">
-                          {entrega.nombreEpp}
-                        </span>
-                      </div>
-                    </TableCell>
+                  {/* EPP Recibidos */}
+                  <TableCell>
+                    <ul className="space-y-1.5">
+                      {remito.items.map((item) => (
+                        <li key={item.eppId} className="flex items-center gap-2">
+                          <ShieldAlert className="size-4 shrink-0 text-primary" />
+                          <span className="font-semibold text-foreground">
+                            {item.nombreEpp}
+                          </span>
+                          <span className="inline-flex items-center rounded-full bg-subtle px-2 py-0.5 text-xs font-semibold text-foreground">
+                            {item.cantidad} {item.cantidad === 1 ? "unidad" : "unidades"}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </TableCell>
 
-                    {/* Cantidad */}
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center rounded-full bg-subtle px-2.5 py-0.5 text-xs font-semibold text-foreground">
-                        {entrega.cantidadEntregada}{" "}
-                        {entrega.cantidadEntregada === 1 ? "unidad" : "unidades"}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
+                  {/* Remito */}
+                  <TableCell className="text-right">
+                    <VerRemitoButton remito={remito} />
+                  </TableCell>
+                </TableRow>
+              ))}
             </TableBody>
           </Table>
         </div>

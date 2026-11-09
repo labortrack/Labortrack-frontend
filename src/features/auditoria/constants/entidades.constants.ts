@@ -5,7 +5,8 @@
  */
 export const DICCIONARIO_ENTIDADES_OVERRIDE: Record<string, string> = {
   epp: "EPP",
-  empleado_epp: "Entrega de EPP",
+  remito: "Remito de EPP",
+  detalle_epp: "Línea de remito de EPP",
   categoria_uocra: "Categoría UOCRA",
   categoria_zona: "Categoría por Zona",
   cuadro_tarifario: "Cuadro Tarifario",

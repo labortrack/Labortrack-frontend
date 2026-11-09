@@ -6,32 +6,29 @@ import {
 } from "@tanstack/react-query";
 import {
   activarEpp,
-  asignarEpp,
   bajaEpp,
   createEpp,
-  getEntregasPaginadas,
-  getEntregasPorEmpleado,
   getEpps,
-  getMisEntregas,
+  getMisRemitos,
+  getRemitosPaginados,
+  registrarRemito,
   reponerStockEpp,
   updateEpp,
 } from "../api/epp.api";
 import type {
   AltaEppDto,
   ModificarEppDto,
-  NuevaEntregaDto,
+  NuevoRemitoDto,
   ReponerEppDto,
 } from "../types/epp.types";
 
 export const eppKeys = {
   all: ["epp"] as const,
   lists: () => [...eppKeys.all, "list"] as const,
-  entregas: () => [...eppKeys.all, "entregas"] as const,
-  misEntregas: () => [...eppKeys.entregas(), "mis-entregas"] as const,
-  entregasPaginadas: (page: number, size: number) =>
-    [...eppKeys.entregas(), "paginadas", { page, size }] as const,
-  entregasPorEmpleado: (empleadoId: number) =>
-    [...eppKeys.entregas(), "empleado", empleadoId] as const,
+  remitos: () => [...eppKeys.all, "remitos"] as const,
+  misRemitos: () => [...eppKeys.remitos(), "mios"] as const,
+  remitosPaginados: (page: number, size: number) =>
+    [...eppKeys.remitos(), "paginadas", { page, size }] as const,
 };
 
 /**
@@ -48,33 +45,22 @@ export function useEpps() {
 export const useEpp = useEpps;
 
 /**
- * Hook para consultar las entregas de EPP asignadas al operario autenticado en sesión.
+ * Hook para consultar los remitos de EPP del usuario autenticado en sesión.
  */
-export function useMisEntregas() {
+export function useMisRemitos() {
   return useQuery({
-    queryKey: eppKeys.misEntregas(),
-    queryFn: getMisEntregas,
+    queryKey: eppKeys.misRemitos(),
+    queryFn: getMisRemitos,
   });
 }
 
 /**
- * Hook para consultar las entregas de EPP asignadas a un empleado.
+ * Hook para consultar el historial global paginado de remitos de EPP.
  */
-export function useEntregasPorEmpleado(empleadoId: number | null | undefined) {
+export function useRemitosPaginados(page = 0, size = 10) {
   return useQuery({
-    queryKey: eppKeys.entregasPorEmpleado(empleadoId ?? 0),
-    queryFn: () => getEntregasPorEmpleado(empleadoId!),
-    enabled: Boolean(empleadoId),
-  });
-}
-
-/**
- * Hook para consultar el historial global paginado de todas las entregas de EPP.
- */
-export function useEntregasPaginadas(page = 0, size = 10) {
-  return useQuery({
-    queryKey: eppKeys.entregasPaginadas(page, size),
-    queryFn: () => getEntregasPaginadas(page, size),
+    queryKey: eppKeys.remitosPaginados(page, size),
+    queryFn: () => getRemitosPaginados(page, size),
     placeholderData: keepPreviousData,
   });
 }
@@ -145,17 +131,16 @@ export function useReponerStockEpp() {
 }
 
 /**
- * Hook de mutación para registrar y asignar una entrega de EPP a un empleado.
+ * Hook de mutación para registrar un remito de entrega de EPP con todos sus ítems.
  */
-export function useAsignarEpp() {
+export function useRegistrarRemito() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: NuevaEntregaDto) => asignarEpp(payload),
+    mutationFn: (payload: NuevoRemitoDto) => registrarRemito(payload),
     onSuccess: () => {
       // Invalida la lista de EPPs para reflejar el descuento de stock
       queryClient.invalidateQueries({ queryKey: eppKeys.lists() });
-      // Invalida el historial global de entregas y el del empleado
-      queryClient.invalidateQueries({ queryKey: eppKeys.entregas() });
+      queryClient.invalidateQueries({ queryKey: eppKeys.remitos() });
     },
   });
 }
