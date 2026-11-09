@@ -9,9 +9,10 @@ import {
   ShieldCheck,
   User,
 } from "lucide-react";
-import { useEntregasPaginadas } from "../hooks/useEpp";
+import { useRemitosPaginados } from "../hooks/useEpp";
 import { EppDeliveryModal } from "../components/modals/EppDeliveryModal";
 import { ImprimirRemitoButton } from "../components/ImprimirRemitoButton";
+import { formatNumeroRemito, resumenItems } from "../utils/remito";
 import {
   ErrorState,
   EmptyState,
@@ -55,12 +56,12 @@ export function EppDeliveriesHistoryPage() {
   const esAdmin = useEsAdminAuditoria();
   const { abrirHistorial, renderDialog } = useHistorialAuditoriaDialog();
 
-  const { data, isLoading, isError, error, refetch } = useEntregasPaginadas(
+  const { data, isLoading, isError, error, refetch } = useRemitosPaginados(
     page,
     size,
   );
 
-  const entregas = data?.content ?? [];
+  const remitos = data?.content ?? [];
   const totalElements = data?.totalElements ?? 0;
   const totalPages = data?.totalPages ?? 0;
 
@@ -99,7 +100,7 @@ export function EppDeliveriesHistoryPage() {
             </div>
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-foreground-muted">
-                Total Entregas Realizadas
+                Remitos Emitidos
               </p>
               <p className="text-2xl font-bold text-foreground">
                 {totalElements}
@@ -155,7 +156,7 @@ export function EppDeliveriesHistoryPage() {
             onRetry={() => refetch()}
           />
         </div>
-      ) : entregas.length === 0 ? (
+      ) : remitos.length === 0 ? (
         <div className="rounded-card border border-border bg-card p-6 shadow-soft">
           <EmptyState
             title="No hay entregas registradas"
@@ -175,28 +176,25 @@ export function EppDeliveriesHistoryPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[15%]">Fecha</TableHead>
-                <TableHead className="w-[32%]">Operario</TableHead>
-                <TableHead className="w-[27%]">EPP Entregado</TableHead>
-                <TableHead className="w-[14%] text-center">Cantidad</TableHead>
+                <TableHead className="w-[14%]">Fecha</TableHead>
+                <TableHead className="w-[28%]">Operario</TableHead>
+                <TableHead className="w-[34%]">EPP Entregados</TableHead>
+                <TableHead className="w-[12%] text-center">Remito N°</TableHead>
                 <TableHead className="w-[12%] text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {entregas.map((entrega, index) => {
-                const operarioNombre = `${entrega.apellidoEmpleado}, ${entrega.nombreEmpleado}`.trim();
-                const eppNombre = entrega.nombreEpp;
-                const rowKey =
-                  entrega.id ??
-                  `${entrega.idEpp}-${entrega.idEmpleado}-${entrega.fechaEntrega}-${index}`;
+              {remitos.map((remito) => {
+                const operarioNombre = `${remito.apellidoEmpleado}, ${remito.nombreEmpleado}`.trim();
+                const numeroRemito = formatNumeroRemito(remito.id);
 
                 return (
-                  <TableRow key={rowKey}>
+                  <TableRow key={remito.id}>
                     {/* Fecha */}
                     <TableCell>
                       <div className="flex items-center gap-2 text-foreground font-medium">
                         <Calendar className="size-4 text-foreground-muted" />
-                        <span>{formatFecha(entrega.fechaEntrega)}</span>
+                        <span>{formatFecha(remito.fechaEntrega)}</span>
                       </div>
                     </TableCell>
 
@@ -211,48 +209,45 @@ export function EppDeliveriesHistoryPage() {
                             {operarioNombre}
                           </p>
                           <p className="text-xs text-foreground-muted">
-                            Legajo / ID #{entrega.idEmpleado}
+                            Legajo / ID #{remito.empleadoId}
                           </p>
                         </div>
                       </div>
                     </TableCell>
 
-                    {/* EPP Entregado */}
+                    {/* EPP Entregados */}
                     <TableCell>
                       <div className="flex items-center gap-2.5">
                         <Package className="size-4 text-primary shrink-0" />
                         <span className="font-medium text-foreground">
-                          {eppNombre}
+                          {resumenItems(remito.items)}
                         </span>
                       </div>
                     </TableCell>
 
-                    {/* Cantidad */}
+                    {/* Remito N° */}
                     <TableCell className="text-center">
-                      <span className="inline-flex items-center rounded-full bg-subtle px-2.5 py-0.5 text-xs font-semibold text-foreground">
-                        {entrega.cantidadEntregada}{" "}
-                        {entrega.cantidadEntregada === 1 ? "unidad" : "unidades"}
+                      <span className="inline-flex items-center rounded-full bg-subtle px-2.5 py-0.5 text-xs font-semibold text-foreground tabular-nums">
+                        {numeroRemito}
                       </span>
                     </TableCell>
 
                     {/* Acciones: remito (ROLE_ADMIN y ROLE_RRHH) e historial (solo ROLE_ADMIN) */}
                     <TableCell className="text-right">
-                      {entrega.id != null ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <ImprimirRemitoButton entregaId={entrega.id} soloIcono />
-                          {esAdmin && (
-                            <HistorialAuditoriaIconButton
-                              onAbrir={() =>
-                                abrirHistorial(
-                                  "empleado_epp",
-                                  entrega.id!,
-                                  `${operarioNombre} - ${eppNombre} - ${formatFecha(entrega.fechaEntrega)}`,
-                                )
-                              }
-                            />
-                          )}
-                        </div>
-                      ) : null}
+                      <div className="flex items-center justify-end gap-1">
+                        <ImprimirRemitoButton remitoId={remito.id} soloIcono />
+                        {esAdmin && (
+                          <HistorialAuditoriaIconButton
+                            onAbrir={() =>
+                              abrirHistorial(
+                                "remito",
+                                remito.id,
+                                `Remito N° ${numeroRemito} - ${operarioNombre}`,
+                              )
+                            }
+                          />
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 );

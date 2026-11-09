@@ -1,4 +1,6 @@
 import { z } from "zod";
+import { fechaLocalActual } from "@/shared/utils/fechaLocal";
+import { MAX_ITEMS_REMITO } from "../utils/remito";
 
 export const altaEppSchema = z.object({
   nombreEPP: z
@@ -27,26 +29,54 @@ export const reponerEppSchema = z.object({
     .positive("La cantidad a reponer debe ser un número entero positivo."),
 });
 
-export const nuevaEntregaSchema = z.object({
+const itemRemitoSchema = z.object({
+  eppId: z
+    .number({ error: "Debe seleccionar un EPP." })
+    .int("El ID de EPP debe ser un entero.")
+    .positive("Debe seleccionar un EPP."),
+  cantidad: z
+    .number({ error: "La cantidad es obligatoria." })
+    .int("La cantidad debe ser un número entero.")
+    .positive("La cantidad debe ser un número entero positivo."),
+});
+
+export const nuevoRemitoSchema = z.object({
   empleadoId: z
     .number({ error: "Debe seleccionar un empleado." })
     .int("El ID de empleado debe ser un entero.")
     .positive("Debe seleccionar un empleado válido."),
-  eppId: z
-    .number({ error: "Debe seleccionar un EPP." })
-    .int("El ID de EPP debe ser un entero.")
-    .positive("Debe seleccionar un EPP válido."),
-  cantidadEntregada: z
-    .number({ error: "La cantidad entregada es obligatoria." })
-    .int("La cantidad debe ser un número entero.")
-    .positive("La cantidad entregada debe ser un número entero positivo."),
   fechaEntrega: z
     .string()
     .trim()
-    .min(1, "La fecha de entrega es obligatoria."),
+    .min(1, "La fecha de entrega es obligatoria.")
+    .refine(
+      (fecha) => fecha <= fechaLocalActual(),
+      "La fecha de entrega no puede ser una fecha futura.",
+    ),
+  items: z
+    .array(itemRemitoSchema)
+    .min(1, "El remito debe tener al menos un EPP.")
+    .max(
+      MAX_ITEMS_REMITO,
+      `Un remito admite como máximo ${MAX_ITEMS_REMITO} EPP distintos.`,
+    )
+    .superRefine((items, ctx) => {
+      const vistos = new Set<number>();
+      items.forEach((item, index) => {
+        if (item.eppId <= 0) return;
+        if (vistos.has(item.eppId)) {
+          ctx.addIssue({
+            code: "custom",
+            message: "Este EPP ya está en otra fila.",
+            path: [index, "eppId"],
+          });
+        }
+        vistos.add(item.eppId);
+      });
+    }),
 });
 
 export type AltaEppForm = z.infer<typeof altaEppSchema>;
 export type ModificarEppForm = z.infer<typeof modificarEppSchema>;
 export type ReponerEppForm = z.infer<typeof reponerEppSchema>;
-export type NuevaEntregaForm = z.infer<typeof nuevaEntregaSchema>;
+export type NuevoRemitoForm = z.infer<typeof nuevoRemitoSchema>;

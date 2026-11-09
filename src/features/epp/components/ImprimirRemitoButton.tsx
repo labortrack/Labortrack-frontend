@@ -13,17 +13,17 @@ import {
 } from "../hooks/useAbrirRemitoEntrega";
 
 interface ImprimirRemitoButtonProps {
-  entregaId: number;
+  remitoId: number;
   /** Ícono con tooltip para columnas de tabla; si no, botón con texto. */
   soloIcono?: boolean;
 }
 
 /**
- * Abre el remito PDF de una entrega de EPP.
+ * Abre el PDF de un remito de EPP.
  * Si el usuario no es ROLE_ADMIN ni ROLE_RRHH, retorna null.
  */
 export function ImprimirRemitoButton({
-  entregaId,
+  remitoId,
   soloIcono = false,
 }: ImprimirRemitoButtonProps) {
   const rol = useSessionStore((state) => state.user?.rol);
@@ -41,7 +41,7 @@ export function ImprimirRemitoButton({
             variant="ghost"
             size="icon"
             className="size-8 text-foreground-muted hover:bg-primary-soft hover:text-primary"
-            onClick={() => void remito.abrir(entregaId)}
+            onClick={() => void remito.abrir(remitoId)}
             disabled={remito.isPending}
             aria-label={label}
           >
@@ -61,7 +61,7 @@ export function ImprimirRemitoButton({
     <Button
       type="button"
       variant="primary"
-      onClick={() => void remito.abrir(entregaId)}
+      onClick={() => void remito.abrir(remitoId)}
       disabled={remito.isPending}
     >
       {remito.isPending ? (
