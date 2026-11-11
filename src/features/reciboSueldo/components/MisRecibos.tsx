@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { CheckCircle2, FileDown } from "lucide-react";
+import { CheckCircle2, Eye } from "lucide-react";
 import { toast } from "sonner";
-import { useAbrirPdfRecibo } from "../hooks/useAbrirPdfRecibo";
+import { useVisorPdfRecibo } from "../hooks/useVisorPdfRecibo";
 import { useConfirmarLectura, useMisRecibos } from "../hooks/useRecibosSueldo";
 import type { ReciboSueldoPropioDto } from "../types/reciboSueldo.types";
 import {
@@ -21,6 +21,8 @@ import {
 import { Badge, Button, Card, CardContent, Spinner } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { formatCurrency } from "@/shared/utils/currency";
+import { cn } from "@/shared/utils/cn";
+import { DocumentoVisorIntegrado } from "@/features/documentacion/components/DocumentoVisorIntegrado";
 
 /**
  * Autogestión del empleado (RF058-RF060, CU36, CU40): sus recibos publicados, el PDF y la
@@ -29,7 +31,7 @@ import { formatCurrency } from "@/shared/utils/currency";
  */
 export function MisRecibos() {
   const query = useMisRecibos();
-  const pdf = useAbrirPdfRecibo();
+  const pdf = useVisorPdfRecibo();
   const confirmar = useConfirmarLectura();
   const [aConfirmar, setAConfirmar] = useState<ReciboSueldoPropioDto | null>(null);
 
@@ -74,8 +76,10 @@ export function MisRecibos() {
         {query.data.map((recibo) => {
           const documentoId = recibo.documentoId;
           const abriendo = documentoId != null && pdf.documentoIdPendiente === documentoId;
+          const visor = documentoId != null && pdf.visor?.documentoId === documentoId ? pdf.visor : null;
           return (
-            <Card key={recibo.id}>
+            // Con el visor abierto la tarjeta ocupa toda la fila para que el PDF sea legible.
+            <Card key={recibo.id} className={cn(visor && "md:col-span-2 xl:col-span-3")}>
               <CardContent className="flex h-full flex-col gap-4 p-5">
                 <div className="flex items-start justify-between gap-3">
                   <div>
@@ -104,25 +108,34 @@ export function MisRecibos() {
                   </p>
                 ) : null}
 
-                <div className="mt-auto flex flex-col gap-2 sm:flex-row">
+                <div className={cn("mt-auto flex flex-col gap-2 sm:flex-row", visor && "sm:justify-end")}>
                   {documentoId != null ? (
                     <Button
-                      variant="outline"
-                      className="flex-1"
-                      onClick={() => void pdf.abrir(documentoId)}
+                      variant={visor ? "secondary" : "outline"}
+                      className={cn(!visor && "flex-1")}
+                      onClick={() => void pdf.alternar(documentoId)}
                       disabled={abriendo}
                     >
-                      {abriendo ? <Spinner /> : <FileDown className="mr-1.5 size-4" />}
-                      Ver PDF
+                      {abriendo ? <Spinner /> : <Eye className="mr-1.5 size-4" />}
+                      {visor ? "Ocultar PDF" : "Ver PDF"}
                     </Button>
                   ) : null}
                   {recibo.estado === "PENDIENTE_LECTURA" ? (
-                    <Button className="flex-1" onClick={() => setAConfirmar(recibo)}>
+                    <Button className={cn(!visor && "flex-1")} onClick={() => setAConfirmar(recibo)}>
                       <CheckCircle2 className="mr-1.5 size-4" />
                       Confirmar lectura
                     </Button>
                   ) : null}
                 </div>
+
+                {visor ? (
+                  <DocumentoVisorIntegrado
+                    url={visor.url}
+                    titulo={`Recibo ${recibo.descripcionPeriodo}`}
+                    contentType="application/pdf"
+                    onClose={pdf.cerrar}
+                  />
+                ) : null}
               </CardContent>
             </Card>
           );
