@@ -31,8 +31,13 @@ export function QrScanner({ onScan, onCancel }: QrScannerProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controlsRef = useRef<IScannerControls | undefined>(undefined);
   const scanEntregadoRef = useRef(false);
+  const onScanRef = useRef(onScan);
   const [error, setError] = useState<string>();
   const [reinicio, setReinicio] = useState(0);
+
+  useEffect(() => {
+    onScanRef.current = onScan;
+  }, [onScan]);
 
   useEffect(() => {
     let activo = true;
@@ -68,7 +73,7 @@ export function QrScanner({ onScan, onCancel }: QrScannerProps) {
 
             scanEntregadoRef.current = true;
             scannerControls.stop();
-            onScan(token);
+            onScanRef.current(token);
           },
         );
 
@@ -88,7 +93,7 @@ export function QrScanner({ onScan, onCancel }: QrScannerProps) {
       controlsRef.current?.stop();
       controlsRef.current = undefined;
     };
-  }, [onScan, reinicio]);
+  }, [reinicio]);
 
   const reintentar = () => {
     controlsRef.current?.stop();
