@@ -12,6 +12,10 @@ import type {
   GrupoRequestDto,
 } from "../types/estructuraLaboral.types";
 
+// La pantalla calcula conteos y "sin grupo" en cliente, así que necesita el
+// listado completo. Tope temporal hasta mover paginación y conteos al backend.
+const LISTADO_COMPLETO_SIZE = 1000;
+
 export const estructuraLaboralKeys = {
   all: ["estructuraLaboral"] as const,
   grupos: (filter?: GrupoFilterDto) =>
@@ -25,7 +29,7 @@ export const estructuraLaboralKeys = {
 export function useGruposList(filter?: GrupoFilterDto) {
   return useQuery({
     queryKey: estructuraLaboralKeys.grupos(filter),
-    queryFn: () => estructuraLaboralApi.getGrupos(filter, 0, 100),
+    queryFn: () => estructuraLaboralApi.getGrupos(filter, 0, LISTADO_COMPLETO_SIZE),
   });
 }
 
@@ -70,7 +74,7 @@ export function useDeleteGrupo() {
 export function useEmpleadoGruposList(filter?: EmpleadoGrupoFilterDto) {
   return useQuery({
     queryKey: estructuraLaboralKeys.asignaciones(filter),
-    queryFn: () => estructuraLaboralApi.getEmpleadoGrupos(filter, 0, 100),
+    queryFn: () => estructuraLaboralApi.getEmpleadoGrupos(filter, 0, LISTADO_COMPLETO_SIZE),
   });
 }
 
@@ -106,7 +110,7 @@ export function useEmpleadosActivos() {
     queryFn: () =>
       legajosApi.getPaginados({
         estado: "ACTIVO",
-        size: 100,
+        size: LISTADO_COMPLETO_SIZE,
         sort: "usuario.apellido,asc",
       }),
   });
@@ -119,7 +123,7 @@ export function useEmpleadosPorGrupo(
   return useQuery({
     queryKey: [...estructuraLaboralKeys.all, "porGrupo", idGrupo, filter] as const,
     queryFn: () =>
-      estructuraLaboralApi.getEmpleadoGruposPorGrupo(idGrupo!, filter, 0, 100),
+      estructuraLaboralApi.getEmpleadoGruposPorGrupo(idGrupo!, filter, 0, LISTADO_COMPLETO_SIZE),
     enabled: Boolean(idGrupo),
   });
 }
