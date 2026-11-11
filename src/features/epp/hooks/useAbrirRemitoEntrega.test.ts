@@ -27,12 +27,18 @@ describe("puedeImprimirRemito", () => {
 });
 
 describe("mensajeErrorRemito", () => {
-  it("403 indica falta de permiso", () => {
-    expect(mensajeErrorRemito(errorHttp(403))).toBe("No tenés permiso para imprimir remitos.");
+  it("403 indica falta de permiso sobre el remito", () => {
+    expect(mensajeErrorRemito(errorHttp(403))).toBe("No tenés permiso para ver este remito.");
   });
 
-  it("404 indica que la entrega no existe", () => {
-    expect(mensajeErrorRemito(errorHttp(404))).toBe("No se encontró la entrega.");
+  it("404 indica que el remito no existe", () => {
+    expect(mensajeErrorRemito(errorHttp(404))).toBe("No se encontró el remito.");
+  });
+
+  it("400 muestra el mensaje genérico", () => {
+    expect(mensajeErrorRemito(errorHttp(400))).toBe(
+      "No se pudo generar el remito. Intentá nuevamente.",
+    );
   });
 
   it("otros errores del servidor muestran el mensaje genérico", () => {

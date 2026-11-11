@@ -194,7 +194,9 @@ export function AppLayout() {
         </button>
       </div>
       <nav
-        className="flex-1 space-y-1 overflow-y-auto p-3"
+        // Pantallas bajas (notebooks): ítems compactos para que el menú entre sin scroll.
+        // El scroll queda solo como respaldo, sin barra visible.
+        className="flex-1 space-y-1 overflow-y-auto p-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [@media(max-height:820px)]:space-y-0.5 [@media(max-height:820px)]:p-2"
         aria-label="Navegación principal"
       >
         {navItems.map(({ to, activePath = to, label, icon: Icon }) => {
@@ -217,7 +219,7 @@ export function AppLayout() {
                   to={to}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
-                    "group relative flex h-11 items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors",
+                    "group relative flex h-11 items-center gap-3 rounded-control px-3 text-sm font-medium transition-colors [@media(max-height:820px)]:h-8",
                     isCurrentActive
                       ? "bg-primary text-white shadow-soft before:absolute before:-left-3 before:top-1/2 before:h-8 before:w-1 before:-translate-y-1/2 before:rounded-r-full before:bg-accent"
                       : "text-foreground hover:bg-border",
@@ -256,7 +258,7 @@ export function AppLayout() {
           );
         })}
       </nav>
-      <div className="hidden border-t border-border p-3 lg:block">
+      <div className="hidden border-t border-border p-3 lg:block [@media(max-height:820px)]:p-1.5">
         <Button
           variant="ghost"
           className="w-full"
@@ -269,7 +271,7 @@ export function AppLayout() {
           {!collapsed ? "Contraer" : null}
         </Button>
       </div>
-      <div className="border-t border-border bg-border/70 p-3">
+      <div className="border-t border-border bg-border/70 p-3 [@media(max-height:820px)]:p-2">
         <div
           className={cn(
             "flex items-center gap-3",

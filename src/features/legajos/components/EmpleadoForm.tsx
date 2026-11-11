@@ -49,9 +49,6 @@ import {
 } from "@/shared/ui";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 import { PASSWORD_HINT } from "@/shared/lib/validation/passwordSchema";
-import { useSessionStore } from "@/features/auth/store/sessionStore";
-import type { RolNombre } from "@/features/auth/types/auth.types";
-import { puedeAsignarRol } from "@/features/auth/utils/rolesAsignables";
 
 const GRUPO_SANGUINEO_OPTIONS = [
   "A+",
@@ -68,13 +65,6 @@ const GENERO_OPTIONS: Array<{ value: Genero; label: string }> = (
   Object.keys(GENERO_LABELS) as Genero[]
 ).map((key) => ({ value: key, label: GENERO_LABELS[key] }));
 
-const ROL_OPTIONS: Array<{ value: RolNombre; label: string }> = [
-  { value: "ROLE_OPERARIO", label: "Operario" },
-  { value: "ROLE_RRHH", label: "Recursos Humanos" },
-  { value: "ROLE_CONTADOR", label: "Contador" },
-  { value: "ROLE_ADMIN", label: "Administrador" },
-];
-
 export interface EmpleadoFormProps {
   empleadoId?: number;
   onSuccess?: () => void;
@@ -89,7 +79,6 @@ export function EmpleadoForm({
   onDirtyChange,
 }: EmpleadoFormProps) {
   const isEdit = Boolean(empleadoId);
-  const rolActor = useSessionStore((state) => state.user?.rol);
 
   const { data: empleadoData, isLoading: isLoadingEmpleado } =
     useLegajoDetail(empleadoId);
@@ -135,7 +124,8 @@ export function EmpleadoForm({
         apellido: "",
         email: "",
         password: "",
-        rol: undefined,
+        // El alta desde Legajos siempre crea la cuenta como Operario.
+        rol: "ROLE_OPERARIO",
       },
     },
   });
@@ -368,37 +358,8 @@ export function EmpleadoForm({
           )}
 
           {!isEdit && (
-            <FormField
-              id="empleado-rol"
-              label="Rol en el Sistema"
-              error={errors.usuario?.rol?.message}
-              required
-            >
-              <Controller
-                name="usuario.rol"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    value={field.value ?? ""}
-                    onValueChange={(val) =>
-                      field.onChange(
-                        val as (typeof ROL_OPTIONS)[number]["value"],
-                      )
-                    }
-                  >
-                    <SelectTrigger id="empleado-rol">
-                      <SelectValue placeholder="Seleccioná un rol" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {ROL_OPTIONS.filter((opt) => puedeAsignarRol(rolActor, opt.value)).map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                )}
-              />
+            <FormField id="empleado-rol" label="Rol en el Sistema">
+              <Input id="empleado-rol" value="Operario" disabled readOnly />
             </FormField>
           )}
         </div>

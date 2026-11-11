@@ -1,6 +1,7 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getRemitoEntrega } from "../api/epp.api";
+import { getRemitoPdf } from "../api/epp.api";
+import { eppKeys } from "./useEpp";
 import type { RolNombre } from "@/features/auth/types/auth.types";
 import { normalizeApiError } from "@/shared/lib/http/apiError";
 
@@ -17,25 +18,31 @@ export function mensajeErrorRemito(error: unknown): string {
     error,
     "No se pudo generar el remito. Intentá nuevamente.",
   );
-  if (normalizado.status === 403) return "No tenés permiso para imprimir remitos.";
-  if (normalizado.status === 404) return "No se encontró la entrega.";
+  if (normalizado.status === 403) return "No tenés permiso para ver este remito.";
+  if (normalizado.status === 404) return "No se encontró el remito.";
   if (normalizado.isNetworkError) return normalizado.message;
   return "No se pudo generar el remito. Intentá nuevamente.";
 }
 
 /**
- * Abre el remito PDF de una entrega en otra pestaña. El PDF exige el token de sesión,
+ * Abre el PDF de un remito en otra pestaña. El PDF exige el token de sesión,
  * por eso se descarga como blob con el cliente autenticado en lugar de usar un link directo.
  */
 export function useAbrirRemitoEntrega() {
-  const descarga = useMutation({ mutationFn: getRemitoEntrega });
+  const queryClient = useQueryClient();
+  const descarga = useMutation({
+    mutationFn: getRemitoPdf,
+    // La primera apertura genera y guarda el PDF: se refrescan las listas para que pdfGenerado
+    // deje de ser false.
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: eppKeys.remitos() }),
+  });
 
-  const abrir = async (entregaId: number) => {
+  const abrir = async (remitoId: number) => {
     // La pestaña se abre en el mismo clic: si se abriera después del await, el navegador
     // la bloquearía como popup.
     const ventana = window.open("", "_blank");
     try {
-      const blob = await descarga.mutateAsync(entregaId);
+      const blob = await descarga.mutateAsync(remitoId);
       const url = URL.createObjectURL(blob);
       if (ventana) {
         ventana.opener = null;
